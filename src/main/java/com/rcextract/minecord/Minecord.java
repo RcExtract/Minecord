@@ -63,6 +63,8 @@ public class Minecord extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(new EventManager(), this);
 		getCommand("minecord").setExecutor(new CommandHandler());
 		getCommand("users").setExecutor(new CommandHandler());
+		for (User user : Minecord.getUserManager().getUsers()) 
+			if (user.getChannel() == null) user.switchChannel(null);
 	}
 	@Override
 	public void onDisable() {

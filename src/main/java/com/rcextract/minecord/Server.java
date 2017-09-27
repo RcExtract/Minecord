@@ -53,13 +53,6 @@ public class Server implements RecordManager<ServerEvent> {
 		this.locked = locked;
 		this.channelManager = channelManager;
 		this.rankManager = rankManager;
-		if (channelManager.getChannels().size() == 0)
-			try {
-				channelManager.createChannel("general", null);
-			} catch (DuplicatedException e) {
-				// This exception is never thrown.
-				e.printStackTrace();
-			}
 	}
 	/**
 	 * Gets the identifier of the server.

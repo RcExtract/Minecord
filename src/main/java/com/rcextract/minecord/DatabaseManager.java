@@ -111,6 +111,8 @@ public class DatabaseManager {
 					if (c.getInt("main") == channel.getIdentifier()) 
 						server.getChannelManager().setMainChannel(channel);
 				}
+				if (server.getChannelManager().getChannels().isEmpty()) 
+					server.getChannelManager().initialize();
 				unrecordedservers.add(server);
 			}
 			Minecord.getControlPanel().addAllServers(unrecordedservers);
@@ -123,8 +125,13 @@ public class DatabaseManager {
 	 * @throws SQLException If an error occurred while attempting to save the data.
 	 */
 	public void save() throws SQLException {
-		Statement stmt = connection.createStatement();
-		stmt.executeUpdate("DROP DATABASE minecord;");
+		Statement stmt = null;
+		try {
+			stmt = connection.createStatement();
+			stmt.executeUpdate("DROP DATABASE minecord;");
+		} finally {
+			if (stmt != null) stmt.close();
+		}
 		init();
 		for (Server server : Minecord.getServerManager().getServers()) {
 			PreparedStatement one = connection.prepareStatement("INSERT INTO servers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);");
@@ -136,6 +143,10 @@ public class DatabaseManager {
 			one.setBoolean(6, server.isPermanent());
 			one.setBoolean(7, !(server.ready()));
 			Set<String> channelids = new HashSet<String>();
+			System.out.println(server.getName() + " channels:");
+			for (Channel channel : server.getChannelManager().getChannels()) {
+				System.out.println(channel.getName());
+			}
 			for (Channel channel : server.getChannelManager().getChannels()) {
 				channelids.add(Integer.toString(channel.getIdentifier()));
 				PreparedStatement two = connection.prepareStatement("INSERT INTO channels VALUES (?, ?, ?, ?, ?);");

@@ -105,6 +105,21 @@ public class CommandHandler implements CommandExecutor {
 				}
 				return true;
 			}
+			if (args[0].equalsIgnoreCase("channels")) {
+				if (args.length == 1) {
+					player.sendMessage(ChatColor.RED + "Please specify a server!");
+					return true;
+				}
+				Server server = Minecord.getServerManager().getServer(args[1]);
+				if (server == null) {
+					player.sendMessage(ChatColor.RED + "The server does not exist!");
+					return true;
+				}
+				for (Channel channel : server.getChannelManager().getChannels()) {
+					player.sendMessage(channel.getIdentifier() + channel.getName() + channel.getMembers().size());
+				}
+				return true;
+			}
 			if (args[0].equalsIgnoreCase("join")) {
 				if (args.length == 1) {
 					player.sendMessage(ChatColor.RED + "Please specify a server to join!");

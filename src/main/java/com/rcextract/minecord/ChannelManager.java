@@ -128,4 +128,14 @@ public class ChannelManager {
 		if (target == this.main) this.main = main;
 		return channels.remove(target);
 	}
+	public Channel initialize() {
+		if (channels.isEmpty())
+			try {
+				return createChannel("general", null);
+			} catch (DuplicatedException e) {
+				//This exception is never thrown.
+				e.printStackTrace();
+			}
+		return null;
+	}
 }

@@ -34,7 +34,8 @@ public class EventManager implements Listener {
 		Player player = event.getPlayer();
 		if (!(Minecord.getUserManager().isRegistered(player))) 
 			Minecord.getUserManager().registerPlayer(player);
-		System.out.println(Minecord.getUserManager().isRegistered(player));
+		User user = Minecord.getUserManager().getUser(player);
+		if (user.getChannel() == null) user.switchChannel(null);
 	}
 	/**
 	 * Distributes the messages to suitable players and serialize them.
@@ -50,7 +51,6 @@ public class EventManager implements Listener {
 		Player player = event.getPlayer();
 		//Sender in user form.
 		User sender = Minecord.getUserManager().getUser(player);
-		System.out.println(sender == null);
 		//Message sent time.
 		Date date = new Date();
 		//Players that will instantly receive message after finish handling.
@@ -61,6 +61,7 @@ public class EventManager implements Listener {
 		Set<User> users = new HashSet<User>();
 		//All user tags occured in the message.
 		List<UserTagEvent> tags = new ArrayList<UserTagEvent>();
+		System.out.println(sender.getChannel() == null);
 		users.addAll(sender.getChannel().getMembers());
 		//Tag detection
 		LinkedHashMap<String, Player> segments = new LinkedHashMap<String, Player>();
