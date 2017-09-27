@@ -4,7 +4,10 @@
 the runtime of Minecord.
 - On Update 2.0 and 3.0, the plugin is recoded.
 
-## Beta 1.3 (Current)
+## Beta 1.4 (Current)
+- Now users can reload data with commands
+
+## Beta 1.3
 - Fixed duplicated database and table issues on save
 - Fixed identifier truncation issues
 - Fixed API bugs
