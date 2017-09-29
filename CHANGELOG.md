@@ -2,9 +2,19 @@
 - This file tracks all updates of Minecord and provides detail information about an update.
 - Version label, plugin.yml changes or pom.xml changes will not be tracked unless the change affects 
 the runtime of Minecord.
-- On Update 2.0 and 3.0, the plugin is recoded.
+- On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
-## Beta 1.4 (Current)
+## Beta 3.0
+- Added Update Checker
+- Configuration file format changed to .properties
+- Improved error logs
+- Fixed runtime after plugin disable bug
+
+## Beta 2.0
+- Fixed duplicated channel issues
+- Cleared testing codes
+
+## Beta 1.4
 - Now users can reload data with commands
 
 ## Beta 1.3

@@ -2,7 +2,7 @@ package com.rcextract.minecord;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
@@ -21,41 +21,33 @@ import com.rcextract.minecord.event.UserMessageEvent;
  */
 public class Minecord extends JavaPlugin {
 
-	private static String format;
 	private static InternalManager panel;
 	private static ConfigManager cm;
 	private static DatabaseManager dm;
-	private static String host;
-	private static String user;
-	private static String password;
-	private static int MESSAGE_LOAD_COUNT;
+	protected static Properties properties;
 	private static boolean errorDisable;
 	
 	@Override
 	public void onEnable() {
 		cm = new ConfigManager(this);
 		panel = new InternalManager();
-		List<String> lines = null;
+		properties = new Properties();
 		try {
-			lines = cm.load();
+			getLogger().log(Level.INFO, "Loading properties...");
+			cm.load(properties);
 		} catch (IOException e) {
-			getLogger().log(Level.SEVERE, "Failed to load data.");
-			e.printStackTrace();
+			getLogger().log(Level.SEVERE, "An error occurred while attempting to load the properties.", e);
 			errorDisable = true;
 			Bukkit.getPluginManager().disablePlugin(this);
+			return;
 		}
-		host = lines.get(0);
-		user = lines.get(1);
-		password = lines.get(2);
-		format = lines.get(3);
-		MESSAGE_LOAD_COUNT = Integer.parseInt(lines.get(4));
 		try {
+			getLogger().log(Level.INFO, "Loading data...");
 			dm = new DatabaseManager();
 			dm.init();
 			dm.load();
 		} catch (SQLException | ClassNotFoundException e) {
-			getLogger().log(Level.SEVERE, "Failed to load data.");
-			e.printStackTrace();
+			getLogger().log(Level.SEVERE, "An error occured while attempting to load the data.", e);
 			errorDisable = true;
 			Bukkit.getPluginManager().disablePlugin(this);
 			return;
@@ -70,7 +62,7 @@ public class Minecord extends JavaPlugin {
 	public void onDisable() {
 		if (!(errorDisable)) {
 			try {
-				cm.save();
+				cm.save(properties);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -124,23 +116,23 @@ public class Minecord extends JavaPlugin {
 	 * @return The format of a message.
 	 */
 	public static String getFormat() {
-		return format;
+		return properties.getProperty("format");
 	}
 	protected static String getHost() {
-		return host;
+		return properties.getProperty("host");
 	}
 	protected static String getUsername() {
-		return user;
+		return properties.getProperty("username");
 	}
 	protected static String getPassword() {
-		return password;
+		return properties.getProperty("password");
 	}
 	/**
 	 * Gets the amount of messages to be loaded for a user.
 	 * @return The amount of messages to be loaded for a user.
 	 */
 	public static int getMessageLoadCount() {
-		return MESSAGE_LOAD_COUNT;
+		return Integer.parseInt(properties.getProperty("message-load-count"));
 	}
 	/**
 	 * Loads messages for a user.
@@ -164,25 +156,19 @@ public class Minecord extends JavaPlugin {
 		}
 	}
 	public static void reloadConfiguration() {
-		List<String> lines = null;
+		String format = getFormat();
 		try {
-			lines = cm.load();
+			cm.load(properties);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return;
 		}
-		host = lines.get(0);
-		user = lines.get(1);
-		password = lines.get(2);
-		String format = lines.get(3);
 		if (!(getFormat().equals(format))) 
 			for (User user : Minecord.getUserManager().getUsers()) 
 				updateMessage(user, true);
-		Minecord.format = format;
-		MESSAGE_LOAD_COUNT = Integer.parseInt(lines.get(4));
 	}
 	public static String applyFormat(String name, String nickname, String uuid, String message, String date) {
-		String format = new String(Minecord.format);
+		String format = new String(getFormat());
 		format.replaceAll("<playername>", name);
 		format.replaceAll("<playernickname", nickname);
 		format.replaceAll("<playeruuid>", uuid);
