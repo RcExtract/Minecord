@@ -111,8 +111,7 @@ public class DatabaseManager {
 					if (c.getInt("main") == channel.getIdentifier()) 
 						server.getChannelManager().setMainChannel(channel);
 				}
-				if (server.getChannelManager().getChannels().isEmpty()) 
-					server.getChannelManager().initialize();
+				server.getChannelManager().initialize();
 				unrecordedservers.add(server);
 			}
 			Minecord.getControlPanel().addAllServers(unrecordedservers);
@@ -143,10 +142,6 @@ public class DatabaseManager {
 			one.setBoolean(6, server.isPermanent());
 			one.setBoolean(7, !(server.ready()));
 			Set<String> channelids = new HashSet<String>();
-			System.out.println(server.getName() + " channels:");
-			for (Channel channel : server.getChannelManager().getChannels()) {
-				System.out.println(channel.getName());
-			}
 			for (Channel channel : server.getChannelManager().getChannels()) {
 				channelids.add(Integer.toString(channel.getIdentifier()));
 				PreparedStatement two = connection.prepareStatement("INSERT INTO channels VALUES (?, ?, ?, ?, ?);");

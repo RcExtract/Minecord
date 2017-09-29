@@ -120,7 +120,7 @@ public class ChannelManager {
 		Bukkit.getPluginManager().callEvent(event);
 		if (!(event.isCancelled())) {
 			channels.add(channel);
-			if (main == null) main = channel;
+			if (main == null) channel = main;
 		}
 		return channel;
 	}
@@ -129,9 +129,10 @@ public class ChannelManager {
 		return channels.remove(target);
 	}
 	public Channel initialize() {
-		if (channels.isEmpty())
+		if (channels.isEmpty()) 
 			try {
-				return createChannel("general", null);
+				Channel channel = createChannel("general", null);
+				return channel;
 			} catch (DuplicatedException e) {
 				//This exception is never thrown.
 				e.printStackTrace();

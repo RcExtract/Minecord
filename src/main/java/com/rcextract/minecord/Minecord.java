@@ -29,6 +29,7 @@ public class Minecord extends JavaPlugin {
 	
 	@Override
 	public void onEnable() {
+		Updater.checkForUpdate(this);
 		cm = new ConfigManager(this);
 		panel = new InternalManager();
 		properties = new Properties();

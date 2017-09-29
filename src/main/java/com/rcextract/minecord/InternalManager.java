@@ -30,7 +30,8 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		servers.addAll(server);
 		if (getServer("default") == null)
 			try {
-				createServer("default", "This is the default server. All users will be switched to here if the redirect channel is not explicity mentioned.", false, false, null);
+				Server s = createServer("default", "This is the default server. All users will be switched to here if the redirect channel is not explicity mentioned.", false, false, null);
+				s.getChannelManager().initialize();
 			} catch (DuplicatedException e) {
 				//This exception is never thrown.
 				e.printStackTrace();
