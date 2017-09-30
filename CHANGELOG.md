@@ -4,6 +4,10 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 4.0
+- Added detector for incompatible event handlers
+- Fixed core
+
 ## Beta 3.1
 - Fixed default server channel initialization bug
 - Fixed not calling update checker bug

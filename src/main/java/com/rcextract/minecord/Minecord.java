@@ -54,6 +54,7 @@ public class Minecord extends JavaPlugin {
 			return;
 		}
 		Bukkit.getPluginManager().registerEvents(new EventManager(), this);
+		new IncompatibleDetector(this).runTask(this);
 		getCommand("minecord").setExecutor(new CommandHandler());
 		getCommand("users").setExecutor(new CommandHandler());
 		for (User user : Minecord.getUserManager().getUsers()) 
