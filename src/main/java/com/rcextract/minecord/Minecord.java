@@ -26,33 +26,51 @@ public class Minecord extends JavaPlugin {
 	private static DatabaseManager dm;
 	protected static Properties properties;
 	private static boolean errorDisable;
+	private static Minecord minecord;
 	
 	@Override
 	public void onEnable() {
-		Updater.checkForUpdate(this);
+		minecord = this;
 		cm = new ConfigManager(this);
 		panel = new InternalManager();
 		properties = new Properties();
 		try {
-			getLogger().log(Level.INFO, "Loading properties...");
+			getLogger().log(Level.INFO, "Loading properties from minecord.properties...");
 			cm.load(properties);
+			getLogger().log(Level.INFO, "Properties are successfully loaded.");
 		} catch (IOException e) {
 			getLogger().log(Level.SEVERE, "An error occurred while attempting to load the properties.", e);
 			errorDisable = true;
 			Bukkit.getPluginManager().disablePlugin(this);
 			return;
 		}
-		try {
-			getLogger().log(Level.INFO, "Loading data...");
-			dm = new DatabaseManager();
-			dm.init();
-			dm.load();
-		} catch (SQLException | ClassNotFoundException e) {
-			getLogger().log(Level.SEVERE, "An error occured while attempting to load the data.", e);
-			errorDisable = true;
-			Bukkit.getPluginManager().disablePlugin(this);
-			return;
-		}
+		Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					minecord.getLogger().log(Level.INFO, "Loading data from database...");
+					dm = new DatabaseManager();
+					dm.initialize();
+					dm.load();
+					minecord.getLogger().log(Level.INFO, "Data are successfully loaded.");
+				} catch (ClassNotFoundException | SQLException e) {
+					minecord.getLogger().log(Level.SEVERE, "An error occured while attempting to load the data.", e);
+					errorDisable = true;
+					Bukkit.getPluginManager().disablePlugin(minecord);
+					return;
+				}
+			}
+			
+		});
+		Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
+
+			@Override
+			public void run() {
+				Updater.checkForUpdate(minecord);
+			}
+			
+		});
 		Bukkit.getPluginManager().registerEvents(new EventManager(), this);
 		new IncompatibleDetector(this).runTask(this);
 		getCommand("minecord").setExecutor(new CommandHandler());
@@ -62,19 +80,25 @@ public class Minecord extends JavaPlugin {
 	}
 	@Override
 	public void onDisable() {
-		if (!(errorDisable)) {
+		if (errorDisable) {
+			getLogger().log(Level.WARNING, "Minecord is disabling due to an error occurred while initializing.");
+			getLogger().log(Level.WARNING, "This is purposed to keep your data protected from being overrided.");
+		} else {
 			try {
+				getLogger().log(Level.INFO, "Saving properties to minecord.properties...");
 				cm.save(properties);
+				getLogger().log(Level.INFO, "Properties are successfully saved.");
 			} catch (IOException e) {
-				e.printStackTrace();
+				getLogger().log(Level.SEVERE, "An error occurred while attempting to save the properties.", e);
 			}
 			try {
-				dm.init();
+				getLogger().log(Level.INFO, "Saving data to database...");
+				dm.initialize();
 				dm.save();
 				dm.close();
+				getLogger().log(Level.INFO, "Data are successfully saved.");
 			} catch (SQLException e) {
-				getLogger().log(Level.SEVERE, "Failed to save data.");
-				e.printStackTrace();
+				getLogger().log(Level.SEVERE, "An error occurred while attempting to save the data.", e);
 			}
 		}
 	}

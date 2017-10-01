@@ -34,8 +34,7 @@ public class DatabaseManager {
 		Class.forName("com.mysql.jdbc.Driver");
 		this.connection = DriverManager.getConnection("jdbc:mysql://" + Minecord.getHost() + "?autoReconnect=true&useSSL=false", Minecord.getUsername(), Minecord.getPassword());
 	}
-	public void init() throws SQLException {
-		
+	public synchronized void initialize() throws SQLException {
 		DatabaseMetaData dbmd = connection.getMetaData();
 		ResultSet databases = dbmd.getCatalogs();
 		Set<String> databasenames = new HashSet<String>();
@@ -56,7 +55,7 @@ public class DatabaseManager {
 	 * Loads the data from the database.
 	 * @throws SQLException If an error occurred while attempting to load the data.
 	 */
-	public void load() throws SQLException {
+	public synchronized void load() throws SQLException {
 		/* User:
 		 * id, name, nickname, desc, uuid;
 		 * Channel:
@@ -123,7 +122,7 @@ public class DatabaseManager {
 	 * Saves the data to the database.
 	 * @throws SQLException If an error occurred while attempting to save the data.
 	 */
-	public void save() throws SQLException {
+	public synchronized void save() throws SQLException {
 		Statement stmt = null;
 		try {
 			stmt = connection.createStatement();
@@ -131,7 +130,7 @@ public class DatabaseManager {
 		} finally {
 			if (stmt != null) stmt.close();
 		}
-		init();
+		initialize();
 		for (Server server : Minecord.getServerManager().getServers()) {
 			PreparedStatement one = connection.prepareStatement("INSERT INTO servers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);");
 			one.setInt(1, server.getIdentifier());
@@ -172,7 +171,7 @@ public class DatabaseManager {
 			statement.close();
 		}
 	}
-	public void close() throws SQLException {
+	public synchronized void close() throws SQLException {
 		connection.close();
 	}
 }

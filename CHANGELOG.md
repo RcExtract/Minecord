@@ -4,6 +4,10 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 4.1
+- Now load data and check update asynchronously
+- Improved error logs
+
 ## Beta 4.0
 - Added detector for incompatible event handlers
 - Fixed core
