@@ -4,6 +4,12 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 5.0
+- Added Ranks
+- Added Permissions (Can be overrided by Bukkit permissions)
+- Fixed null validation in channel creator method
+- Removed Rank Manager deprecation
+
 ## Beta 4.1
 - Now load data and check update asynchronously
 - Improved error logs

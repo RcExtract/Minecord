@@ -2,27 +2,26 @@ package com.rcextract.minecord.event;
 
 import org.bukkit.event.HandlerList;
 
-import com.rcextract.minecord.Channel;
+import com.rcextract.minecord.Rank;
 import com.rcextract.minecord.Server;
 
-public class ChannelCreateEvent extends ServerEvent {
+public class RankCreateEvent extends ServerEvent {
 
 	private static final HandlerList handlers = new HandlerList();
 	public static HandlerList getHandlerList() {
 		return handlers;
 	}
-	private Channel channel;
-	public ChannelCreateEvent(Server server, Channel channel) {
+	private Rank rank;
+	public RankCreateEvent(Server server, Rank rank) {
 		super(server);
-		this.channel = channel;
+		this.rank = rank;
 	}
-
-	public Channel getChannel() {
-		return channel;
-	}
-
 	@Override
 	public HandlerList getHandlers() {
 		return handlers;
 	}
+	public Rank getRank() {
+		return rank;
+	}
+
 }

@@ -18,7 +18,7 @@ import com.rcextract.minecord.event.ChannelCreateEvent;
 public class ChannelManager {
 
 	private Channel main;
-	private Set<Channel> channels;
+	protected Set<Channel> channels;
 	/**
 	 * Creates a channel manager.
 	 * @param channels The channels to be imported at instantiation. There is no difference between
@@ -59,9 +59,6 @@ public class ChannelManager {
 	 */
 	public Set<Channel> getChannels() {
 		return new HashSet<Channel>(channels);
-	}
-	protected Set<Channel> getModifiableChannels() {
-		return channels;
 	}
 	/**
 	 * Gets a channel by its identifier.
@@ -125,6 +122,7 @@ public class ChannelManager {
 		return channel;
 	}
 	public boolean disbandChannel(Channel target, Channel main) {
+		Validate.notNull(main);
 		if (target == this.main) this.main = main;
 		return channels.remove(target);
 	}

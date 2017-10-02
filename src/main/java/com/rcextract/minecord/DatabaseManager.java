@@ -106,7 +106,7 @@ public class DatabaseManager {
 				Server server = new Server(id, name, desc, approvement, invitation, permanent, locked, new ChannelManager(), null);
 				for (Channel channel : unrecordedchannels) {
 					if (Arrays.asList(c.getString("channels").split(",")).contains(Integer.toString(channel.getIdentifier()))) 
-						server.getChannelManager().getModifiableChannels().add(channel);
+						server.getChannelManager().channels.add(channel);
 					if (c.getInt("main") == channel.getIdentifier()) 
 						server.getChannelManager().setMainChannel(channel);
 				}

@@ -38,12 +38,11 @@ public class Server implements RecordManager<ServerEvent> {
 	private boolean permanent;
 	private boolean locked;
 	private ChannelManager channelManager;
-	@Deprecated
 	private RankManager rankManager;
 	/**
 	 * This constructor is reserved for initialization.
 	 */
-	protected Server(int id, String name, String desc, boolean approvement, boolean invitation, boolean permanent, boolean locked, ChannelManager channelManager, @SuppressWarnings("deprecation") RankManager rankManager) {
+	protected Server(int id, String name, String desc, boolean approvement, boolean invitation, boolean permanent, boolean locked, ChannelManager channelManager, RankManager rankManager) {
 		this.id = id;
 		this.name = name;
 		this.desc = desc;
@@ -194,7 +193,6 @@ public class Server implements RecordManager<ServerEvent> {
 	 * Gets the rank manager. It currently does nothing and always return null.
 	 * @return The rank manager.
 	 */
-	@Deprecated
 	public RankManager getRankManager() {
 		return rankManager;
 	}
