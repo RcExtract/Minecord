@@ -13,8 +13,8 @@ the runtime of Minecord.
 - Improved database saving and loading speed
 - Now registering users requires a channel for the user to join after registration, null for default server
 - Added unimplemented method getIdentifier() in interface Permission
+- Recoded Database Manager
 
-Recoded Database Manager
 ## Beta 5.0
 - Added Ranks
 - Added Permissions (Can be overrided by Bukkit permissions)
