@@ -28,7 +28,7 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	public void initialize() {
 		if (getServer("default") == null)
 			try {
-				Server server = createServer("default", null, null, null, null);
+				Server server = createServer("default", null, null, null, null, null);
 				server.getChannelManager().initialize();
 			} catch (DuplicatedException e) {
 				//This exception is never thrown.
@@ -71,16 +71,17 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		return null;
 	}
 	@Override
-	public Server createServer(String name, String desc, Boolean approvement, Boolean invitation, ChannelManager channelManager) throws DuplicatedException {
+	public Server createServer(String name, String desc, Boolean approvement, Boolean invitation, ChannelManager channelManager, RankManager rankManager) throws DuplicatedException {
 		Validate.notNull(name);
 		if (getServer(name) != null) throw new DuplicatedException();
 		if (desc == null) desc = "A default server description.";
 		if (approvement == null) approvement = true;
 		if (invitation == null) invitation = false;
 		if (channelManager == null) channelManager = new ChannelManager();
+		if (rankManager == null) rankManager = new RankManager();
 		int id = ThreadLocalRandom.current().nextInt();
 		while (getServer(id) != null || id < 0) id = ThreadLocalRandom.current().nextInt();
-		Server server = new Server(id, name, desc, approvement, invitation, false, false, channelManager, null);
+		Server server = new Server(id, name, desc, approvement, invitation, false, false, channelManager, rankManager);
 		ServerCreateEvent event = new ServerCreateEvent(server);
 		Bukkit.getPluginManager().callEvent(event);
 		if (!(event.isCancelled())) servers.add(server);

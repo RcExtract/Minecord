@@ -37,7 +37,9 @@ public class DatabaseManager {
 	public synchronized void initialize() throws SQLException {
 		try (Statement statement = connection.createStatement()) {
 			statement.executeUpdate("CREATE DATABASE IF NOT EXISTS minecord;");
-			connection.setCatalog("minecord");
+		}
+		connection.setCatalog("minecord");
+		try (Statement statement = connection.createStatement()) {
 			statement.execute("CREATE TABLE IF NOT EXISTS servers (id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), approvement BOOLEAN NOT NULL, invitation BOOLEAN NOT NULL, permanent BOOLEAN NOT NULL, locked BOOLEAN NOT NULL);");
 			statement.execute("CREATE TABLE IF NOT EXISTS channels (server INT UNSIGNED NOT NULL, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), locked BOOLEAN NOT NULL);");
 			statement.execute("CREATE TABLE IF NOT EXISTS ranks (server INT UNSIGNED NOT NULL, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), tag VARCHAR(255) PRIMARY KEY, admin BOOLEAN NOT NULL, override BOOLEAN NOT NULL, permissions TEXT(65535));");

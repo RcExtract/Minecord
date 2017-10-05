@@ -59,5 +59,5 @@ public interface ServerManager {
 	 * @return The server created.
 	 * @throws DuplicatedException If the name is used by another server.
 	 */
-	public Server createServer(String name, String desc, Boolean approvement, Boolean invitation, ChannelManager channelManager) throws DuplicatedException;
+	public Server createServer(String name, String desc, Boolean approvement, Boolean invitation, ChannelManager channelManager, RankManager rankManager) throws DuplicatedException;
 }
