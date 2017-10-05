@@ -4,6 +4,17 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 6.0
+- Now ranks are saved
+- Improved Database Manager API
+- Fixed max channels issues (changed from around 8k to 2,147,483,647)
+- Fixed max users issues per channel (changed from around 8k to unlimited)
+- Fixed a bug of wrong assignment of channels to servers (before this fix a channel in server A may be moved to server B internally)
+- Improved database saving and loading speed
+- Now registering users requires a channel for the user to join after registration, null for default server
+- Added unimplemented method getIdentifier() in interface Permission
+
+Recoded Database Manager
 ## Beta 5.0
 - Added Ranks
 - Added Permissions (Can be overrided by Bukkit permissions)
