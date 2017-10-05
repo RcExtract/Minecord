@@ -15,12 +15,14 @@ public class User implements RecordManager<UserEvent> {
 	private String nickname;
 	private String desc;
 	private OfflinePlayer player;
-	protected User(int id, String name, String nickname, String desc, OfflinePlayer player) {
+	private Channel channel;
+	protected User(int id, String name, String nickname, String desc, OfflinePlayer player, Channel channel) {
 		this.id = id;
 		this.name = name;
 		this.nickname = nickname == null ? name : nickname;
 		this.desc = desc;
-		this.setPlayer(player);
+		this.player = player;
+		this.channel = channel;
 	}
 	public int getIdentifier() {
 		return id;
@@ -44,10 +46,7 @@ public class User implements RecordManager<UserEvent> {
 		this.desc = desc;
 	}
 	public Channel getChannel() {
-		for (Server server : Minecord.getServerManager().getServers()) 
-			for (Channel channel : server.getChannelManager().getChannels()) 
-				if (channel.getMembers().contains(this)) return channel;
-		return null;
+		return channel;
 	}
 	public OfflinePlayer getPlayer() {
 		return player;
@@ -66,8 +65,7 @@ public class User implements RecordManager<UserEvent> {
 		ChannelSwitchEvent event = new ChannelSwitchEvent(channel == null ? Minecord.getServerManager().getServer("default").getChannelManager().getMainChannel() : channel, this);
 		Bukkit.getPluginManager().callEvent(event);
 		if (!(event.isCancelled())) {
-			Minecord.getServerManager().getServer(this).remove(this);
-			event.getChannel().getModifiableMemberSet().add(this);
+			this.channel = event.getChannel();
 			return true;
 		}
 		return false;

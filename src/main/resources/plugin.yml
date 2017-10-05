@@ -1,5 +1,5 @@
 name: Minecord
-version: Beta 5.0
+version: Beta 6.0
 author: RcExtract
 main: com.rcextract.minecord.Minecord
 database: true

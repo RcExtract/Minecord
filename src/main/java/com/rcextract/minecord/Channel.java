@@ -29,7 +29,6 @@ public class Channel implements RecordManager<ChannelEvent> {
 	private String name;
 	private String desc;
 	private boolean locked;
-	private Set<User> onlines;
 	private List<UserMessageEvent> recent;
 	/**
 	 * This constructor is reserved for initialization.
@@ -39,18 +38,7 @@ public class Channel implements RecordManager<ChannelEvent> {
 		this.name = name;
 		this.desc = desc;
 		this.locked = locked;
-		this.onlines = new HashSet<User>();
 		this.recent = new ArrayList<UserMessageEvent>();
-	}
-	/**
-	 * This constructor is reserved for initialization.
-	 */
-	protected Channel(int id, String name, String desc, boolean locked, Set<User> onlines) {
-		this.id = id;
-		this.name = name;
-		this.desc = desc;
-		this.locked = locked;
-		this.onlines = onlines;
 	}
 	/**
 	 * Gets the identifier of the channel.
@@ -112,15 +100,16 @@ public class Channel implements RecordManager<ChannelEvent> {
 	public void unlock() {
 		this.locked = false;
 	}
-	protected Set<User> getModifiableMemberSet() {
-		return onlines;
-	}
 	/**
 	 * Gets all online players joined the channel. Modifying this HashSet does not affect anything.
 	 * @return All online players joined the channel.
 	 */
 	public Set<User> getMembers() {
-		return new HashSet<User>(onlines);
+		Set<User> users = new HashSet<User>();
+		for (User user : Minecord.getUserManager().getUsers()) 
+			if (user.getChannel() == this) 
+				users.add(user);
+		return users;
 	}
 	/**
 	 * Gets the channel manager managing this channel.

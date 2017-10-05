@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.commons.lang.Validate;
 
 import com.rcextract.minecord.event.RankCreateEvent;
+import com.rcextract.minecord.permissions.Permission;
 
 /**
  * The rank manager helps to manage permission of each user. There is currently no plan on how 
@@ -14,7 +15,7 @@ import com.rcextract.minecord.event.RankCreateEvent;
  */
 public class RankManager {
 
-	private Set<Rank> ranks;
+	protected Set<Rank> ranks;
 	private Rank main;
 	
 	public RankManager(Rank ... ranks) {
@@ -66,7 +67,7 @@ public class RankManager {
 	public Rank initialize() {
 		if (ranks.isEmpty()) {
 			try {
-				Rank rank = createRank("member", null, null, false, false, Permission.Channel.CREATE);
+				Rank rank = createRank("member", null, null, false, false);
 				return rank;
 			} catch (DuplicatedException e) {
 				//This exception is never thrown.

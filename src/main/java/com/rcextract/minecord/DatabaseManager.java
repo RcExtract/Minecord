@@ -1,19 +1,19 @@
 package com.rcextract.minecord;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+
+import com.rcextract.minecord.permissions.Permission;
 
 /**
  * A serializer and a deserializer of data between the database and the Minecord system.
@@ -35,143 +35,123 @@ public class DatabaseManager {
 		this.connection = DriverManager.getConnection("jdbc:mysql://" + Minecord.getHost() + "?autoReconnect=true&useSSL=false", Minecord.getUsername(), Minecord.getPassword());
 	}
 	public synchronized void initialize() throws SQLException {
-		DatabaseMetaData dbmd = connection.getMetaData();
-		ResultSet databases = dbmd.getCatalogs();
-		Set<String> databasenames = new HashSet<String>();
-		while (databases.next()) databasenames.add(databases.getString("TABLE_CAT"));
-		Statement statement = null;
-		try {
-			statement = connection.createStatement();
+		try (Statement statement = connection.createStatement()) {
 			statement.executeUpdate("CREATE DATABASE IF NOT EXISTS minecord;");
-			statement.execute("USE minecord;");
-			statement.execute("CREATE TABLE IF NOT EXISTS users (id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, nickname VARCHAR(255) NOT NULL, description VARCHAR(255), uuid VARCHAR(255) NOT NULL);");
-			statement.execute("CREATE TABLE IF NOT EXISTS channels (id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), locked BOOLEAN NOT NULL, onlines TEXT(65535) NOT NULL);");
-			statement.execute("CREATE TABLE IF NOT EXISTS servers (id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), approvement BOOLEAN NOT NULL, invitation BOOLEAN NOT NULL, permanent BOOLEAN NOT NULL, locked BOOLEAN NOT NULL, channels TEXT(65535) NOT NULL, main INT UNSIGNED NOT NULL);");
-		} finally {
-			if (statement != null) statement.close();
+			connection.setCatalog("minecord");
+			statement.execute("CREATE TABLE IF NOT EXISTS servers (id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), approvement BOOLEAN NOT NULL, invitation BOOLEAN NOT NULL, permanent BOOLEAN NOT NULL, locked BOOLEAN NOT NULL);");
+			statement.execute("CREATE TABLE IF NOT EXISTS channels (server INT UNSIGNED NOT NULL, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), locked BOOLEAN NOT NULL);");
+			statement.execute("CREATE TABLE IF NOT EXISTS ranks (server INT UNSIGNED NOT NULL, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), tag VARCHAR(255) PRIMARY KEY, admin BOOLEAN NOT NULL, override BOOLEAN NOT NULL, permissions TEXT(65535));");
+			statement.execute("CREATE TABLE IF NOT EXISTS users (server INT UNSIGNED NOT NULL, channel INT UNSIGNED NOT NULL, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, nickname VARCHAR(255) NOT NULL, description VARCHAR(255), uuid VARCHAR(255) NOT NULL);");
 		}
 	}
-	/**
-	 * Loads the data from the database.
-	 * @throws SQLException If an error occurred while attempting to load the data.
-	 */
 	public synchronized void load() throws SQLException {
-		/* User:
-		 * id, name, nickname, desc, uuid;
-		 * Channel:
-		 * id, name, desc, locked, onlines
-		 * Server:
-		 * id, name, desc, approvement, invitation, permanent, locked, ChannelManager:(channels, main)
-		 */
-		Statement statement = null;
-		try {
-			statement = connection.createStatement();
-			ResultSet a = statement.executeQuery("SELECT * FROM users;");
-			Set<User> unrecordedusers = new HashSet<User>();
-			while (a.next()) {
-				int id = a.getInt("id");
-				String name = a.getString("name");
-				String nickname = a.getString("nickname");
-				String desc = a.getString("description");
-				if (desc == null) desc = "A default user description.";
-				OfflinePlayer player = Bukkit.getOfflinePlayer(UUID.fromString(a.getString("uuid")));
-				unrecordedusers.add(new User(id, name, nickname, desc, player));
+		try (Statement statement = connection.createStatement()) {
+			ResultSet serverset = statement.executeQuery("SELECT * FROM servers;");
+			while (serverset.next()) {
+				int id = serverset.getInt("id");
+				String name = serverset.getString("name");
+				String desc = serverset.getString("description");
+				boolean approvement = serverset.getBoolean("approvement");
+				boolean invitation = serverset.getBoolean("invitation");
+				boolean permanent = serverset.getBoolean("permanent");
+				boolean locked = serverset.getBoolean("locked");
+				Server server = new Server(id, name, desc, approvement, invitation, permanent, locked, new ChannelManager(), new RankManager());
+				Minecord.getControlPanel().servers.add(server); 
 			}
-			Minecord.getControlPanel().addAllUsers(unrecordedusers);
-			ResultSet b = statement.executeQuery("SELECT * FROM channels;");
-			Set<Channel> unrecordedchannels = new HashSet<Channel>();
-			while (b.next()) {
-				int id = b.getInt("id");
-				String name = b.getString("name");
-				String desc = b.getString("description");
-				if (desc == null) desc = "A default channel description.";
-				boolean locked = b.getBoolean("locked");
+			ResultSet channelset = statement.executeQuery("SELECT * FROM channels;");
+			while (channelset.next()) {
+				Server server = Minecord.getServerManager().getServer(channelset.getInt("server"));
+				int id = channelset.getInt("id");
+				String name = channelset.getString("name");
+				String desc = channelset.getString("description");
+				boolean locked = channelset.getBoolean("locked");
 				Channel channel = new Channel(id, name, desc, locked);
-				for (User user : unrecordedusers) 
-					if (Arrays.asList(b.getString("onlines").split(",")).contains(Integer.toString(user.getIdentifier()))) 
-						user.switchChannel(channel);
-				unrecordedchannels.add(channel);
+				if (server != null) server.getChannelManager().channels.add(channel);
 			}
-			ResultSet c = statement.executeQuery("SELECT * FROM servers;");
-			Set<Server> unrecordedservers = new HashSet<Server>();
-			while (c.next()) {
-				int id = c.getInt("id");
-				String name = c.getString("name");
-				String desc = c.getString("description");
-				if (desc == null) desc = "A default server description.";
-				boolean approvement = c.getBoolean("approvement");
-				boolean invitation = c.getBoolean("invitation");
-				boolean permanent = c.getBoolean("permanent");
-				boolean locked = c.getBoolean("locked");
-				Server server = new Server(id, name, desc, approvement, invitation, permanent, locked, new ChannelManager(), null);
-				for (Channel channel : unrecordedchannels) {
-					if (Arrays.asList(c.getString("channels").split(",")).contains(Integer.toString(channel.getIdentifier()))) 
-						server.getChannelManager().channels.add(channel);
-					if (c.getInt("main") == channel.getIdentifier()) 
-						server.getChannelManager().setMainChannel(channel);
-				}
-				server.getChannelManager().initialize();
-				unrecordedservers.add(server);
+			ResultSet rankset = statement.executeQuery("SELECT * FROM ranks");
+			while (rankset.next()) {
+				Server server = Minecord.getServerManager().getServer(rankset.getInt("server"));
+				String name = rankset.getString("name");
+				String desc = rankset.getString("description");
+				String tag = rankset.getString("tag");
+				boolean admin = rankset.getBoolean("admin");
+				boolean override = rankset.getBoolean("override");
+				Set<Permission> permissions = new HashSet<Permission>();
+				for (String permission : rankset.getString("permissions").split(",")) 
+					permissions.add(Permission.valueOf(Integer.parseInt(permission)));
+				Rank rank = new Rank(name, desc, tag, admin, override, permissions);
+				if (server != null) server.getRankManager().ranks.add(rank);
 			}
-			Minecord.getControlPanel().addAllServers(unrecordedservers);
-		} finally {
-			if (statement != null) statement.close();
+			ResultSet userset = statement.executeQuery("SELECT * FROM users;");
+			while (userset.next()) {
+				Server server = Minecord.getServerManager().getServer(userset.getInt("server"));
+				Channel channel = server == null ? null : server.getChannelManager().getChannel(userset.getInt("channel"));
+				int id = userset.getInt("id");
+				String name = userset.getString("name");
+				String nickname = userset.getString("nickname");
+				String desc = userset.getString("description");
+				OfflinePlayer player = Bukkit.getOfflinePlayer(UUID.fromString(userset.getString("uuid")));
+				User user = new User(id, name, nickname, desc, player, channel);
+				Minecord.getControlPanel().users.add(user);
+			}
+			Minecord.getControlPanel().initialize();
 		}
 	}
-	/**
-	 * Saves the data to the database.
-	 * @throws SQLException If an error occurred while attempting to save the data.
-	 */
 	public synchronized void save() throws SQLException {
-		Statement stmt = null;
-		try {
-			stmt = connection.createStatement();
-			stmt.executeUpdate("DROP DATABASE minecord;");
-		} finally {
-			if (stmt != null) stmt.close();
-		}
-		initialize();
-		for (Server server : Minecord.getServerManager().getServers()) {
-			PreparedStatement one = connection.prepareStatement("INSERT INTO servers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);");
-			one.setInt(1, server.getIdentifier());
-			one.setString(2, server.getName());
-			one.setString(3, server.getDescription());
-			one.setBoolean(4, server.needApprovement());
-			one.setBoolean(5, server.needInvitation());
-			one.setBoolean(6, server.isPermanent());
-			one.setBoolean(7, !(server.ready()));
-			Set<String> channelids = new HashSet<String>();
-			for (Channel channel : server.getChannelManager().getChannels()) {
-				channelids.add(Integer.toString(channel.getIdentifier()));
-				PreparedStatement two = connection.prepareStatement("INSERT INTO channels VALUES (?, ?, ?, ?, ?);");
-				two.setInt(1, channel.getIdentifier());
-				two.setString(2, channel.getName());
-				two.setString(3, channel.getDescription());
-				two.setBoolean(4, !(channel.ready()));
-				Set<String> userids = new HashSet<String>();
-				for (User user : channel.getMembers()) 
-					userids.add(Integer.toString(user.getIdentifier()));
-				two.setString(5, String.join(",", userids));
-				two.executeUpdate();
-				two.close();
+		try (PreparedStatement serverstmt = connection.prepareStatement("INSERT INTO servers VALUES (?, ?, ?, ?, ?, ?, ?);"); 
+				PreparedStatement channelstmt = connection.prepareStatement("INSERT INTO channels VALUES (?, ?, ?, ?, ?);"); 
+				PreparedStatement rankstmt = connection.prepareStatement("INSERT INTO ranks VALUES (?, ?, ?, ?, ?, ?);")) {
+			for (Server server : Minecord.getServerManager().getServers()) {
+				serverstmt.setInt(1, server.getIdentifier());
+				serverstmt.setString(2, server.getName());
+				serverstmt.setString(3, server.getDescription());
+				serverstmt.setBoolean(4, server.needApprovement());
+				serverstmt.setBoolean(5, server.needInvitation());
+				serverstmt.setBoolean(6, server.isPermanent());
+				serverstmt.setBoolean(7, !(server.ready()));
+				serverstmt.executeUpdate();
+				for (Channel channel : server.getChannelManager().getChannels()) {
+					channelstmt.setInt(1, server.getIdentifier());
+					channelstmt.setInt(2, channel.getIdentifier());
+					channelstmt.setString(3, channel.getName());
+					channelstmt.setString(4, channel.getDescription());
+					channelstmt.setBoolean(5, !(channel.ready()));
+					channelstmt.executeUpdate();
+				}
+				for (Rank rank : server.getRankManager().getRanks()) {
+					rankstmt.setInt(1, server.getIdentifier());
+					rankstmt.setString(2, rank.getName());
+					rankstmt.setString(3, rank.getDescription());
+					rankstmt.setString(4, rank.getTag());
+					rankstmt.setBoolean(5, rank.isAdministrative());
+					rankstmt.setBoolean(6, rank.isOverride());
+					StringBuilder sb = new StringBuilder();
+					for (Permission permission : rank.getPermissions()) 
+						sb.append(permission.getIdentifier()).append(',');
+					rankstmt.setString(7, sb.toString());
+					rankstmt.executeUpdate();
+				}
 			}
-			one.setString(8, String.join(",", channelids));
-			one.setInt(9, server.getChannelManager().getMainChannel().getIdentifier());
-			one.executeUpdate();
-			one.close();
 		}
-		for (User user : Minecord.getUserManager().getUsers()) {
-			PreparedStatement statement = connection.prepareStatement("INSERT INTO users VALUES (?, ?, ?, ?, ?);");
-			statement.setInt(1, user.getIdentifier());
-			statement.setString(2, user.getName());
-			statement.setString(3, user.getNickName());
-			statement.setString(4, user.getDescription());
-			statement.setString(5, user.getPlayer().getUniqueId().toString());
-			statement.executeUpdate();
-			statement.close();
+		try (PreparedStatement statement = connection.prepareStatement("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?);")) {
+			for (User user : Minecord.getUserManager().getUsers()) {
+				statement.setInt(1, user.getChannel().getChannelManager().getServer().getIdentifier());
+				statement.setInt(2, user.getChannel().getIdentifier());
+				statement.setInt(3, user.getIdentifier());
+				statement.setString(4, user.getName());
+				statement.setString(5, user.getNickName());
+				statement.setString(6, user.getDescription());
+				statement.setString(7, user.getPlayer().getUniqueId().toString());
+				statement.executeUpdate();
+			}
 		}
 	}
-	public synchronized void close() throws SQLException {
-		connection.close();
+	public Connection getConnection() {
+		return connection;
+	}
+	public void dropDatabase() throws SQLException {
+		try (Statement statement = connection.createStatement()) {
+			statement.executeUpdate("DROP DATABASE minecord;");
+		}
 	}
 }

@@ -33,7 +33,7 @@ public class EventManager implements Listener {
 	public void onPlayerLogin(PlayerLoginEvent event) {
 		Player player = event.getPlayer();
 		if (!(Minecord.getUserManager().isRegistered(player))) 
-			Minecord.getUserManager().registerPlayer(player);
+			Minecord.getUserManager().registerPlayer(player, null);
 		User user = Minecord.getUserManager().getUser(player);
 		if (user.getChannel() == null) user.switchChannel(null);
 	}

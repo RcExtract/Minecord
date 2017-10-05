@@ -93,9 +93,10 @@ public class Minecord extends JavaPlugin {
 			}
 			try {
 				getLogger().log(Level.INFO, "Saving data to database...");
+				dm.dropDatabase();
 				dm.initialize();
 				dm.save();
-				dm.close();
+				dm.getConnection().close();
 				getLogger().log(Level.INFO, "Data are successfully saved.");
 			} catch (SQLException e) {
 				getLogger().log(Level.SEVERE, "An error occurred while attempting to save the data.", e);

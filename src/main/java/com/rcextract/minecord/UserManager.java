@@ -11,7 +11,7 @@ public interface UserManager {
 	public Set<User> getUsers(String name);
 	public User getUser(OfflinePlayer player);
 	public boolean isRegistered(OfflinePlayer player);
-	public void registerPlayer(OfflinePlayer player);
+	public void registerPlayer(OfflinePlayer player, Channel channel);
 	@Deprecated
 	public void unregisterPlayer(User user);
 }

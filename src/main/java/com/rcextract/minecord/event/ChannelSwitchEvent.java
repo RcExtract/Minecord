@@ -14,7 +14,7 @@ public class ChannelSwitchEvent extends UserEvent {
 	private Channel channel;
 	public ChannelSwitchEvent(Channel channel, User user) {
 		super(user);
-		this.setChannel(channel);
+		this.channel = channel;
 	}
 
 	@Override

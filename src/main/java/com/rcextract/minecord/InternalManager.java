@@ -1,7 +1,6 @@
 package com.rcextract.minecord;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,25 +19,21 @@ import com.rcextract.minecord.event.UserRegisterEvent;
  */
 public final class InternalManager implements ServerManager, UserManager, Recordable<MinecordEvent> {
 
-	private final Set<Server> servers = new HashSet<Server>();
-	private final Set<User> users = new HashSet<User>();
+	protected final Set<Server> servers = new HashSet<Server>();
+	protected final Set<User> users = new HashSet<User>();
 	private final List<MinecordEvent> records = new ArrayList<MinecordEvent>();
 
 	protected InternalManager() {}
 	
-	public void addAllServers(Collection<? extends Server> server) {
-		servers.addAll(server);
+	public void initialize() {
 		if (getServer("default") == null)
 			try {
-				Server s = createServer("default", "This is the default server. All users will be switched to here if the redirect channel is not explicity mentioned.", false, false, null);
-				s.getChannelManager().initialize();
+				Server server = createServer("default", null, null, null, null);
+				server.getChannelManager().initialize();
 			} catch (DuplicatedException e) {
 				//This exception is never thrown.
 				e.printStackTrace();
 			}
-	}
-	public void addAllUsers(Collection<? extends User> user) {
-		users.addAll(user);
 	}
 	@Override
 	public Set<Server> getServers() {
@@ -122,13 +117,14 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	}
 	
 	@Override
-	public void registerPlayer(OfflinePlayer player) {
+	public void registerPlayer(OfflinePlayer player, Channel channel) {
 		int id = ThreadLocalRandom.current().nextInt();
 		while (getUser(id) != null || id < 0) id = ThreadLocalRandom.current().nextInt();
 		String name = player.getName();
 		String nickname = name;
 		String desc = "A default user description";
-		User user = new User(id, name, nickname, desc, player);
+		if (channel == null) channel = Minecord.getServerManager().getServer("default").getChannelManager().getMainChannel();
+		User user = new User(id, name, nickname, desc, player, channel);
 		UserRegisterEvent event = new UserRegisterEvent(user);
 		Bukkit.getPluginManager().callEvent(event);
 		if (!(event.isCancelled())) users.add(user);

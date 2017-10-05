@@ -2,6 +2,8 @@ package com.rcextract.minecord;
 
 import java.util.Set;
 
+import com.rcextract.minecord.permissions.Permission;
+
 public class Rank {
 
 	private String name;
