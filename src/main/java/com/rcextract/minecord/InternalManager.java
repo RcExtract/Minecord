@@ -28,12 +28,13 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	public void initialize() {
 		if (getServer("default") == null)
 			try {
-				Server server = createServer("default", null, null, null, null, null);
-				server.getChannelManager().initialize();
+				createServer("default", null, null, null, null, null);
 			} catch (DuplicatedException e) {
 				//This exception is never thrown.
 				e.printStackTrace();
 			}
+		for (Server server : getServers()) 
+			server.getChannelManager().initialize();
 	}
 	@Override
 	public Set<Server> getServers() {
@@ -82,6 +83,7 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		int id = ThreadLocalRandom.current().nextInt();
 		while (getServer(id) != null || id < 0) id = ThreadLocalRandom.current().nextInt();
 		Server server = new Server(id, name, desc, approvement, invitation, false, false, channelManager, rankManager);
+		server.getChannelManager().initialize();
 		ServerCreateEvent event = new ServerCreateEvent(server);
 		Bukkit.getPluginManager().callEvent(event);
 		if (!(event.isCancelled())) servers.add(server);

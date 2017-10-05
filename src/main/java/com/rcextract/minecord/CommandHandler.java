@@ -116,7 +116,7 @@ public class CommandHandler implements CommandExecutor {
 					return true;
 				}
 				for (Channel channel : server.getChannelManager().getChannels()) {
-					player.sendMessage(channel.getIdentifier() + channel.getName() + channel.getMembers().size());
+					player.sendMessage(channel.getIdentifier() + channel.getName() + channel.getMembers().size() + channel.isMain());
 				}
 				return true;
 			}
@@ -158,14 +158,14 @@ public class CommandHandler implements CommandExecutor {
 				}
 				System.out.println(user == null);
 				System.out.println(channel == null);
-				if (user.switchChannel(channel)) {
+				if (user.setChannel(channel)) {
 					player.sendMessage(ChatColor.GREEN + "You have successfully joined the server!");
 					return true;
 				}
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("leave")) {
-				if (user.switchChannel(null)) 
+				if (user.setChannel(null)) 
 					player.sendMessage(ChatColor.GREEN + "You have successfully left the channel!");
 				return true;
 			}

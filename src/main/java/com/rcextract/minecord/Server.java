@@ -171,7 +171,7 @@ public class Server implements RecordManager<ServerEvent> {
 	 * @return If the removal succeeded.
 	 */
 	public boolean remove(User user) {
-		return user.switchChannel(null);
+		return user.setChannel(null);
 	}
 	/**
 	 * Gets the channel manager.

@@ -4,6 +4,9 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 6.2
+- Fixed auto main channel assignment issue
+
 ## Beta 6.1
 - Fixed null Rank Manager
 - Fixed No database selected bug

@@ -54,6 +54,7 @@ public class Minecord extends JavaPlugin {
 					dm.initialize();
 					dm.load();
 					minecord.getLogger().log(Level.INFO, "Data are successfully loaded.");
+					initialize();
 				} catch (ClassNotFoundException | SQLException e) {
 					minecord.getLogger().log(Level.SEVERE, "An error occured while attempting to load the data.", e);
 					errorDisable = true;
@@ -75,8 +76,6 @@ public class Minecord extends JavaPlugin {
 		new IncompatibleDetector(this).runTask(this);
 		getCommand("minecord").setExecutor(new CommandHandler());
 		getCommand("users").setExecutor(new CommandHandler());
-		for (User user : Minecord.getUserManager().getUsers()) 
-			if (user.getChannel() == null) user.switchChannel(null);
 	}
 	@Override
 	public void onDisable() {
@@ -196,12 +195,19 @@ public class Minecord extends JavaPlugin {
 	}
 	public static String applyFormat(String name, String nickname, String uuid, String message, String date) {
 		String format = new String(getFormat());
-		format.replaceAll("<playername>", name);
-		format.replaceAll("<playernickname", nickname);
-		format.replaceAll("<playeruuid>", uuid);
-		format.replaceAll("<message>", message);
-		format.replaceAll("<time>", date);
+		format.replaceAll("playername", name);
+		format.replaceAll("playernickname", nickname);
+		format.replaceAll("playeruuid", uuid);
+		format.replaceAll("message", message);
+		format.replaceAll("time", date);
 		format.replaceAll("&", "¡±");
 		return format;
+	}
+	private static void initialize() {
+		for (OfflinePlayer player : Bukkit.getOfflinePlayers()) 
+			if (!(Minecord.getUserManager().isRegistered(player))) Minecord.getUserManager().registerPlayer(player, null);
+		for (User user : Minecord.getUserManager().getUsers()) {
+			if (user.getChannel() == null) user.setChannel(null);
+		}
 	}
 }

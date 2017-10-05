@@ -117,7 +117,7 @@ public class ChannelManager {
 		Bukkit.getPluginManager().callEvent(event);
 		if (!(event.isCancelled())) {
 			channels.add(channel);
-			if (main == null) channel = main;
+			if (main == null) main = channel;
 		}
 		return channel;
 	}

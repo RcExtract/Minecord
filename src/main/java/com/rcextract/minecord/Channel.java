@@ -125,9 +125,7 @@ public class Channel implements RecordManager<ChannelEvent> {
 	 * @return If this channel is main in the channel manager defined.
 	 */
 	public boolean isMain() {
-		ChannelManager cm = getChannelManager();
-		if (cm != null && cm.getMainChannel() == this) return true;
-		return false;
+		return getChannelManager().getMainChannel() == this;
 	}
 	@Override
 	public List<ChannelEvent> getRecords() {

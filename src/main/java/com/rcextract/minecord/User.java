@@ -61,7 +61,7 @@ public class User implements RecordManager<UserEvent> {
 	 * @param user The target user.
 	 * @return If the process succeeded.
 	 */
-	public boolean switchChannel(Channel channel) {
+	public boolean setChannel(Channel channel) {
 		ChannelSwitchEvent event = new ChannelSwitchEvent(channel == null ? Minecord.getServerManager().getServer("default").getChannelManager().getMainChannel() : channel, this);
 		Bukkit.getPluginManager().callEvent(event);
 		if (!(event.isCancelled())) {

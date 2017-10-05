@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -41,9 +42,9 @@ public class DatabaseManager {
 		connection.setCatalog("minecord");
 		try (Statement statement = connection.createStatement()) {
 			statement.execute("CREATE TABLE IF NOT EXISTS servers (id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), approvement BOOLEAN NOT NULL, invitation BOOLEAN NOT NULL, permanent BOOLEAN NOT NULL, locked BOOLEAN NOT NULL);");
-			statement.execute("CREATE TABLE IF NOT EXISTS channels (server INT UNSIGNED NOT NULL, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), locked BOOLEAN NOT NULL);");
+			statement.execute("CREATE TABLE IF NOT EXISTS channels (server INT UNSIGNED NOT NULL, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), locked BOOLEAN NOT NULL, main BOOLEAN NOT NULL);");
 			statement.execute("CREATE TABLE IF NOT EXISTS ranks (server INT UNSIGNED NOT NULL, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), tag VARCHAR(255) PRIMARY KEY, admin BOOLEAN NOT NULL, override BOOLEAN NOT NULL, permissions TEXT(65535));");
-			statement.execute("CREATE TABLE IF NOT EXISTS users (server INT UNSIGNED NOT NULL, channel INT UNSIGNED NOT NULL, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, nickname VARCHAR(255) NOT NULL, description VARCHAR(255), uuid VARCHAR(255) NOT NULL);");
+			statement.execute("CREATE TABLE IF NOT EXISTS users (server INT UNSIGNED, channel INT UNSIGNED, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, nickname VARCHAR(255) NOT NULL, description VARCHAR(255), uuid VARCHAR(255) NOT NULL);");
 		}
 	}
 	public synchronized void load() throws SQLException {
@@ -69,6 +70,7 @@ public class DatabaseManager {
 				boolean locked = channelset.getBoolean("locked");
 				Channel channel = new Channel(id, name, desc, locked);
 				if (server != null) server.getChannelManager().channels.add(channel);
+				if (channelset.getBoolean("main")) server.getChannelManager().setMainChannel(channel);
 			}
 			ResultSet rankset = statement.executeQuery("SELECT * FROM ranks");
 			while (rankset.next()) {
@@ -101,7 +103,7 @@ public class DatabaseManager {
 	}
 	public synchronized void save() throws SQLException {
 		try (PreparedStatement serverstmt = connection.prepareStatement("INSERT INTO servers VALUES (?, ?, ?, ?, ?, ?, ?);"); 
-				PreparedStatement channelstmt = connection.prepareStatement("INSERT INTO channels VALUES (?, ?, ?, ?, ?);"); 
+				PreparedStatement channelstmt = connection.prepareStatement("INSERT INTO channels VALUES (?, ?, ?, ?, ?, ?);"); 
 				PreparedStatement rankstmt = connection.prepareStatement("INSERT INTO ranks VALUES (?, ?, ?, ?, ?, ?);")) {
 			for (Server server : Minecord.getServerManager().getServers()) {
 				serverstmt.setInt(1, server.getIdentifier());
@@ -118,6 +120,7 @@ public class DatabaseManager {
 					channelstmt.setString(3, channel.getName());
 					channelstmt.setString(4, channel.getDescription());
 					channelstmt.setBoolean(5, !(channel.ready()));
+					channelstmt.setBoolean(6, channel.isMain());
 					channelstmt.executeUpdate();
 				}
 				for (Rank rank : server.getRankManager().getRanks()) {
@@ -137,8 +140,13 @@ public class DatabaseManager {
 		}
 		try (PreparedStatement statement = connection.prepareStatement("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?);")) {
 			for (User user : Minecord.getUserManager().getUsers()) {
-				statement.setInt(1, user.getChannel().getChannelManager().getServer().getIdentifier());
-				statement.setInt(2, user.getChannel().getIdentifier());
+				try {
+					statement.setInt(1, user.getChannel().getChannelManager().getServer().getIdentifier());
+					statement.setInt(2, user.getChannel().getIdentifier());
+				} catch (NullPointerException e) {
+					statement.setNull(1, Types.INTEGER);
+					statement.setNull(2, Types.INTEGER);
+				}
 				statement.setInt(3, user.getIdentifier());
 				statement.setString(4, user.getName());
 				statement.setString(5, user.getNickName());

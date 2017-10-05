@@ -1,17 +1,17 @@
 package com.rcextract.minecord;
 
-import java.util.ArrayList;
+/*import java.util.ArrayList;*/
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
+/*import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Map;*/
 import java.util.Set;
-import java.util.UUID;
+/*import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import org.bukkit.ChatColor;*/
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -20,8 +20,8 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 
-import com.rcextract.minecord.event.UserMessageEvent;
-import com.rcextract.minecord.event.UserTagEvent;
+/*import com.rcextract.minecord.event.UserMessageEvent;
+import com.rcextract.minecord.event.UserTagEvent;*/
 
 public class EventManager implements Listener {
 
@@ -35,7 +35,7 @@ public class EventManager implements Listener {
 		if (!(Minecord.getUserManager().isRegistered(player))) 
 			Minecord.getUserManager().registerPlayer(player, null);
 		User user = Minecord.getUserManager().getUser(player);
-		if (user.getChannel() == null) user.switchChannel(null);
+		if (user.getChannel() == null) user.setChannel(null);
 	}
 	/**
 	 * Distributes the messages to suitable players and serialize them.
@@ -52,19 +52,21 @@ public class EventManager implements Listener {
 		//Sender in user form.
 		User sender = Minecord.getUserManager().getUser(player);
 		//Message sent time.
-		Date date = new Date();
+		/*Date date = new Date();*/
 		//Players that will instantly receive message after finish handling.
-		Set<Player> recipients = new HashSet<Player>();
+		/*Set<Player> recipients = new HashSet<Player>();*/
 		/*Users that will receive message, regardless of its online state. Message will be sent to 
 		online players instantly regarding to the above set. Offline players will receive the 
 		message while loading messages when joined the server.*/
 		Set<User> users = new HashSet<User>();
 		//All user tags occured in the message.
-		List<UserTagEvent> tags = new ArrayList<UserTagEvent>();
-		System.out.println(sender.getChannel() == null);
+		/*List<UserTagEvent> tags = new ArrayList<UserTagEvent>();*/
 		users.addAll(sender.getChannel().getMembers());
+		for (User user : Minecord.getUserManager().getUsers()) 
+			if (user.getPlayer().isOnline()) 
+				user.getPlayer().getPlayer().sendMessage(Minecord.applyFormat(user.getName(), user.getNickName(), user.getPlayer().getUniqueId().toString(), message, new Date().toString()));
 		//Tag detection
-		LinkedHashMap<String, Player> segments = new LinkedHashMap<String, Player>();
+		/*LinkedHashMap<String, Player> segments = new LinkedHashMap<String, Player>();
 		for (String segment : event.getMessage().split("@")) segments.put(segment, null);
 		boolean start = true;
 		loop:
@@ -136,6 +138,7 @@ public class EventManager implements Listener {
 			for (User user : users) if (user.getPlayer().isOnline()) recipients.add(user.getPlayer().getPlayer());
 			msg.send(recipients.toArray(new Player[recipients.size()]));
 		}
+		*/
 	}
 	/**
 	 * Loads previously dismissed messages. Format is not fixed.
