@@ -4,6 +4,15 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 7.0
+- Removed temporary command users
+- Tracked all command updates
+- Added command server
+- Added command channel
+- Added filtering function in command servers and channels
+- Fixed reload command actions
+- Improved command responses
+
 ## Beta 6.3
 - Fixed duplicated user registration issue
 - Fixed UUID equality check statement

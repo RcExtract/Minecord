@@ -1,10 +1,8 @@
 name: Minecord
-version: Beta 6.3
+version: Beta 7.0
 author: RcExtract
 main: com.rcextract.minecord.Minecord
 database: true
 commands:
     minecord:
-        usage: /<command>
-    users:
         usage: /<command>
