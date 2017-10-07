@@ -44,7 +44,7 @@ public class DatabaseManager {
 			statement.execute("CREATE TABLE IF NOT EXISTS servers (id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), approvement BOOLEAN NOT NULL, invitation BOOLEAN NOT NULL, permanent BOOLEAN NOT NULL, locked BOOLEAN NOT NULL);");
 			statement.execute("CREATE TABLE IF NOT EXISTS channels (server INT UNSIGNED NOT NULL, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), locked BOOLEAN NOT NULL, main BOOLEAN NOT NULL);");
 			statement.execute("CREATE TABLE IF NOT EXISTS ranks (server INT UNSIGNED NOT NULL, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), tag VARCHAR(255) PRIMARY KEY, admin BOOLEAN NOT NULL, override BOOLEAN NOT NULL, permissions TEXT(65535));");
-			statement.execute("CREATE TABLE IF NOT EXISTS users (server INT UNSIGNED, channel INT UNSIGNED, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, nickname VARCHAR(255) NOT NULL, description VARCHAR(255), uuid VARCHAR(255) NOT NULL);");
+			statement.execute("CREATE TABLE IF NOT EXISTS users (server INT UNSIGNED, channel INT UNSIGNED, rank VARCHAR(255), id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, nickname VARCHAR(255) NOT NULL, description VARCHAR(255), uuid VARCHAR(255) NOT NULL);");
 		}
 	}
 	public synchronized void load() throws SQLException {
@@ -90,12 +90,13 @@ public class DatabaseManager {
 			while (userset.next()) {
 				Server server = Minecord.getServerManager().getServer(userset.getInt("server"));
 				Channel channel = server == null ? null : server.getChannelManager().getChannel(userset.getInt("channel"));
+				Rank rank = server == null ? null : server.getRankManager().getRankByTag(userset.getString("rank"));
 				int id = userset.getInt("id");
 				String name = userset.getString("name");
 				String nickname = userset.getString("nickname");
 				String desc = userset.getString("description");
 				OfflinePlayer player = Bukkit.getOfflinePlayer(UUID.fromString(userset.getString("uuid")));
-				User user = new User(id, name, nickname, desc, player, channel);
+				User user = new User(id, name, nickname, desc, player.getUniqueId(), channel, rank);
 				Minecord.getControlPanel().users.add(user);
 			}
 			Minecord.getControlPanel().initialize();
@@ -138,20 +139,22 @@ public class DatabaseManager {
 				}
 			}
 		}
-		try (PreparedStatement statement = connection.prepareStatement("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?);")) {
+		try (PreparedStatement statement = connection.prepareStatement("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?);")) {
 			for (User user : Minecord.getUserManager().getUsers()) {
 				try {
 					statement.setInt(1, user.getChannel().getChannelManager().getServer().getIdentifier());
 					statement.setInt(2, user.getChannel().getIdentifier());
+					statement.setString(3, user.getRank().getTag());
 				} catch (NullPointerException e) {
 					statement.setNull(1, Types.INTEGER);
 					statement.setNull(2, Types.INTEGER);
+					statement.setNull(3, Types.VARCHAR);
 				}
-				statement.setInt(3, user.getIdentifier());
-				statement.setString(4, user.getName());
-				statement.setString(5, user.getNickName());
-				statement.setString(6, user.getDescription());
-				statement.setString(7, user.getPlayer().getUniqueId().toString());
+				statement.setInt(4, user.getIdentifier());
+				statement.setString(5, user.getName());
+				statement.setString(6, user.getNickName());
+				statement.setString(7, user.getDescription());
+				statement.setString(8, user.getUUID().toString());
 				statement.executeUpdate();
 			}
 		}

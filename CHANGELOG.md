@@ -4,6 +4,11 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 6.3
+- Fixed duplicated user registration issue
+- Fixed UUID equality check statement
+- User instances now contains UUIDs of players instead of player instances
+
 ## Beta 6.2
 - Fixed auto main channel assignment issue
 

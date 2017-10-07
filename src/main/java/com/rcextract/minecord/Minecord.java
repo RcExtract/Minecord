@@ -166,7 +166,7 @@ public class Minecord extends JavaPlugin {
 	 * @param wash Determination of clearing out old messages.
 	 */
 	public static void updateMessage(User user, boolean wash) {
-		OfflinePlayer off = user.getPlayer();
+		OfflinePlayer off = Bukkit.getOfflinePlayer(user.getUUID());
 		if (off.isOnline()) {
 			Player player = off.getPlayer();
 			if (wash) for (int i = 0; i <= 25; i++) player.sendMessage("");
@@ -174,8 +174,8 @@ public class Minecord extends JavaPlugin {
 				if (e instanceof UserMessageEvent) {
 					UserMessageEvent event = (UserMessageEvent) e;
 					User sender = event.getUser();
-					JSONMessage message = JSONMessage.create().suggestCommand("@uuid:" + sender.getPlayer().getUniqueId().toString() + " ");
-					message.then(applyFormat(sender.getName(), sender.getNickName(), sender.getPlayer().getUniqueId().toString(), event.getMessage(), event.getDate().toString()));
+					JSONMessage message = JSONMessage.create().suggestCommand("@uuid:" + sender.getUUID().toString() + " ");
+					message.then(applyFormat(sender.getName(), sender.getNickName(), sender.getUUID().toString(), event.getMessage(), event.getDate().toString()));
 					message.send(player);
 				}
 			}
@@ -205,9 +205,10 @@ public class Minecord extends JavaPlugin {
 	}
 	private static void initialize() {
 		for (OfflinePlayer player : Bukkit.getOfflinePlayers()) 
-			if (!(Minecord.getUserManager().isRegistered(player))) Minecord.getUserManager().registerPlayer(player, null);
+			if (!(Minecord.getUserManager().isRegistered(player.getUniqueId()))) Minecord.getUserManager().registerPlayer(player, null, null);
 		for (User user : Minecord.getUserManager().getUsers()) {
 			if (user.getChannel() == null) user.setChannel(null);
+			if (user.getRank() == null) user.setRank(null);
 		}
 	}
 }

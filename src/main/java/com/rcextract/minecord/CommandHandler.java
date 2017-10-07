@@ -61,7 +61,7 @@ public class CommandHandler implements CommandExecutor {
 				return true;
 			}
 			Player player = (Player) sender;
-			User user = Minecord.getUserManager().getUser(player);
+			User user = Minecord.getUserManager().getUser(player.getUniqueId());
 			if (args[0].equalsIgnoreCase("gui")) {
 				if (gui.get(player) == null) gui.put(player, false);
 				gui.put(player, !(gui.get(player)));
@@ -167,6 +167,19 @@ public class CommandHandler implements CommandExecutor {
 			if (args[0].equalsIgnoreCase("leave")) {
 				if (user.setChannel(null)) 
 					player.sendMessage(ChatColor.GREEN + "You have successfully left the channel!");
+				return true;
+			}
+			if (args[0].equalsIgnoreCase("profile")) {
+				StringBuilder sb = new StringBuilder();
+				sb.append(user.getIdentifier());
+				sb.append(user.getName());
+				sb.append(user.getNickName());
+				sb.append(user.getDescription());
+				sb.append(player.getName());
+				sb.append(user.getChannel().getIdentifier());
+				sb.append(user.getChannel().getName());
+				/*sb.append(user.getRank().getName());*/
+				player.sendMessage(sb.toString());
 				return true;
 			}
 			return true;

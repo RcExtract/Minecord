@@ -1,8 +1,7 @@
 package com.rcextract.minecord;
 
 import java.util.Set;
-
-import org.bukkit.OfflinePlayer;
+import java.util.UUID;
 
 /**
  * A management system for Minecord Servers. This class only allows one instance to exist in the 
@@ -32,7 +31,7 @@ public interface ServerManager {
 	 * @param player The parameter of members of the target server.
 	 * @return The server the player is inside, regardless of its online state. Null if not found.
 	 */
-	public Server getServer(OfflinePlayer player);
+	public Server getServer(UUID player);
 	/**
 	 * Gets a server by if the user is inside.
 	 * @param user The parameter of members of the target server.

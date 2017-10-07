@@ -3,11 +3,11 @@ package com.rcextract.minecord;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 
 import com.rcextract.minecord.event.ChannelCreateEvent;
 
@@ -83,7 +83,7 @@ public class ChannelManager {
 	 * @param user The paramater of members of the target channel.
 	 * @return The server the player is inside, regardless of its online state. Null if not found.
 	 */
-	public Channel getChannel(OfflinePlayer player) {
+	public Channel getChannel(UUID player) {
 		User user = Minecord.getUserManager().getUser(player);
 		if (user == null) return null;
 		return getChannel(user);

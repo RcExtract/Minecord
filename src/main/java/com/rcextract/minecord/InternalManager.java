@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.lang.Validate;
@@ -54,7 +55,7 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	}
 
 	@Override
-	public Server getServer(OfflinePlayer player) {
+	public Server getServer(UUID player) {
 		User user = getUser(player);
 		if (user == null) return null;
 		return getServer(user);
@@ -109,34 +110,40 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	}
 
 	@Override
-	public User getUser(OfflinePlayer player) {
-		for (User user : users) if (user.getPlayer() == player) return user;
+	public User getUser(UUID player) {
+		for (User user : users) 
+			if (user.getUUID().equals(player)) 
+				return user;
 		return null;
 	}
 
 	@Override
-	public boolean isRegistered(OfflinePlayer player) {
+	public boolean isRegistered(UUID player) {
 		return getUser(player) != null;
 	}
 	
 	@Override
-	public void registerPlayer(OfflinePlayer player, Channel channel) {
+	public User registerPlayer(OfflinePlayer player, Channel channel, Rank rank) {
+		System.out.println("register player called");
 		int id = ThreadLocalRandom.current().nextInt();
 		while (getUser(id) != null || id < 0) id = ThreadLocalRandom.current().nextInt();
 		String name = player.getName();
 		String nickname = name;
 		String desc = "A default user description";
 		if (channel == null) channel = Minecord.getServerManager().getServer("default").getChannelManager().getMainChannel();
-		User user = new User(id, name, nickname, desc, player, channel);
+		if (rank == null) rank = channel.getChannelManager().getServer().getRankManager().getMain();
+		else if (rank.getRankManager().getServer() != channel.getChannelManager().getServer()) throw new IllegalStateException("Both channel and rank must be in the same server!");
+		User user = new User(id, name, nickname, desc, player.getUniqueId(), channel, rank);
 		UserRegisterEvent event = new UserRegisterEvent(user);
 		Bukkit.getPluginManager().callEvent(event);
 		if (!(event.isCancelled())) users.add(user);
+		return user;
 	}
 
 	@Override
 	@Deprecated
 	public void unregisterPlayer(User user) {
-		
+		users.remove(user);
 	}
 
 	public void record(MinecordEvent event) {

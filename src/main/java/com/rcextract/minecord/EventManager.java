@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;*/
 import java.util.Set;
+
+import org.bukkit.Bukkit;
 /*import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -32,9 +34,9 @@ public class EventManager implements Listener {
 	@EventHandler
 	public void onPlayerLogin(PlayerLoginEvent event) {
 		Player player = event.getPlayer();
-		if (!(Minecord.getUserManager().isRegistered(player))) 
-			Minecord.getUserManager().registerPlayer(player, null);
-		User user = Minecord.getUserManager().getUser(player);
+		if (Minecord.getUserManager().getUser(player.getUniqueId()) == null) 
+			Minecord.getUserManager().registerPlayer(player, null, null);
+		User user = Minecord.getUserManager().getUser(player.getUniqueId());
 		if (user.getChannel() == null) user.setChannel(null);
 	}
 	/**
@@ -50,7 +52,7 @@ public class EventManager implements Listener {
 		//Sender in player form.
 		Player player = event.getPlayer();
 		//Sender in user form.
-		User sender = Minecord.getUserManager().getUser(player);
+		User sender = Minecord.getUserManager().getUser(player.getUniqueId());
 		//Message sent time.
 		/*Date date = new Date();*/
 		//Players that will instantly receive message after finish handling.
@@ -63,8 +65,8 @@ public class EventManager implements Listener {
 		/*List<UserTagEvent> tags = new ArrayList<UserTagEvent>();*/
 		users.addAll(sender.getChannel().getMembers());
 		for (User user : Minecord.getUserManager().getUsers()) 
-			if (user.getPlayer().isOnline()) 
-				user.getPlayer().getPlayer().sendMessage(Minecord.applyFormat(user.getName(), user.getNickName(), user.getPlayer().getUniqueId().toString(), message, new Date().toString()));
+			if (Bukkit.getOfflinePlayer(user.getUUID()).isOnline()) 
+				Bukkit.getPlayer(user.getUUID()).sendMessage(Minecord.applyFormat(user.getName(), user.getNickName(), user.getUUID().toString(), message, new Date().toString()));
 		//Tag detection
 		/*LinkedHashMap<String, Player> segments = new LinkedHashMap<String, Player>();
 		for (String segment : event.getMessage().split("@")) segments.put(segment, null);
@@ -146,8 +148,8 @@ public class EventManager implements Listener {
 	 */
 	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent event) {
-		User user = Minecord.getUserManager().getUser(event.getPlayer());
+		User user = Minecord.getUserManager().getUser(event.getPlayer().getUniqueId());
 		if (user.getChannel() != null)
-			Minecord.updateMessage(Minecord.getUserManager().getUser(event.getPlayer()), false);
+			Minecord.updateMessage(Minecord.getUserManager().getUser(event.getPlayer().getUniqueId()), false);
 	}
 }

@@ -1,9 +1,9 @@
 package com.rcextract.minecord;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 
 import com.rcextract.minecord.event.ChannelSwitchEvent;
 import com.rcextract.minecord.event.UserEvent;
@@ -14,15 +14,17 @@ public class User implements RecordManager<UserEvent> {
 	private String name;
 	private String nickname;
 	private String desc;
-	private OfflinePlayer player;
+	private UUID player;
 	private Channel channel;
-	protected User(int id, String name, String nickname, String desc, OfflinePlayer player, Channel channel) {
+	private Rank rank;
+	protected User(int id, String name, String nickname, String desc, UUID player, Channel channel, Rank rank) {
 		this.id = id;
 		this.name = name;
 		this.nickname = nickname == null ? name : nickname;
 		this.desc = desc;
 		this.player = player;
 		this.channel = channel;
+		this.setRank(rank);
 	}
 	public int getIdentifier() {
 		return id;
@@ -48,10 +50,10 @@ public class User implements RecordManager<UserEvent> {
 	public Channel getChannel() {
 		return channel;
 	}
-	public OfflinePlayer getPlayer() {
+	public UUID getUUID() {
 		return player;
 	}
-	public void setPlayer(OfflinePlayer player) {
+	public void setUUID(UUID player) {
 		this.player = player;
 	}
 	/**
@@ -69,6 +71,13 @@ public class User implements RecordManager<UserEvent> {
 			return true;
 		}
 		return false;
+	}
+	public Rank getRank() {
+		return rank;
+	}
+	public void setRank(Rank rank) {
+		if (rank == null) rank = Minecord.getServerManager().getServer("default").getRankManager().getMain();
+		this.rank = rank;
 	}
 	@Override
 	public List<UserEvent> getRecords() {
