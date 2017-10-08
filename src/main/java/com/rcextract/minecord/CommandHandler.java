@@ -1,6 +1,5 @@
 package com.rcextract.minecord;
 
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,28 +30,16 @@ public class CommandHandler implements CommandExecutor {
 			}
 			if (args[0].equalsIgnoreCase("reload")) {
 				if (args.length == 1) {
-					Minecord.reloadConfiguration();
-					try {
-						Minecord.getDatabaseManager().initialize();
-						Minecord.getDatabaseManager().load();
-					} catch (SQLException e) {
-						sender.sendMessage(ChatColor.RED + "An error occurred while attempting to load data from database.");
-						e.printStackTrace();
-					}
+					Minecord.loadProperties();
+					Minecord.loadData();
 					return true;
 				}
 				if (args[1].equalsIgnoreCase("config")) {
-					Minecord.reloadConfiguration();
+					Minecord.loadProperties();
 					return true;
 				}
 				if (args[1].equalsIgnoreCase("database") || args[1].equalsIgnoreCase("db")) {
-					try {
-						Minecord.getDatabaseManager().initialize();
-						Minecord.getDatabaseManager().load();
-					} catch (SQLException e) {
-						sender.sendMessage(ChatColor.RED + "An error occurred while attempting to load data from database.");
-						e.printStackTrace();
-					}
+					Minecord.loadData();
 					return true;
 				}
 				sender.sendMessage(ChatColor.RED + "Invalid type of data. Please choose config / database (db), or blank out the option for reloading both config and database.");
@@ -184,8 +171,31 @@ public class CommandHandler implements CommandExecutor {
 				}
 				return true;
 			}
+			if (args[0].equalsIgnoreCase("profile")) {
+				Set<User> users = new HashSet<User>();
+				if (args.length == 1) {
+					sender.sendMessage(ChatColor.RED + "Please specify a user name!");
+					return true;
+				}
+				users.addAll(Minecord.getUserManager().getUsers(args[1]));
+				if (users.isEmpty()) {
+					sender.sendMessage(ChatColor.YELLOW + "No users found.");
+					return true;
+				}
+				for (User target : users) {
+					sender.sendMessage("User #" + Integer.toString(target.getIdentifier()) + ":");
+					sender.sendMessage("Name: " + target.getName());
+					sender.sendMessage("Nickname: " + target.getNickName());
+					sender.sendMessage("Description: " + target.getDescription());
+					sender.sendMessage("UUID: " + target.getUUID().toString());
+					sender.sendMessage("Server: " + target.getChannel().getChannelManager().getServer().getName());
+					sender.sendMessage("Channel: " + target.getChannel().getName());
+					sender.sendMessage("Rank: " + target.getRank().getName());
+				}
+				return true;
+			}
 			if (!(sender instanceof Player)) {
-				sender.sendMessage(ChatColor.RED + "Only players can choose if they want to control with GUI!");
+				sender.sendMessage(ChatColor.RED + "This command can only be executed as a player!");
 				return true;
 			}
 			Player player = (Player) sender;
@@ -232,8 +242,6 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.YELLOW + "You are already in the channel!");
 					return true;
 				}
-				System.out.println(user == null);
-				System.out.println(channel == null);
 				if (user.setChannel(channel)) {
 					player.sendMessage(ChatColor.GREEN + "You have successfully joined the server!");
 					return true;
@@ -243,19 +251,6 @@ public class CommandHandler implements CommandExecutor {
 			if (args[0].equalsIgnoreCase("leave")) {
 				if (user.setChannel(null)) 
 					player.sendMessage(ChatColor.GREEN + "You have successfully left the channel!");
-				return true;
-			}
-			if (args[0].equalsIgnoreCase("profile")) {
-				StringBuilder sb = new StringBuilder();
-				sb.append(user.getIdentifier());
-				sb.append(user.getName());
-				sb.append(user.getNickName());
-				sb.append(user.getDescription());
-				sb.append(player.getName());
-				sb.append(user.getChannel().getIdentifier());
-				sb.append(user.getChannel().getName());
-				/*sb.append(user.getRank().getName());*/
-				player.sendMessage(sb.toString());
 				return true;
 			}
 			return true;

@@ -34,8 +34,14 @@ public final class InternalManager implements ServerManager, UserManager, Record
 				//This exception is never thrown.
 				e.printStackTrace();
 			}
-		for (Server server : getServers()) 
+		for (Server server : getServers()) {
 			server.getChannelManager().initialize();
+			server.getRankManager().initialize();
+		}
+		for (User user : Minecord.getUserManager().getUsers()) {
+			if (user.getChannel() == null) user.setChannel(null);
+			if (user.getRank() == null) user.setRank(null);
+		}
 	}
 	@Override
 	public Set<Server> getServers() {
@@ -85,6 +91,7 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		while (getServer(id) != null || id < 0) id = ThreadLocalRandom.current().nextInt();
 		Server server = new Server(id, name, desc, approvement, invitation, false, false, channelManager, rankManager);
 		server.getChannelManager().initialize();
+		server.getRankManager().initialize();
 		ServerCreateEvent event = new ServerCreateEvent(server);
 		Bukkit.getPluginManager().callEvent(event);
 		if (!(event.isCancelled())) servers.add(server);
@@ -124,7 +131,6 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	
 	@Override
 	public User registerPlayer(OfflinePlayer player, Channel channel, Rank rank) {
-		System.out.println("register player called");
 		int id = ThreadLocalRandom.current().nextInt();
 		while (getUser(id) != null || id < 0) id = ThreadLocalRandom.current().nextInt();
 		String name = player.getName();

@@ -4,6 +4,14 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 8.0
+- Added command profile
+- Fixed user null rank and auto rank assignment
+- Improved API a lot
+- Rearranged statements into different methods
+- Fixed command reload
+- Removed message printing statements
+
 ## Beta 7.0
 - Removed temporary command users
 - Tracked all command updates

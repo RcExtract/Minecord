@@ -33,48 +33,10 @@ public class Minecord extends JavaPlugin {
 		minecord = this;
 		cm = new ConfigManager(this);
 		panel = new InternalManager();
-		properties = new Properties();
-		try {
-			getLogger().log(Level.INFO, "Loading properties from minecord.properties...");
-			cm.load(properties);
-			getLogger().log(Level.INFO, "Properties are successfully loaded.");
-		} catch (IOException e) {
-			getLogger().log(Level.SEVERE, "An error occurred while attempting to load the properties.", e);
-			errorDisable = true;
-			Bukkit.getPluginManager().disablePlugin(this);
-			return;
-		}
-		Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
-
-			@Override
-			public void run() {
-				try {
-					minecord.getLogger().log(Level.INFO, "Loading data from database...");
-					dm = new DatabaseManager();
-					dm.initialize();
-					dm.load();
-					minecord.getLogger().log(Level.INFO, "Data are successfully loaded.");
-					initialize();
-				} catch (ClassNotFoundException | SQLException e) {
-					minecord.getLogger().log(Level.SEVERE, "An error occured while attempting to load the data.", e);
-					errorDisable = true;
-					Bukkit.getPluginManager().disablePlugin(minecord);
-					return;
-				}
-			}
-			
-		});
-		Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
-
-			@Override
-			public void run() {
-				Updater.checkForUpdate(minecord);
-			}
-			
-		});
-		Bukkit.getPluginManager().registerEvents(new EventManager(), this);
+		loadProperties();
+		loadData();
+		checkUpdate();
 		new IncompatibleDetector(this).runTask(this);
-		getCommand("minecord").setExecutor(new CommandHandler(this));
 	}
 	@Override
 	public void onDisable() {
@@ -94,7 +56,7 @@ public class Minecord extends JavaPlugin {
 				dm.dropDatabase();
 				dm.initialize();
 				dm.save();
-				dm.getConnection().close();
+				dm.close();
 				getLogger().log(Level.INFO, "Data are successfully saved.");
 			} catch (SQLException e) {
 				getLogger().log(Level.SEVERE, "An error occurred while attempting to save the data.", e);
@@ -194,20 +156,88 @@ public class Minecord extends JavaPlugin {
 	}
 	public static String applyFormat(String name, String nickname, String uuid, String message, String date) {
 		String format = new String(getFormat());
-		format.replaceAll("playername", name);
-		format.replaceAll("playernickname", nickname);
-		format.replaceAll("playeruuid", uuid);
-		format.replaceAll("message", message);
-		format.replaceAll("time", date);
-		format.replaceAll("&", "¡±");
+		format = format.replaceAll("playername", name);
+		format = format.replaceAll("playernickname", nickname);
+		format = format.replaceAll("playeruuid", uuid);
+		format = format.replaceAll("message", message);
+		format = format.replaceAll("time", date);
+		format = format.replaceAll("&", "¡±");
 		return format;
 	}
-	private static void initialize() {
+	public static void initialize() {
+		if (minecord == null) throw new IllegalStateException("Minecord is not ready.");
+		if (dm == null) throw new IllegalStateException("Minecord is not ready.");
+		Bukkit.getPluginManager().registerEvents(new EventManager(), minecord);
+		minecord.getCommand("minecord").setExecutor(new CommandHandler(minecord));
 		for (OfflinePlayer player : Bukkit.getOfflinePlayers()) 
-			if (!(Minecord.getUserManager().isRegistered(player.getUniqueId()))) Minecord.getUserManager().registerPlayer(player, null, null);
-		for (User user : Minecord.getUserManager().getUsers()) {
-			if (user.getChannel() == null) user.setChannel(null);
-			if (user.getRank() == null) user.setRank(null);
+			if (!(Minecord.getUserManager().isRegistered(player.getUniqueId()))) 
+				Minecord.getUserManager().registerPlayer(player, null, null);
+		panel.initialize();
+	}
+	public static void loadProperties() {
+		if (minecord == null) throw new IllegalStateException("Minecord is not ready.");
+		properties = new Properties();
+		try {
+			minecord.getLogger().log(Level.INFO, "Loading properties from minecord.properties...");
+			cm.load(properties);
+			minecord.getLogger().log(Level.INFO, "Properties are successfully loaded.");
+		} catch (IOException e) {
+			minecord.getLogger().log(Level.SEVERE, "An error occurred while attempting to load the properties.", e);
+			errorDisable = true;
+			Bukkit.getPluginManager().disablePlugin(minecord);
+			return;
 		}
+	}
+	public static void loadData() {
+		if (minecord == null) throw new IllegalStateException("Minecord is not ready.");
+		if (properties == null) throw new IllegalStateException("Properties are not loaded.");
+		Bukkit.getScheduler().runTaskAsynchronously(minecord, new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					minecord.getLogger().log(Level.INFO, "Loading data from database...");
+					dm = new DatabaseManager();
+					dm.initialize();
+					dm.load();
+					minecord.getLogger().log(Level.INFO, "Data are successfully loaded.");
+					initialize();
+				} catch (ClassNotFoundException | SQLException e) {
+					minecord.getLogger().log(Level.SEVERE, "An error occured while attempting to load the data.", e);
+					errorDisable = true;
+					Bukkit.getPluginManager().disablePlugin(minecord);
+					return;
+				} finally {
+					initialize();
+				}
+			}
+			
+		});
+	}
+	public static void checkUpdate() {
+		Bukkit.getScheduler().runTaskAsynchronously(minecord, new Runnable() {
+
+			@Override
+			public void run() {
+				switch (new Updater(minecord).check()) {
+				case CONNECTION_FAILURE: {
+					minecord.getLogger().log(Level.SEVERE, "An error occured while attempting to check for an update.");
+					minecord.getLogger().log(Level.INFO, "Usually this error is caused by failure on connecting to spigot server.");
+				}
+					break;
+				case DATA_ACCESSED:
+					break;
+				case UPDATE_AVAILABLE: minecord.getLogger().log(Level.INFO, "An update is available at https://www.spigotmc.org/resources/minecord.44055");
+					break;
+				case UP_TO_DATE: minecord.getLogger().log(Level.INFO, "Your version is up to date.");
+					break;
+				default:
+					break;
+
+				}
+
+			}
+			
+		});
 	}
 }

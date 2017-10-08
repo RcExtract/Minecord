@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.logging.Level;
 
 public class Updater {
 
@@ -13,48 +12,48 @@ public class Updater {
 	private static final String REQUEST_METHOD = "POST";
 	private static final String LINK = "http://www.spigotmc.org/api/general.php";
 	
-	public static void checkForUpdate(Minecord minecord) {
+	public static enum UpdaterResult {
+		CONNECTION_FAILURE, DATA_ACCESSED, UP_TO_DATE, UPDATE_AVAILABLE;
+	}
+	
+	private Minecord minecord;
+	public Updater(Minecord minecord) {
+		this.minecord = minecord;
+	}
+	public UpdaterResult check() {
 		HttpURLConnection connection = null;
 		try {
 			connection = (HttpURLConnection) new URL(LINK).openConnection();
 		} catch (IOException e) {
-			minecord.getLogger().log(Level.SEVERE, "An error occured while attempting to check for an update.", e);
-			minecord.getLogger().log(Level.INFO, "Usually this error is caused by failure on connecting to spigot server.");
-			return;
+			return UpdaterResult.CONNECTION_FAILURE;
 		}
 		connection.setDoOutput(true);
 		try {
 			connection.setRequestMethod(REQUEST_METHOD);
 			connection.getOutputStream().write(("key=" + API_KEY + "&resource=44055").getBytes("UTF-8"));
 		} catch (IOException e) {
-			minecord.getLogger().log(Level.SEVERE, "An error occured while attempting to check for an update.", e);
-			minecord.getLogger().log(Level.INFO, "Usually this error is caused by failure on connecting to spigot server.");
-			return;
+			return UpdaterResult.CONNECTION_FAILURE;
 		}
 		String label = null;
 		try {
 			label = new BufferedReader(new InputStreamReader(connection.getInputStream())).readLine();
 		} catch (IOException e) {
 			//This exception is never thrown.
-			e.printStackTrace();
+			return UpdaterResult.DATA_ACCESSED;
 		}
 		String current = minecord.getDescription().getVersion();
 		if (!(label.startsWith("Beta ") || current.startsWith("Beta "))) {
 			if (Double.parseDouble(label) > Double.parseDouble(current)) {
-				minecord.getLogger().log(Level.INFO, "A new version is available! Please update as soon as possible.");
-				return;
+				return UpdaterResult.UPDATE_AVAILABLE;
 			}
-			minecord.getLogger().log(Level.INFO, "Your minecord is up to date.");
-			return;
+			return UpdaterResult.UP_TO_DATE;
 		}
 		if (!(label.startsWith("Beta ")) && current.startsWith("Beta ")) {
-			minecord.getLogger().log(Level.INFO, "A new version is available! Please update as soon as possible.");
-			return;
+			return UpdaterResult.UPDATE_AVAILABLE;
 		}
 		if (Double.parseDouble(label.substring(5)) > Double.parseDouble(current.substring(5))) {
-			minecord.getLogger().log(Level.INFO, "A new version is available! Please update as soon as possible.");
-			return;
+			return UpdaterResult.UPDATE_AVAILABLE;
 		}
-		minecord.getLogger().log(Level.INFO, "Your version is up to date.");
+		return UpdaterResult.UP_TO_DATE;
 	}
 }

@@ -81,8 +81,10 @@ public class DatabaseManager {
 				boolean admin = rankset.getBoolean("admin");
 				boolean override = rankset.getBoolean("override");
 				Set<Permission> permissions = new HashSet<Permission>();
-				for (String permission : rankset.getString("permissions").split(",")) 
-					permissions.add(Permission.valueOf(Integer.parseInt(permission)));
+				if (!(rankset.getString("permissions").isEmpty())) 
+					for (String permission : rankset.getString("permissions").split(",")) { 
+						permissions.add(Permission.valueOf(Integer.parseInt(permission)));
+					}
 				Rank rank = new Rank(name, desc, tag, admin, override, permissions);
 				if (server != null) server.getRankManager().ranks.add(rank);
 			}
@@ -99,13 +101,12 @@ public class DatabaseManager {
 				User user = new User(id, name, nickname, desc, player.getUniqueId(), channel, rank);
 				Minecord.getControlPanel().users.add(user);
 			}
-			Minecord.getControlPanel().initialize();
 		}
 	}
 	public synchronized void save() throws SQLException {
 		try (PreparedStatement serverstmt = connection.prepareStatement("INSERT INTO servers VALUES (?, ?, ?, ?, ?, ?, ?);"); 
 				PreparedStatement channelstmt = connection.prepareStatement("INSERT INTO channels VALUES (?, ?, ?, ?, ?, ?);"); 
-				PreparedStatement rankstmt = connection.prepareStatement("INSERT INTO ranks VALUES (?, ?, ?, ?, ?, ?);")) {
+				PreparedStatement rankstmt = connection.prepareStatement("INSERT INTO ranks VALUES (?, ?, ?, ?, ?, ?, ?);")) {
 			for (Server server : Minecord.getServerManager().getServers()) {
 				serverstmt.setInt(1, server.getIdentifier());
 				serverstmt.setString(2, server.getName());
@@ -159,8 +160,8 @@ public class DatabaseManager {
 			}
 		}
 	}
-	public Connection getConnection() {
-		return connection;
+	public void close() throws SQLException {
+		connection.close();
 	}
 	public void dropDatabase() throws SQLException {
 		try (Statement statement = connection.createStatement()) {
