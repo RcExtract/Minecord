@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.lang.Validate;
@@ -27,13 +26,6 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	protected InternalManager() {}
 	
 	public void initialize() {
-		if (getServer("default") == null)
-			try {
-				createServer("default", null, null, null, null, null);
-			} catch (DuplicatedException e) {
-				//This exception is never thrown.
-				e.printStackTrace();
-			}
 		for (Server server : getServers()) {
 			server.getChannelManager().initialize();
 			server.getRankManager().initialize();
@@ -41,6 +33,7 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		for (User user : Minecord.getUserManager().getUsers()) {
 			if (user.getChannel() == null) user.setChannel(null);
 			if (user.getRank() == null) user.setRank(null);
+			user.applyRank();
 		}
 	}
 	@Override
@@ -61,7 +54,7 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	}
 
 	@Override
-	public Server getServer(UUID player) {
+	public Server getServer(OfflinePlayer player) {
 		User user = getUser(player);
 		if (user == null) return null;
 		return getServer(user);
@@ -77,6 +70,10 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	public Server getServer(Channel channel) {
 		for (Server server : servers) if (server.getChannelManager().getChannels().contains(channel)) return server;
 		return null;
+	}
+	@Override
+	public Server getMain() {
+		return getServer("default");
 	}
 	@Override
 	public Server createServer(String name, String desc, Boolean approvement, Boolean invitation, ChannelManager channelManager, RankManager rankManager) throws DuplicatedException {
@@ -117,33 +114,42 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	}
 
 	@Override
-	public User getUser(UUID player) {
+	public User getUser(OfflinePlayer player) {
 		for (User user : users) 
-			if (user.getUUID().equals(player)) 
+			if (user.getPlayer().getUniqueId().equals(player.getUniqueId())) 
 				return user;
 		return null;
 	}
 
 	@Override
-	public boolean isRegistered(UUID player) {
+	public boolean isRegistered(OfflinePlayer player) {
 		return getUser(player) != null;
 	}
 	
 	@Override
-	public User registerPlayer(OfflinePlayer player, Channel channel, Rank rank) {
+	public User registerPlayer(OfflinePlayer player, Channel channel, Rank rank) throws IllegalStateException {
 		int id = ThreadLocalRandom.current().nextInt();
 		while (getUser(id) != null || id < 0) id = ThreadLocalRandom.current().nextInt();
+		System.out.println(getMain() == null);
+		System.out.println(getServer("default") == null);
 		String name = player.getName();
 		String nickname = name;
 		String desc = "A default user description";
-		if (channel == null) channel = Minecord.getServerManager().getServer("default").getChannelManager().getMainChannel();
+		if (channel == null) channel = getMain().getChannelManager().getMainChannel();
 		if (rank == null) rank = channel.getChannelManager().getServer().getRankManager().getMain();
 		else if (rank.getRankManager().getServer() != channel.getChannelManager().getServer()) throw new IllegalStateException("Both channel and rank must be in the same server!");
-		User user = new User(id, name, nickname, desc, player.getUniqueId(), channel, rank);
+		User user = new User(id, name, nickname, desc, player, channel, rank);
+		user.applyRank();
 		UserRegisterEvent event = new UserRegisterEvent(user);
 		Bukkit.getPluginManager().callEvent(event);
 		if (!(event.isCancelled())) users.add(user);
 		return user;
+	}
+	
+	@Override
+	public User registerPlayerIfAbsent(OfflinePlayer player, Channel channel, Rank rank) {
+		if (getUser(player) == null) return registerPlayer(player, channel, rank);
+		return getUser(player);
 	}
 
 	@Override

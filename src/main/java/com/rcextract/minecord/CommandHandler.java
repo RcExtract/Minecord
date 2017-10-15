@@ -5,12 +5,15 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
+
+import com.rcextract.minecord.event.ChannelSwitchEvent;
 
 public class CommandHandler implements CommandExecutor {
 
@@ -187,11 +190,25 @@ public class CommandHandler implements CommandExecutor {
 					sender.sendMessage("Name: " + target.getName());
 					sender.sendMessage("Nickname: " + target.getNickName());
 					sender.sendMessage("Description: " + target.getDescription());
-					sender.sendMessage("UUID: " + target.getUUID().toString());
+					sender.sendMessage("UUID: " + target.getPlayer().getUniqueId().toString());
 					sender.sendMessage("Server: " + target.getChannel().getChannelManager().getServer().getName());
 					sender.sendMessage("Channel: " + target.getChannel().getName());
 					sender.sendMessage("Rank: " + target.getRank().getName());
 				}
+				return true;
+			}
+			if (args[0].equalsIgnoreCase("create")) {
+				if (args.length == 1) {
+					sender.sendMessage(ChatColor.RED + "Please specify a name!");
+					return true;
+				}
+				try {
+					Minecord.getServerManager().createServer(args[1], null, null, null, null, null);
+				} catch (DuplicatedException e) {
+					sender.sendMessage(ChatColor.RED + "A server with that name already exists!");
+					return true;
+				}
+				sender.sendMessage(ChatColor.GREEN + "A server has been successfully created!");
 				return true;
 			}
 			if (!(sender instanceof Player)) {
@@ -199,7 +216,7 @@ public class CommandHandler implements CommandExecutor {
 				return true;
 			}
 			Player player = (Player) sender;
-			User user = Minecord.getUserManager().getUser(player.getUniqueId());
+			User user = Minecord.getUserManager().getUser(player);
 			if (args[0].equalsIgnoreCase("gui")) {
 				if (gui.get(player) == null) gui.put(player, false);
 				gui.put(player, !(gui.get(player)));
@@ -242,15 +259,37 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.YELLOW + "You are already in the channel!");
 					return true;
 				}
-				if (user.setChannel(channel)) {
+				ChannelSwitchEvent event = new ChannelSwitchEvent(channel, user);
+				Bukkit.getPluginManager().callEvent(event);
+				if (!(event.isCancelled())) {
+					user.setChannel(event.getChannel());
 					player.sendMessage(ChatColor.GREEN + "You have successfully joined the server!");
 					return true;
 				}
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("leave")) {
-				if (user.setChannel(null)) 
+				ChannelSwitchEvent event = new ChannelSwitchEvent(Minecord.getServerManager().getServer("default").getChannelManager().getMainChannel(), user);
+				
+				if (!(event.isCancelled())) {
+					user.setChannel(event.getChannel());
 					player.sendMessage(ChatColor.GREEN + "You have successfully left the channel!");
+					return true;
+				}
+				return true;
+			}
+			if (args[0].equalsIgnoreCase("editserver")) {
+				if (args.length == 1) {
+					player.sendMessage(ChatColor.RED + "Please specify a server!");
+					return true;
+				}
+				Server server = Minecord.getServerManager().getServer(args[1]);
+				if (server == null) {
+					player.sendMessage(ChatColor.RED + "Server is not found!");
+					return true;
+				}
+				ServerEditor editor = new ServerEditor(server, minecord);
+				player.openInventory(editor.getInventory());
 				return true;
 			}
 			return true;

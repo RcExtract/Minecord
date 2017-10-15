@@ -4,6 +4,23 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 10.0
+- You can now create servers with command
+- You can now edit servers with inventory
+- Added a few events
+
+## Beta 9.0 (Commit Missing)
+- Removed permissions interface
+- Removed permission enumerations
+- Removed Minecord permission package
+- Rank now has Bukkit permissions instead of Minecord permissions
+- Fixed default server generated after user registration bug
+- Temporarily removed user specific permission for plugin stable
+- Now depends on Vault
+- Now updates permissions for a user once the rank has changed
+- Fixed database saving issues
+- Added permission minecord.create-server
+
 ## Beta 8.0
 - Added command profile
 - Fixed user null rank and auto rank assignment

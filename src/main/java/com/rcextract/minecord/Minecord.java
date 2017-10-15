@@ -11,8 +11,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.rcextract.minecord.event.MinecordEvent;
-import com.rcextract.minecord.event.UserEvent;
 import com.rcextract.minecord.event.UserMessageEvent;
+
+import net.milkbowl.vault.permission.Permission;
 
 /**
  * The core class of Minecord, also the core class of the plugin.
@@ -26,13 +27,15 @@ public class Minecord extends JavaPlugin {
 	private static DatabaseManager dm;
 	protected static Properties properties;
 	private static boolean errorDisable;
-	private static Minecord minecord;
+	protected static Minecord minecord;
+	private static Permission permission;
 	
 	@Override
 	public void onEnable() {
 		minecord = this;
 		cm = new ConfigManager(this);
 		panel = new InternalManager();
+		permission = Bukkit.getServicesManager().getRegistration(Permission.class).getProvider();
 		loadProperties();
 		loadData();
 		checkUpdate();
@@ -127,18 +130,12 @@ public class Minecord extends JavaPlugin {
 	 * @param wash Determination of clearing out old messages.
 	 */
 	public static void updateMessage(User user, boolean wash) {
-		OfflinePlayer off = Bukkit.getOfflinePlayer(user.getUUID());
-		if (off.isOnline()) {
-			Player player = off.getPlayer();
-			if (wash) for (int i = 0; i <= 25; i++) player.sendMessage("");
-			for (UserEvent e : user.getRecords()) {
-				if (e instanceof UserMessageEvent) {
-					UserMessageEvent event = (UserMessageEvent) e;
-					User sender = event.getUser();
-					JSONMessage message = JSONMessage.create().suggestCommand("@uuid:" + sender.getUUID().toString() + " ");
-					message.then(applyFormat(sender.getName(), sender.getNickName(), sender.getUUID().toString(), event.getMessage(), event.getDate().toString()));
-					message.send(player);
-				}
+		if (user.isOnline()) {
+			Player player = user.getOnlinePlayer();
+			if (wash) user.clear();
+			for (UserMessageEvent event : panel.getRecords(UserMessageEvent.class)) {
+				if (event.getChannel() == user.getChannel()) 
+					player.sendMessage(event.getMessage());
 			}
 		}
 	}
@@ -169,8 +166,14 @@ public class Minecord extends JavaPlugin {
 		if (dm == null) throw new IllegalStateException("Minecord is not ready.");
 		Bukkit.getPluginManager().registerEvents(new EventManager(), minecord);
 		minecord.getCommand("minecord").setExecutor(new CommandHandler(minecord));
+		if (panel.getServer("default") == null)
+			try {
+				panel.createServer("default", null, null, null, null, null);
+			} catch (DuplicatedException e) {
+				//This exception is never thrown.
+			}
 		for (OfflinePlayer player : Bukkit.getOfflinePlayers()) 
-			if (!(Minecord.getUserManager().isRegistered(player.getUniqueId()))) 
+			if (!(Minecord.getUserManager().isRegistered(player))) 
 				Minecord.getUserManager().registerPlayer(player, null, null);
 		panel.initialize();
 	}
@@ -239,5 +242,8 @@ public class Minecord extends JavaPlugin {
 			}
 			
 		});
+	}
+	public static Permission getPermissionManager() {
+		return permission;
 	}
 }

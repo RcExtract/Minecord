@@ -1,8 +1,13 @@
 name: Minecord
-version: Beta 8.0
+version: Beta 10.0
 author: RcExtract
 main: com.rcextract.minecord.Minecord
 database: true
+depend: [Vault]
 commands:
     minecord:
         usage: /<command>
+permissions:
+    minecord.create-server:
+        default: true
+        description: Permits a player to create a server.

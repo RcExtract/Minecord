@@ -29,7 +29,7 @@ public class Channel implements RecordManager<ChannelEvent> {
 	private String name;
 	private String desc;
 	private boolean locked;
-	private List<UserMessageEvent> recent;
+	protected List<UserMessageEvent> recent;
 	/**
 	 * This constructor is reserved for initialization.
 	 */

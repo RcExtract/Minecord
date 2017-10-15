@@ -114,6 +114,7 @@ public class Server implements RecordManager<ServerEvent> {
 	/**
 	 * Changes the state of invitation requirement.
 	 * @param approvement The new state of invitation requirement.
+	 * @return 
 	 */
 	public void setInvitation(boolean invitation) {
 		this.invitation = invitation;
@@ -128,6 +129,7 @@ public class Server implements RecordManager<ServerEvent> {
 	/**
 	 * Sets if the users can delete the server.
 	 * @param approvement The new state of if the users can delete the server.
+	 * @return 
 	 */
 	public void setPermanent(boolean permanent) {
 		this.permanent = permanent;
@@ -142,8 +144,10 @@ public class Server implements RecordManager<ServerEvent> {
 	/**
 	 * Locks the server. All functions should be disabled for normal users and they all should 
 	 * be kicked.
+	 * @return 
 	 */
-	public void lock() {
+	public void lock() throws IllegalStateException {
+		if (locked) throw new IllegalStateException();
 		this.locked = true;
 	}
 	/**
@@ -151,7 +155,8 @@ public class Server implements RecordManager<ServerEvent> {
 	 * rank manager. Only users with permission {@code minecord.managelock.server} should have
 	 * access to unlocking.
 	 */
-	public void unlock() {
+	public void unlock() throws IllegalStateException {
+		if (!(locked)) throw new IllegalStateException();
 		this.locked = false;
 	}
 	/**
@@ -168,10 +173,9 @@ public class Server implements RecordManager<ServerEvent> {
 	 * Removes a player from this channel. This method simply invokes the User.switchChannel(Channel)
 	 * method, redirecting the user to the default channel.
 	 * @param user The target user.
-	 * @return If the removal succeeded.
 	 */
-	public boolean remove(User user) {
-		return user.setChannel(null);
+	public void remove(User user) {
+		user.setChannel(null);
 	}
 	/**
 	 * Gets the channel manager.

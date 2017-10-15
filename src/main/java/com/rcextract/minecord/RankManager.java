@@ -5,9 +5,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang.Validate;
+import org.bukkit.permissions.Permission;
 
 import com.rcextract.minecord.event.RankCreateEvent;
-import com.rcextract.minecord.permissions.Permission;
 
 /**
  * The rank manager helps to manage permission of each user. There is currently no plan on how 

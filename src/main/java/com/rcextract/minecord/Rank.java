@@ -2,7 +2,7 @@ package com.rcextract.minecord;
 
 import java.util.Set;
 
-import com.rcextract.minecord.permissions.Permission;
+import org.bukkit.permissions.Permission;
 
 public class Rank {
 
@@ -51,6 +51,21 @@ public class Rank {
 		this.override = override;
 	}
 	public Set<Permission> getPermissions() {
+		/*
+		 * minecord:
+		 *   <server>:
+		 *     disband, rename, redescribe, setapprovement, setinvitation, setpermanent, lock, unlock, kick, invite, approve, join-on-lock, stay-on-lock
+		 *     channel:
+		 *       create, setmain
+		 *       <channel>:
+		 *         disband, rename, redescribe, lock, unlock, join-on-lock, stay-on-lock, chat, chat-on-lock
+		 *     rank:
+		 *       create, setmain
+		 *       <rank>:
+		 *         delete, rename, redescribe, settag, setadmin, setoverride, editpermissions
+		 *   create-server
+		 *       
+		 */
 		return permissions;
 	}
 	public RankManager getRankManager() {
