@@ -66,11 +66,12 @@ public class EventManager implements Listener {
 		int id = ThreadLocalRandom.current().nextInt();
 		while (UserMessageEvent.REGISTERED_IDENTIFIERS.contains(id)) id = ThreadLocalRandom.current().nextInt();
 		UserMessageEvent e = new UserMessageEvent(id, sender.getChannel(), sender, message, users, null, null);
-		Bukkit.getPluginManager().callEvent(event);
+		Bukkit.getPluginManager().callEvent(e);
 		if (e.isCancelled()) return;
 		for (User user : users) 
-			if (user.isOnline()) 
+			if (user.isOnline()) {
 				user.getOnlinePlayer().sendMessage(Minecord.applyFormat(user.getName(), user.getNickName(), user.getPlayer().getUniqueId().toString(), e.getMessage(), new Date().toString()));
+			}
 		//Tag detection
 		/*LinkedHashMap<String, Player> segments = new LinkedHashMap<String, Player>();
 		for (String segment : event.getMessage().split("@")) segments.put(segment, null);

@@ -102,11 +102,11 @@ public class DatabaseManager {
 				String nickname = userset.getString("nickname");
 				String desc = userset.getString("description");
 				OfflinePlayer player = Bukkit.getOfflinePlayer(UUID.fromString(userset.getString("uuid")));
-				Set<Permission> perms = new HashSet<Permission>();
-				if (!(rankset.getString("permissions").isEmpty())) 
+				/*Set<Permission> perms = new HashSet<Permission>();
+				if (!(userset.getString("permissions").isEmpty())) 
 					for (String permission : userset.getString("permissions").split(",")) 
-						perms.add(permissions.get(Integer.parseInt(permission) + 1));
-				User user = new User(id, name, nickname, desc, player, channel, rank);
+						perms.add(permissions.get(Integer.parseInt(permission) + 1));*/
+				User user = new User(id, name, nickname, desc, player, channel, rank/*, perms*/);
 				Minecord.getControlPanel().users.add(user);
 			}
 		}
@@ -152,7 +152,10 @@ public class DatabaseManager {
 							} else {
 								sb.append(savedperms.indexOf(permission) + 1).append(',');
 							}
-						rankstmt.setString(7, sb.toString().substring(0, sb.toString().length() - 2));
+						String permissions = sb.toString();
+						if (permissions.length() > 0) 
+							permissions = permissions.substring(0, permissions.length() - 2);
+						rankstmt.setString(7, permissions);
 						rankstmt.executeUpdate();
 					}
 				}

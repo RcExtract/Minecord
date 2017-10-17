@@ -130,8 +130,6 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	public User registerPlayer(OfflinePlayer player, Channel channel, Rank rank) throws IllegalStateException {
 		int id = ThreadLocalRandom.current().nextInt();
 		while (getUser(id) != null || id < 0) id = ThreadLocalRandom.current().nextInt();
-		System.out.println(getMain() == null);
-		System.out.println(getServer("default") == null);
 		String name = player.getName();
 		String nickname = name;
 		String desc = "A default user description";
