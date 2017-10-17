@@ -4,6 +4,11 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 10.1
+- Fixed the large bug which crashes the server when chatting
+- Fixed data column not existed bug on loading
+- Removed debugging messages
+
 ## Beta 10.0
 - You can now create servers with command
 - You can now edit servers with inventory
