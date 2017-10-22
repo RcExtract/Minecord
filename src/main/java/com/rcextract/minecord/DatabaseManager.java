@@ -37,13 +37,13 @@ public class DatabaseManager {
 	}
 	public synchronized void initialize() throws SQLException {
 		try (Statement statement = connection.createStatement()) {
-			statement.executeUpdate("CREATE DATABASE IF NOT EXISTS minecord;");
+			statement.executeUpdate("CREATE DATABASE IF NOT EXISTS " + databaseName() + ";");
 		}
-		connection.setCatalog("minecord");
+		connection.setCatalog(databaseName());
 		try (Statement statement = connection.createStatement()) {
 			statement.executeUpdate("CREATE TABLE IF NOT EXISTS servers (id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), approvement BOOLEAN NOT NULL, invitation BOOLEAN NOT NULL, permanent BOOLEAN NOT NULL, locked BOOLEAN NOT NULL);");
-			statement.executeUpdate("CREATE TABLE IF NOT EXISTS channels (server INT UNSIGNED NOT NULL, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), locked BOOLEAN NOT NULL, main BOOLEAN NOT NULL);");
-			statement.executeUpdate("CREATE TABLE IF NOT EXISTS ranks (server INT UNSIGNED NOT NULL, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), tag VARCHAR(255) PRIMARY KEY, admin BOOLEAN NOT NULL, override BOOLEAN NOT NULL, permissions TEXT(65535));");
+			statement.executeUpdate("CREATE TABLE IF NOT EXISTS channels (server INT UNSIGNED NOT NULL, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL, description VARCHAR(255), locked BOOLEAN NOT NULL, main BOOLEAN NOT NULL);");
+			statement.executeUpdate("CREATE TABLE IF NOT EXISTS ranks (server INT UNSIGNED NOT NULL, name VARCHAR(255) NOT NULL, description VARCHAR(255), tag VARCHAR(255) PRIMARY KEY, admin BOOLEAN NOT NULL, override BOOLEAN NOT NULL, permissions TEXT(65535), main BOOLEAN NOT NULL);");
 			statement.executeUpdate("CREATE TABLE IF NOT EXISTS users (server INT UNSIGNED NOT NULL, channel INT UNSIGNED NOT NULL, rank VARCHAR(255) NOT NULL, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, nickname VARCHAR(255) NOT NULL, description VARCHAR(255), uuid VARCHAR(255) NOT NULL);");
 			statement.executeUpdate("CREATE TABLE IF NOT EXISTS permissions (id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT, permission VARCHAR(255) NOT NULL UNIQUE KEY);");
 		}
@@ -91,6 +91,7 @@ public class DatabaseManager {
 						perms.add(permissions.get(Integer.parseInt(permission) + 1));
 				Rank rank = new Rank(name, desc, tag, admin, override, perms);
 				if (server != null) server.getRankManager().ranks.add(rank);
+				if (rankset.getBoolean("main")) server.getRankManager().setMain(rank);
 			}
 			ResultSet userset = statement.executeQuery("SELECT * FROM users;");
 			while (userset.next()) {
@@ -116,7 +117,7 @@ public class DatabaseManager {
 		try (PreparedStatement permstmt = connection.prepareStatement("INSERT INTO permissions VALUES (DEFAULT, ?);")) {
 			try (PreparedStatement serverstmt = connection.prepareStatement("INSERT INTO servers VALUES (?, ?, ?, ?, ?, ?, ?);"); 
 					PreparedStatement channelstmt = connection.prepareStatement("INSERT INTO channels VALUES (?, ?, ?, ?, ?, ?);"); 
-					PreparedStatement rankstmt = connection.prepareStatement("INSERT INTO ranks VALUES (?, ?, ?, ?, ?, ?, ?);")) {
+					PreparedStatement rankstmt = connection.prepareStatement("INSERT INTO ranks VALUES (?, ?, ?, ?, ?, ?, ?, ?);")) {
 				for (Server server : Minecord.getServerManager().getServers()) {
 					serverstmt.setInt(1, server.getIdentifier());
 					serverstmt.setString(2, server.getName());
@@ -156,6 +157,7 @@ public class DatabaseManager {
 						if (permissions.length() > 0) 
 							permissions = permissions.substring(0, permissions.length() - 2);
 						rankstmt.setString(7, permissions);
+						rankstmt.setBoolean(8, rank.isMain());
 						rankstmt.executeUpdate();
 					}
 				}
@@ -190,7 +192,10 @@ public class DatabaseManager {
 	}
 	public void dropDatabase() throws SQLException {
 		try (Statement statement = connection.createStatement()) {
-			statement.executeUpdate("DROP DATABASE minecord;");
+			statement.executeUpdate("DROP DATABASE " + databaseName());
 		}
+	}
+	public String databaseName() {
+		return "minecord" + Minecord.dbversion;
 	}
 }

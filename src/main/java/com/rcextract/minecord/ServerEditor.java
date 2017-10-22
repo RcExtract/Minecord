@@ -29,12 +29,14 @@ public class ServerEditor implements Listener {
 		namemeta.setLore(Arrays.asList(new String[] {
 				"Click me to edit the server name!"
 		}));
+		name.setItemMeta(namemeta);
 		ItemStack desc = new ItemStack(Material.CONCRETE);
 		ItemMeta descmeta = desc.getItemMeta();
 		descmeta.setDisplayName("Description: " + server.getDescription());
 		descmeta.setLore(Arrays.asList(new String[] {
 				"Click me to edit the server description!"
 		}));
+		desc.setItemMeta(descmeta);
 		inventory.setItem(10, name);
 		inventory.setItem(11, desc);
 		Bukkit.getPluginManager().registerEvents(this, minecord);
@@ -60,6 +62,10 @@ public class ServerEditor implements Listener {
 				if (name.startsWith("Description: ")) {
 					editingProperty = "Desc";
 					return;
+				}
+				if (InventoryClickEvent.getHandlerList().getRegisteredListeners().length == 1) {
+					event.setCancelled(true);
+					event.getWhoClicked().closeInventory();
 				}
 			}
 		}

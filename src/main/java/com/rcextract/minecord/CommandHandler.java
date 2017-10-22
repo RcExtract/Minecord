@@ -102,8 +102,8 @@ public class CommandHandler implements CommandExecutor {
 						sender.sendMessage("Approvement: " + (server.needApprovement() ? "activated" : "deactivated"));
 						sender.sendMessage("Invitation: " + (server.needInvitation() ? "activated" : "deactivated"));
 						sender.sendMessage("Permanent: " + (server.isPermanent() ? "activated" : "deactivated"));
-						sender.sendMessage("The server is " + (!(server.ready()) ? "not" : "") + " ready to join.");
-						sender.sendMessage("There " + (server.getMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(server.getMembers().size()) + "member" + (server.getMembers().size() == 1 ? "" : "s") + "online.");
+						sender.sendMessage("The server is " + (!(server.ready()) ? "not " : "") + "ready to join.");
+						sender.sendMessage("There " + (server.getMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(server.getMembers().size()) + " member" + (server.getMembers().size() == 1 ? "" : "s") + " online.");
 					}
 				}
 				return true;
@@ -128,14 +128,12 @@ public class CommandHandler implements CommandExecutor {
 					sender.sendMessage(ChatColor.RED + "The channel does not exist!");
 					return true;
 				}
-				sender.sendMessage("Server #" + Integer.toString(server.getIdentifier()) + ":");
-				sender.sendMessage("Name: " + server.getName());
-				sender.sendMessage("Description: " + server.getDescription());
-				sender.sendMessage("Approvement: " + (server.needApprovement() ? "activated" : "deactivated"));
-				sender.sendMessage("Invitation: " + (server.needInvitation() ? "activated" : "deactivated"));
-				sender.sendMessage("Permanent: " + (server.isPermanent() ? "activated" : "deactivated"));
-				sender.sendMessage("The server is " + (!(server.ready()) ? "not" : "") + " ready to join.");
-				sender.sendMessage("There " + (server.getMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(server.getMembers().size()) + "member" + (server.getMembers().size() == 1 ? "" : "s") + "online.");
+				sender.sendMessage("Server #" + Integer.toString(server.getIdentifier()) + ",");
+				sender.sendMessage("Channel #" + Integer.toString(channel.getIdentifier()) + ":");
+				sender.sendMessage("Name: " + channel.getName());
+				sender.sendMessage("Description: " + channel.getDescription());
+				sender.sendMessage("The channel is " + (!(channel.ready()) ? "not" : "") + " ready to join.");
+				sender.sendMessage("There " + (channel.getMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(channel.getMembers().size()) + "member" + (channel.getMembers().size() == 1 ? "" : "s") + "online.");
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("channels")) {
@@ -165,11 +163,11 @@ public class CommandHandler implements CommandExecutor {
 					yeah = yeah && (main == null ? true : channel.isMain() == main);
 					yeah = yeah && channel.getMembers().containsAll(members);
 					if (yeah) {
-						sender.sendMessage((channel.isMain() ? "Main" : "") + "Channel #" + Integer.toString(channel.getIdentifier()) + ":");
+						sender.sendMessage((channel.isMain() ? "Main " : "") + "Channel #" + Integer.toString(channel.getIdentifier()) + ":");
 						sender.sendMessage("Name: " + channel.getName());
 						sender.sendMessage("Description: " + channel.getDescription());
 						sender.sendMessage("The channel is " + (!(channel.ready()) ? "not" : "") + " ready to join.");
-						sender.sendMessage("There " + (channel.getMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(channel.getMembers().size()) + "member" + (channel.getMembers().size() == 1 ? "" : "s") + "online.");
+						sender.sendMessage("There " + (channel.getMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(channel.getMembers().size()) + " member" + (channel.getMembers().size() == 1 ? "" : "s") + " online.");
 					}
 				}
 				return true;
@@ -202,8 +200,21 @@ public class CommandHandler implements CommandExecutor {
 					sender.sendMessage(ChatColor.RED + "Please specify a name!");
 					return true;
 				}
+				String name = args[1];
+				String desc = null;
+				Boolean approvement = null;
+				Boolean invitation = null;
+				if (args.length > 2 && !(args[2].equals("null"))) {
+					desc = args[2];
+				}
+				if (args.length > 3 && !(args[3].equals("null"))) {
+					approvement = Boolean.parseBoolean(args[3]);
+				}
+				if (args.length > 4 && !(args[4].equals("null"))) {
+					invitation = Boolean.parseBoolean(args[4]);
+				}
 				try {
-					Minecord.getServerManager().createServer(args[1], null, null, null, null, null);
+					Minecord.getServerManager().createServer(name, desc, approvement, invitation, null, null);
 				} catch (DuplicatedException e) {
 					sender.sendMessage(ChatColor.RED + "A server with that name already exists!");
 					return true;

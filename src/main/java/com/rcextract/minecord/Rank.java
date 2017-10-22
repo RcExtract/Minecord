@@ -74,4 +74,7 @@ public class Rank {
 				return server.getRankManager();
 		return null;
 	}
+	public boolean isMain() {
+		return getRankManager().getMain() == this;
+	}
 }

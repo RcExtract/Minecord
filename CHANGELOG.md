@@ -4,6 +4,16 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 11.0
+- Fixed server editer menu generator
+- You can now create servers with customized properties
+- Fixed result messages for command channel, channels and servers
+- Fixed channel duplicated entry bug in database
+- Fixed not saving whether the rank is main to database
+- Fixed ghost files (Files used to be deleted still exists)
+- Removed deprecated classes
+- Now database manager has a version shown behind "minecord" in database name
+
 ## Beta 10.1
 - Fixed the large bug which crashes the server when chatting
 - Fixed data column not existed bug on loading

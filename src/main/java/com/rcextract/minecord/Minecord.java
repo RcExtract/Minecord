@@ -29,10 +29,12 @@ public class Minecord extends JavaPlugin {
 	private static boolean errorDisable;
 	protected static Minecord minecord;
 	private static Permission permission;
+	protected static String dbversion;
 	
 	@Override
 	public void onEnable() {
 		minecord = this;
+		dbversion = "5dot1";
 		cm = new ConfigManager(this);
 		panel = new InternalManager();
 		permission = Bukkit.getServicesManager().getRegistration(Permission.class).getProvider();
@@ -40,6 +42,7 @@ public class Minecord extends JavaPlugin {
 		loadData();
 		checkUpdate();
 		new IncompatibleDetector(this).runTask(this);
+		
 	}
 	@Override
 	public void onDisable() {
@@ -54,16 +57,7 @@ public class Minecord extends JavaPlugin {
 			} catch (IOException e) {
 				getLogger().log(Level.SEVERE, "An error occurred while attempting to save the properties.", e);
 			}
-			try {
-				getLogger().log(Level.INFO, "Saving data to database...");
-				dm.dropDatabase();
-				dm.initialize();
-				dm.save();
-				dm.close();
-				getLogger().log(Level.INFO, "Data are successfully saved.");
-			} catch (SQLException e) {
-				getLogger().log(Level.SEVERE, "An error occurred while attempting to save the data.", e);
-			}
+			saveDataInternal();
 		}
 	}
 	/**
@@ -162,7 +156,7 @@ public class Minecord extends JavaPlugin {
 		return format;
 	}
 	public static void initialize() {
-		if (minecord == null) throw new IllegalStateException("Minecord is not ready.");
+		ready();
 		if (dm == null) throw new IllegalStateException("Minecord is not ready.");
 		Bukkit.getPluginManager().registerEvents(new EventManager(), minecord);
 		minecord.getCommand("minecord").setExecutor(new CommandHandler(minecord));
@@ -192,8 +186,7 @@ public class Minecord extends JavaPlugin {
 		}
 	}
 	public static void loadData() {
-		if (minecord == null) throw new IllegalStateException("Minecord is not ready.");
-		if (properties == null) throw new IllegalStateException("Properties are not loaded.");
+		ready();
 		Bukkit.getScheduler().runTaskAsynchronously(minecord, new Runnable() {
 
 			@Override
@@ -204,7 +197,6 @@ public class Minecord extends JavaPlugin {
 					dm.initialize();
 					dm.load();
 					minecord.getLogger().log(Level.INFO, "Data are successfully loaded.");
-					initialize();
 				} catch (ClassNotFoundException | SQLException e) {
 					minecord.getLogger().log(Level.SEVERE, "An error occured while attempting to load the data.", e);
 					errorDisable = true;
@@ -216,6 +208,28 @@ public class Minecord extends JavaPlugin {
 			}
 			
 		});
+	}
+	public static void saveData() {
+		Bukkit.getScheduler().runTaskAsynchronously(minecord, new Runnable() {
+
+			@Override
+			public void run() {
+				saveDataInternal();
+			}
+			
+		});
+	}
+	private static void saveDataInternal() {
+		try {
+			minecord.getLogger().log(Level.INFO, "Saving data to database...");
+			dm.dropDatabase();
+			dm.initialize();
+			dm.save();
+			dm.close();
+			minecord.getLogger().log(Level.INFO, "Data are successfully saved.");
+		} catch (SQLException e) {
+			minecord.getLogger().log(Level.SEVERE, "An error occurred while attempting to save the data.", e);
+		}
 	}
 	public static void checkUpdate() {
 		Bukkit.getScheduler().runTaskAsynchronously(minecord, new Runnable() {
@@ -245,5 +259,9 @@ public class Minecord extends JavaPlugin {
 	}
 	public static Permission getPermissionManager() {
 		return permission;
+	}
+	public static void ready() {
+		if (minecord == null) throw new IllegalStateException("Minecord is not ready.");
+		if (properties == null) throw new IllegalStateException("Properties are not loaded.");
 	}
 }
