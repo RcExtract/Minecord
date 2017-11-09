@@ -4,6 +4,11 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 11.1
+- Local project repository restored
+- You can now close a Server Editor
+- Removed deprecated and unused classes
+
 ## Beta 11.0
 - Fixed server editer menu generator
 - You can now create servers with customized properties

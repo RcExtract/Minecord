@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -18,8 +19,9 @@ public class ServerEditor implements Listener {
 
 	private Server server;
 	private Inventory inventory;
-	private String editingProperty;
+	private ServerElement property;
 	private HumanEntity editor;
+	private boolean closed;
 	public ServerEditor(Server server, Minecord minecord) {
 		this.server = server;
 		this.inventory = Bukkit.createInventory(null, 27, "Server Editor: " + server.getIdentifier());
@@ -52,15 +54,16 @@ public class ServerEditor implements Listener {
 		Inventory inventory = event.getInventory();
 		if (inventory.getName().startsWith("Server Editor: ")) {
 			if (Integer.parseInt(inventory.getName().substring(15)) == server.getIdentifier()) {
+				if (closed == true) throw new IllegalStateException();
 				ItemStack itemstack = inventory.getItem(event.getSlot());
 				String name = itemstack.getItemMeta().getDisplayName();
 				editor = event.getWhoClicked();
 				if (name.startsWith("Name: ")) {
-					editingProperty = "Name";
+					property = ServerElement.NAME;
 					return;
 				}
 				if (name.startsWith("Description: ")) {
-					editingProperty = "Desc";
+					property = ServerElement.DESCRIPTION;
 					return;
 				}
 				if (InventoryClickEvent.getHandlerList().getRegisteredListeners().length == 1) {
@@ -71,23 +74,28 @@ public class ServerEditor implements Listener {
 		}
 	}
 	@EventHandler
-	public void onPlayerChat(AsyncPlayerChatEvent event) {
+	public void onPlayerChat(AsyncPlayerChatEvent event) throws IllegalStateException {
 		Player player = event.getPlayer();
 		String message = event.getMessage();
 		if (editor == player) {
+			if (closed == true) throw new IllegalStateException();
 			event.setCancelled(true);
-			switch (editingProperty) {
-			case "Name": try {
+			switch (property) {
+			case NAME: try {
 					server.setName(message);
 				} catch (DuplicatedException e) {
 					player.sendMessage("The server with the same name exists. Renaming failed.");
 					return;
 				}
 			break;
-			case "Desc": server.setDescription(message);
+			case DESCRIPTION: server.setDescription(message);
 			break;
 			default: return;
 			}
 		}
+	}
+	public void close() {
+		HandlerList.unregisterAll(this);
+		closed = true;
 	}
 }
