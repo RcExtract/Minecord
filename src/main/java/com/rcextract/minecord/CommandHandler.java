@@ -20,15 +20,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.PluginDescriptionFile;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
 import com.rcextract.minecord.event.ChannelSwitchEvent;
 import com.rcextract.minecord.event.MinecordEvent;
 
 public class CommandHandler implements CommandExecutor {
 
-	private Table<User, Server, Channel> table = HashBasedTable.create();
-	private Map<User, Object> tablenew = new HashMap<User, Object>();
+	private Map<User, Object> editingTarget = new HashMap<User, Object>();
 	private Minecord minecord;
 	public CommandHandler(Minecord minecord) {
 		this.minecord = minecord;
@@ -317,7 +314,19 @@ public class CommandHandler implements CommandExecutor {
 			}
 			if (args[0].equalsIgnoreCase("select")) {
 				if (args.length == 1) {
-					player.sendMessage(ChatColor.RED + "Please specify an editing target!");
+					Object obj = editingTarget.get(user);
+					Class<?> clazz = obj.getClass();
+					try {
+						player.sendMessage("Selected " + clazz.getSimpleName().toLowerCase() + " " + clazz.getMethod("getName").invoke(obj) + (clazz == Channel.class ? " in server " + Minecord.getServerManager().getServer((Channel) obj).getName() : "") + ".");
+					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+							| NoSuchMethodException | SecurityException e) {
+						player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "An error occurred while attemping to do this. Please contact server administrator for further information.");
+						Minecord.minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
+						e.printStackTrace();
+						return true;
+					} catch (NullPointerException e) {
+						player.sendMessage(ChatColor.RED + "Please specify an editing target!");
+					}
 					return true;
 				}
 				Server server = Minecord.getServerManager().getServer(args[1]);
@@ -333,17 +342,16 @@ public class CommandHandler implements CommandExecutor {
 						player.sendMessage(ChatColor.YELLOW + "The channel does not exist. Selection has changed to the server " + server.getName() + "itself.");
 					}
 				}
-				table.put(user, server, channel);
+				editingTarget.put(user, channel != null ? channel : server);
 				player.sendMessage(ChatColor.GREEN + "You have successfully selected " + (channel != null ? "channel " + channel.getName() + " in " : "") + "server " + server.getName() + ".");
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("deselect")) {
-				if (!(table.containsRow(user))) {
+				if (!(editingTarget.containsKey(user))) {
 					player.sendMessage(ChatColor.YELLOW + "You haven't selected an editing target.");
 					return true;
 				}
-				Set<Server> column = table.row(user).keySet();
-				table.remove(user, column.toArray(new Server[column.size()])[column.size() - 1]);
+				editingTarget.remove(user);
 				return true;
 			}
 			/*
@@ -365,11 +373,11 @@ public class CommandHandler implements CommandExecutor {
 			 *   create, setmain
 			 *       
 			 */
-			if (!(table.rowKeySet().contains(user))) {
+			if (!(editingTarget.keySet().contains(user))) {
 				player.sendMessage(ChatColor.RED + "You haven't selected an editing target! Please select it with /minecord select <server> <channel|null>.");
 				return true;
 			}
-			Object obj = tablenew.get(user);
+			Object obj = editingTarget.get(user);
 			boolean contains = false;
 			Class<?> clazz = obj.getClass();
 			for (Method method : clazz.getDeclaredMethods())

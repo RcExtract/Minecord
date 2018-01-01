@@ -4,6 +4,10 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 12.1
+- Executing command select without argument will now display your current editing target if selected
+- Fixed various bugs
+
 ## Beta 12.0
 - You can now edit server and channel properties with commands
 - Changed some event names to support the new commands
