@@ -4,6 +4,10 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## Beta 12.0
+- You can now edit server and channel properties with commands
+- Changed some event names to support the new commands
+
 ## Beta 11.1
 - Local project repository restored
 - You can now close a Server Editor

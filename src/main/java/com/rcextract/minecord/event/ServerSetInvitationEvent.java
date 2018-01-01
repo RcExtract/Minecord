@@ -4,14 +4,14 @@ import org.bukkit.event.HandlerList;
 
 import com.rcextract.minecord.Server;
 
-public class ServerChangeInvitationEvent extends ServerEvent {
+public class ServerSetInvitationEvent extends ServerEvent {
 
 	private static final HandlerList handlers = new HandlerList();
 	public static HandlerList getHandlerList() {
 		return handlers;
 	}
 	private boolean invitation;
-	public ServerChangeInvitationEvent(Server server, boolean invitation) {
+	public ServerSetInvitationEvent(Server server, boolean invitation) {
 		super(server);
 		this.invitation = invitation;
 	}

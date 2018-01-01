@@ -4,16 +4,16 @@ import org.bukkit.event.HandlerList;
 
 import com.rcextract.minecord.Server;
 
-public class ServerChangePermanentEvent extends ServerEvent {
+public class ServerSetApprovementEvent extends ServerEvent {
 
 	private static final HandlerList handlers = new HandlerList();
 	public static HandlerList getHandlerList() {
 		return handlers;
 	}
-	private boolean permanent;
-	public ServerChangePermanentEvent(Server server, boolean permanent) {
+	private boolean approvement;
+	public ServerSetApprovementEvent(Server server, boolean approvement) {
 		super(server);
-		this.permanent = permanent;
+		this.approvement = approvement;
 	}
 
 	@Override
@@ -21,12 +21,12 @@ public class ServerChangePermanentEvent extends ServerEvent {
 		return handlers;
 	}
 
-	public boolean isPermanent() {
-		return permanent;
+	public boolean needApprovement() {
+		return approvement;
 	}
 
-	public void setPermanent(boolean permanent) {
-		this.permanent = permanent;
+	public void setApprovement(boolean approvement) {
+		this.approvement = approvement;
 	}
 
 }

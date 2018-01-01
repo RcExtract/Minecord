@@ -52,18 +52,22 @@ public class Rank {
 	}
 	public Set<Permission> getPermissions() {
 		/*
-		 * minecord:
+		 * server:
 		 *   <server>:
-		 *     disband, rename, redescribe, setapprovement, setinvitation, setpermanent, lock, unlock, kick, invite, approve, join-on-lock, stay-on-lock
+		 *     disband, setname, setdescription, setapprovement, setinvitation, setpermanent, lock, unlock
+		 *     actions:
+		 *       kick, invite, approve, join-on-lock, stay-on-lock
 		 *     channel:
 		 *       create, setmain
 		 *       <channel>:
-		 *         disband, rename, redescribe, lock, unlock, join-on-lock, stay-on-lock, chat, chat-on-lock
+		 *         disband, setname, setdescription, lock, unlock
+		 *         actions:
+		 *           join-on-lock, stay-on-lock, chat, chat-on-lock
 		 *     rank:
 		 *       create, setmain
 		 *       <rank>:
 		 *         delete, rename, redescribe, settag, setadmin, setoverride, editpermissions
-		 *   create-server
+		 *   create, setmain
 		 *       
 		 */
 		return permissions;

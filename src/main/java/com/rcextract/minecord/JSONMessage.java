@@ -625,7 +625,7 @@ public class JSONMessage {
                 throw new IllegalStateException("ReflectionHelper is not set up!");
             }
             try {
-                Object packet = packetPlayOutChat.newInstance();
+                Object packet = packetPlayOutChat.getConstructor().newInstance();
                 set("a", packet, fromJson(message));
                 setType(packet, (byte) 1);
                 return packet;

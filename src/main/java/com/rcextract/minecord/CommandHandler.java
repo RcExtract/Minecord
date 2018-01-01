@@ -1,9 +1,15 @@
 package com.rcextract.minecord;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -11,12 +17,18 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.PluginDescriptionFile;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import com.rcextract.minecord.event.ChannelSwitchEvent;
+import com.rcextract.minecord.event.MinecordEvent;
 
 public class CommandHandler implements CommandExecutor {
 
+	private Table<User, Server, Channel> table = HashBasedTable.create();
+	private Map<User, Object> tablenew = new HashMap<User, Object>();
 	private Minecord minecord;
 	public CommandHandler(Minecord minecord) {
 		this.minecord = minecord;
@@ -296,13 +308,147 @@ public class CommandHandler implements CommandExecutor {
 				}
 				Server server = Minecord.getServerManager().getServer(args[1]);
 				if (server == null) {
-					player.sendMessage(ChatColor.RED + "Server is not found!");
+					player.sendMessage(ChatColor.RED + "The server does not exist!");
 					return true;
 				}
 				ServerEditor editor = new ServerEditor(server, minecord);
 				player.openInventory(editor.getInventory());
 				return true;
 			}
+			if (args[0].equalsIgnoreCase("select")) {
+				if (args.length == 1) {
+					player.sendMessage(ChatColor.RED + "Please specify an editing target!");
+					return true;
+				}
+				Server server = Minecord.getServerManager().getServer(args[1]);
+				Channel channel = null;
+				if (server == null) {
+					player.sendMessage(ChatColor.RED + "The server does not exist!");
+					player.sendMessage(ChatColor.YELLOW + "Make sure the first argument is server name and second argument is channel name.");
+					return true;
+				}
+				if (args.length == 3) {
+					channel = server.getChannelManager().getChannel(args[2]);
+					if (channel == null) {
+						player.sendMessage(ChatColor.YELLOW + "The channel does not exist. Selection has changed to the server " + server.getName() + "itself.");
+					}
+				}
+				table.put(user, server, channel);
+				player.sendMessage(ChatColor.GREEN + "You have successfully selected " + (channel != null ? "channel " + channel.getName() + " in " : "") + "server " + server.getName() + ".");
+				return true;
+			}
+			if (args[0].equalsIgnoreCase("deselect")) {
+				if (!(table.containsRow(user))) {
+					player.sendMessage(ChatColor.YELLOW + "You haven't selected an editing target.");
+					return true;
+				}
+				Set<Server> column = table.row(user).keySet();
+				table.remove(user, column.toArray(new Server[column.size()])[column.size() - 1]);
+				return true;
+			}
+			/*
+			 * server:
+			 *   <server>:
+			 *     disband, setname, setdescription, setapprovement, setinvitation, setpermanent, lock, unlock
+			 *     actions:
+			 *       kick, invite, approve, join-on-lock, stay-on-lock
+			 *     channel:
+			 *       create, setmain
+			 *       <channel>:
+			 *         disband, setname, setdescription, lock, unlock
+			 *         actions:
+			 *           join-on-lock, stay-on-lock, chat, chat-on-lock
+			 *     rank:
+			 *       create, setmain
+			 *       <rank>:
+			 *         delete, rename, redescribe, settag, setadmin, setoverride, editpermissions
+			 *   create, setmain
+			 *       
+			 */
+			if (!(table.rowKeySet().contains(user))) {
+				player.sendMessage(ChatColor.RED + "You haven't selected an editing target! Please select it with /minecord select <server> <channel|null>.");
+				return true;
+			}
+			Object obj = tablenew.get(user);
+			boolean contains = false;
+			Class<?> clazz = obj.getClass();
+			for (Method method : clazz.getDeclaredMethods())
+				contains = contains || method.getName().equalsIgnoreCase(args[0]);
+			if (!(contains)) {
+				player.sendMessage(ChatColor.RED + args[0] + "-ing is not available on your editing target!");
+				return true;
+			}
+			boolean permitted = false;
+			for (Permission permission : user.getRank().getPermissions())
+				try {
+					permitted = permitted || permission.getName().equalsIgnoreCase("minecord." + clazz.getSimpleName().toLowerCase() + "." + (String) clazz.getMethod("getName").invoke(obj) + "." + args[0]);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+						| NoSuchMethodException | SecurityException e) {
+					player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "An error occurred while attemping to do this. Please contact server administrator for further information.");
+					Minecord.minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
+					e.printStackTrace();
+					return true;
+				}
+			if (!(permitted)) {
+				try {
+					player.sendMessage(ChatColor.RED + "You are not permitted to do " + args[0] + "-ing in " + clazz.getSimpleName() + " " + (String) clazz.getMethod("getName").invoke(obj) + "!");
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+						| NoSuchMethodException | SecurityException e) {
+					player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "An error occurred while attemping to do this. Please contact server administrator for further information.");
+					Minecord.minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
+					e.printStackTrace();
+					return true;
+				}
+			}
+			Method method = null;
+			for (Method methods : clazz.getDeclaredMethods()) 
+				if (methods.getName().equalsIgnoreCase(args[0])) 
+					if (methods.getName().equalsIgnoreCase(args[0])) 
+						method = methods;
+			if (args.length - 1 < method.getParameterCount()) {
+				player.sendMessage(ChatColor.RED + "Not enough arguments!");
+				String correctusage = ChatColor.YELLOW + "Correct usage: /minecord " + args[0];
+				for (Parameter parameter : method.getParameters()) 
+					correctusage += " " + parameter.getName();
+				player.sendMessage(correctusage);
+				player.sendMessage(ChatColor.YELLOW + "Please fill the arguments you don't want to fill in with \"null\".");
+				return true;
+			}
+			List<Object> params = new ArrayList<Object>();
+			for (int i = 1; i < args.length; i++) {
+				if (method.getParameterTypes()[i - 1] == boolean.class) {
+					if (!(args[i] == "true" || args[i] == "false")) {
+						player.sendMessage(ChatColor.RED + "Argument No." + Integer.toString(i) + " must be either \"true\" or \"false\"! (Boolean argument)");
+						return true;
+					}
+					params.add(Boolean.parseBoolean(args[i]));
+					continue;
+				}
+				params.add(args[i]);
+			}
+			args[0] = args[0].toLowerCase();
+			args[0] = args[0].substring(0, 1).toUpperCase() + args[0].substring(1, 3) + args[0].substring(3, 4).toUpperCase() + args[0].substring(4);
+			MinecordEvent event;
+			try {
+				event = MinecordEvent.class.cast(Class.forName("com.rcextract.minecord.event." + clazz.getSimpleName() + args[0] + "Event").getConstructors()[0].newInstance(params.toArray()));
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException | SecurityException | ClassNotFoundException e) {
+				player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "An error occurred while attemping to do this. Please contact server administrator for further information.");
+				Minecord.minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
+				e.printStackTrace();
+				return true;
+			}
+			Bukkit.getPluginManager().callEvent(event);
+			if (!(event.isCancelled())) 
+				try {
+					method.invoke(obj, params);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "An error occurred while attemping to do this. Please contact server administrator for further information.");
+					Minecord.minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
+					e.printStackTrace();
+					return true;
+				}
+			player.sendMessage(ChatColor.GREEN + "Configuration has been successfully applied.");
 			return true;
 		}
 		return false;
