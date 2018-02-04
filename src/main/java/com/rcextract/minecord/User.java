@@ -9,7 +9,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 
-import com.rcextract.minecord.event.UserEvent;
+import com.rcextract.minecord.event.user.UserEvent;
 
 public class User implements RecordManager<UserEvent>, ListenerHolder {
 
@@ -115,8 +115,8 @@ public class User implements RecordManager<UserEvent>, ListenerHolder {
 			identities.add(nidentity);
 			return;
 		}
-		if (!(identity.isActivated())) 
-			identity.setActivated(true);
+		if (!(identity.isJoined())) 
+			identity.setJoined(true);
 	}
 	/**
 	 * Deactivates the preference towards the server. If permanently, removes the preference towards the server.
@@ -131,7 +131,7 @@ public class User implements RecordManager<UserEvent>, ListenerHolder {
 		if (permanent) 
 			identities.remove(identity);
 		else 
-			identity.setActivated(false);
+			identity.setJoined(false);
 	}
 	@Override
 	public Set<Listener> getListeners() {

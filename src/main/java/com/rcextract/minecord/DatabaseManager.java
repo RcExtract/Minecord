@@ -33,7 +33,7 @@ import com.google.common.collect.Table;
 public class DatabaseManager {
 
 	private Connection connection;
-	public Boolean loadDataFromOldDb;
+	public Boolean loadDataFromOldDb = false;
 	/**
 	 * This constructor is reserved for initialization.
 	 * @throws ClassNotFoundException 
@@ -44,12 +44,15 @@ public class DatabaseManager {
 	}
 	public synchronized void initialize() throws SQLException {
 		ResultSet databases = connection.getMetaData().getCatalogs();
+		Set<String> dbnames = new HashSet<String>();
 		while (databases.next()) 
-			loadDataFromOldDb = (loadDataFromOldDb == null ? false : loadDataFromOldDb) || databases.getString("TABLE_CAT") != "minecord5dot1";
+			dbnames.add(databases.getString("TABLE_CAT"));
+		if (dbnames.contains("minecord5dot1")) loadDataFromOldDb = true;
 		try (Statement statement = connection.createStatement()) {
 			statement.executeUpdate("CREATE DATABASE IF NOT EXISTS " + databaseName() + ";");
 		}
 		connection.setCatalog(loadDataFromOldDb ? oldDatabaseName() : databaseName());
+		if (loadDataFromOldDb) return;
 		try (Statement statement = connection.createStatement()) {
 			statement.executeUpdate("CREATE TABLE IF NOT EXISTS servers (id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, description VARCHAR(255), approvement BOOLEAN NOT NULL, invitation BOOLEAN NOT NULL, permanent BOOLEAN NOT NULL, locked BOOLEAN NOT NULL);");
 			statement.executeUpdate("CREATE TABLE IF NOT EXISTS channels (server INT UNSIGNED NOT NULL, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL, description VARCHAR(255), locked BOOLEAN NOT NULL, main BOOLEAN NOT NULL);");
@@ -57,7 +60,7 @@ public class DatabaseManager {
 			//statement.executeUpdate("CREATE TABLE IF NOT EXISTS users (server INT UNSIGNED NOT NULL, channel INT UNSIGNED NOT NULL, rank VARCHAR(255) NOT NULL, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, nickname VARCHAR(255) NOT NULL, description VARCHAR(255), uuid VARCHAR(255) NOT NULL);");
 			statement.executeUpdate("CREATE TABLE IF NOT EXISTS users (id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, nickname VARCHAR(255) NOT NULL, description VARCHAR(255), uuid VARCHAR(255) NOT NULL);");
 			statement.executeUpdate("CREATE TABLE IF NOT EXISTS identities (id INT UNSIGNED NOT NULL, user INT UNSIGNED NOT NULL, server INT UNSIGNED NOT NULL, activated BOOLEAN NOT NULL, rank VARCHAR(255) NOT NULL);");
-			statement.executeUpdate("CREATE TABLE IF NOT EXTSTS listeners (identity INT UNSIGNED NOT NULL, server INT UNSIGNED NOT NULL, channel INT UNSIGNED NOT NULL, notify BOOLEAN NOT NULL, index INT UNSIGNED NOT NULL, user INT UNSIGNED);");
+			statement.executeUpdate("CREATE TABLE IF NOT EXISTS listeners (identity INT UNSIGNED NOT NULL, server INT UNSIGNED NOT NULL, channel INT UNSIGNED NOT NULL, notify BOOLEAN NOT NULL, count INT UNSIGNED NOT NULL, user INT UNSIGNED);");
 			statement.executeUpdate("CREATE TABLE IF NOT EXISTS permissions (id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT, permission VARCHAR(255) NOT NULL UNIQUE KEY);");
 		}
 	}
@@ -126,7 +129,7 @@ public class DatabaseManager {
 				Server server = Minecord.getServerManager().getServer(listenerset.getInt("server"));
 				Channel channel = server == null ? null : server.getChannelManager().getChannel(listenerset.getInt("channel"));
 				boolean notify = listenerset.getBoolean("notify");
-				int index = listenerset.getInt("index");
+				int index = listenerset.getInt("count");
 				User user = Minecord.getUserManager().getUser(listenerset.getInt("id"));
 				listeners.put(identityid, user, new Listener(channel, notify, index));
 			}
@@ -282,7 +285,7 @@ public class DatabaseManager {
 							istmt.setInt(1, id);
 							istmt.setInt(2, user.getIdentifier());
 							istmt.setInt(3, identity.getServer().getIdentifier());
-							istmt.setBoolean(4, identity.isActivated());
+							istmt.setBoolean(4, identity.isJoined());
 							istmt.setString(5, identity.getRank().getTag());
 							try (PreparedStatement lstmt = connection.prepareStatement("INSERT INTO listeners VALUES (?, ?, ?, ?, ?, ?)")) {
 								for (Listener listener : identity.getListeners()) {

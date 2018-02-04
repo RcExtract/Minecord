@@ -41,19 +41,14 @@ public class Updater {
 			//This exception is never thrown.
 			return UpdaterResult.DATA_ACCESSED;
 		}
-		String current = minecord.getDescription().getVersion();
-		if (!(label.startsWith("Beta ") || current.startsWith("Beta "))) {
-			if (Double.parseDouble(label) > Double.parseDouble(current)) {
-				return UpdaterResult.UPDATE_AVAILABLE;
-			}
-			return UpdaterResult.UP_TO_DATE;
-		}
-		if (!(label.startsWith("Beta ")) && current.startsWith("Beta ")) {
+		String[] current = minecord.getDescription().getVersion().split("\\.");
+		String[] online = label.split("\\.");
+		if (Integer.parseInt(current[0]) < Integer.parseInt(online[0])) 
 			return UpdaterResult.UPDATE_AVAILABLE;
-		}
-		if (Double.parseDouble(label.substring(5)) > Double.parseDouble(current.substring(5))) {
+		if (Integer.parseInt(current[1]) < Integer.parseInt(online[1])) 
 			return UpdaterResult.UPDATE_AVAILABLE;
-		}
+		if (Integer.parseInt(current[2]) < Integer.parseInt(online[2])) 
+			return UpdaterResult.UPDATE_AVAILABLE;
 		return UpdaterResult.UP_TO_DATE;
 	}
 }

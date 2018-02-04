@@ -48,6 +48,16 @@ public class ConfigManager {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			try {
+				i.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			try {
+				o.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	/**

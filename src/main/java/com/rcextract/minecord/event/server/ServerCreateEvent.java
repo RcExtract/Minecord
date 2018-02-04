@@ -1,10 +1,11 @@
-package com.rcextract.minecord.event;
+package com.rcextract.minecord.event.server;
 
 import org.bukkit.event.HandlerList;
 
 import com.rcextract.minecord.ChannelManager;
 import com.rcextract.minecord.RankManager;
 import com.rcextract.minecord.Server;
+import com.rcextract.minecord.event.MinecordEvent;
 
 /**
  * Represents the creation of a {@link Server}.

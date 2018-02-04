@@ -21,8 +21,7 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.PluginDescriptionFile;
 
 import com.rcextract.minecord.event.MinecordEvent;
-import com.rcextract.minecord.event.ServerCreateEvent;
-//import com.rcextract.minecord.event.UserEvent;
+import com.rcextract.minecord.event.server.ServerCreateEvent;
 
 public class CommandHandler implements CommandExecutor {
 
@@ -267,7 +266,7 @@ public class CommandHandler implements CommandExecutor {
 					return true;
 				}
 				ServerIdentity identity = user.getIdentity(server);
-				if (identity != null && identity.isActivated()) {
+				if (identity != null && identity.isJoined()) {
 					player.sendMessage(ChatColor.RED + "You are already in the server!");
 					return true;
 				}
@@ -292,7 +291,7 @@ public class CommandHandler implements CommandExecutor {
 				}
 				Server server = Minecord.getServerManager().getServer(args[1]);
 				ServerIdentity identity = user.getIdentity(server);
-				if (server == null || identity == null || !(identity.isActivated())) {
+				if (server == null || identity == null || !(identity.isJoined())) {
 					player.sendMessage(ChatColor.RED + "Failed to find the server in your list of joined servers!");
 					return true;
 				}

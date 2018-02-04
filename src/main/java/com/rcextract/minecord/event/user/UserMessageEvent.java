@@ -1,4 +1,4 @@
-package com.rcextract.minecord.event;
+package com.rcextract.minecord.event.user;
 
 import java.util.Arrays;
 import java.util.HashSet;

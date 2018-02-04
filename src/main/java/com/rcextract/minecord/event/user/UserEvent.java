@@ -1,6 +1,7 @@
-package com.rcextract.minecord.event;
+package com.rcextract.minecord.event.user;
 
 import com.rcextract.minecord.User;
+import com.rcextract.minecord.event.MinecordEvent;
 
 public abstract class UserEvent extends MinecordEvent {
 

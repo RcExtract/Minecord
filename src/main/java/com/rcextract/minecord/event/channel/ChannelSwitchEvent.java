@@ -1,9 +1,10 @@
-package com.rcextract.minecord.event;
+package com.rcextract.minecord.event.channel;
 
 import org.bukkit.event.HandlerList;
 
 import com.rcextract.minecord.Channel;
 import com.rcextract.minecord.User;
+import com.rcextract.minecord.event.user.UserEvent;
 
 @Deprecated
 public class ChannelSwitchEvent extends UserEvent {

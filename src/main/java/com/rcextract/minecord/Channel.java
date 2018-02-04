@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.rcextract.minecord.event.ChannelEvent;
+import com.rcextract.minecord.event.channel.ChannelEvent;
 
 /**
  * In Minecord, a Channel groups up a set of users, usually by small topic of a big topic. Main 
@@ -107,7 +107,7 @@ public class Channel implements RecordManager<ChannelEvent> {
 		Set<User> users = new HashSet<User>();
 		for (User user : Minecord.getUserManager().getUsers()) {
 			Listener listener = user.getListener(this);
-			if (listener != null && user.getIdentity(listener).isActivated()) 
+			if (listener != null && user.getIdentity(listener).isJoined()) 
 				users.add(user);
 		}
 		return users;

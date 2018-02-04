@@ -12,23 +12,26 @@ public class ServerIdentity implements Cloneable, ListenerHolder {
 
 	private String name;
 	private final Server server;
-	private boolean activated;
+	private boolean joined;
 	private Rank rank;
 	private final Set<Listener> listeners;
-	public ServerIdentity(Server server, boolean activated, Rank rank, Listener ... listeners) {
+	public ServerIdentity(Server server, boolean joined, Rank rank, Listener ... listeners) {
 		Validate.notNull(server);
+		if (rank == null) rank = server.getRankManager().getMain();
+		if (listeners.length == 0) listeners[0] = new Listener(server.getChannelManager().getMainChannel(), true, 0);
+		this.server = server;
+		this.joined = joined;
+		this.rank = rank;
+		this.listeners = new HashSet<Listener>(Arrays.asList(listeners));
+		validate();
+		registerAllAbsentListeners(true, 0);
+	}
+	private void validate() {
 		boolean sameserver = true;
 		for (Listener listener : listeners) 
 			sameserver = sameserver && listener.getChannel().getChannelManager().getServer() == server;
 		sameserver = sameserver && rank.getRankManager().getServer() == server;
 		if (!(sameserver)) throw new IllegalArgumentException();
-		if (rank == null) rank = server.getRankManager().getMain();
-		if (listeners.length == 0) listeners[0] = new Listener(server.getChannelManager().getMainChannel(), true, 0);
-		this.server = server;
-		this.activated = activated;
-		this.rank = rank;
-		this.listeners = new HashSet<Listener>(Arrays.asList(listeners));
-		registerAllAbsentListeners(true, 0);
 	}
 	public String getName() {
 		return name;
@@ -39,17 +42,18 @@ public class ServerIdentity implements Cloneable, ListenerHolder {
 	public Server getServer() {
 		return server;
 	}
+	public boolean isJoined() {
+		return joined;
+	}
+	public void setJoined(boolean joined) {
+		this.joined = joined;
+	}
 	public Rank getRank() {
 		return rank;
 	}
-	public boolean isActivated() {
-		return activated;
-	}
-	public void setActivated(boolean activated) {
-		this.activated = activated;
-	}
 	public void setRank(Rank rank) {
 		this.rank = rank;
+		validate();
 	}
 	public void applyRank(Rank old) {
 		net.milkbowl.vault.permission.Permission pm = Minecord.getPermissionManager();

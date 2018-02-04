@@ -22,7 +22,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 
-import com.rcextract.minecord.event.UserMessageEvent;
+import com.rcextract.minecord.event.user.UserMessageEvent;
 
 /*import com.rcextract.minecord.event.UserMessageEvent;
 import com.rcextract.minecord.event.UserTagEvent;*/

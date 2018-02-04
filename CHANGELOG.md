@@ -4,6 +4,14 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## 1.0.1
+- Fixed all initial bugs
+- Fixed Jar builder (Not visible from source)
+- Fixed database manager bugs
+- Fixed minecord.properties default config generation bug
+- Fixed update checker bugs
+- Categorized some events into different packages
+
 ## 1.0.0 (Unstable)
 - Added Message class for storing messages. (Alternative of UserMessageEvent) They will not be saved to database.
 - Updated Command Handler to adapt to new Multi-Chat system.

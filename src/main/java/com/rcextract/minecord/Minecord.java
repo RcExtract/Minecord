@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.rcextract.minecord.event.MinecordEvent;
-import com.rcextract.minecord.event.UserMessageEvent;
+import com.rcextract.minecord.event.user.UserMessageEvent;
 
 import net.milkbowl.vault.permission.Permission;
 
@@ -48,6 +48,7 @@ public class Minecord extends JavaPlugin {
 		permission = Bukkit.getServicesManager().getRegistration(Permission.class).getProvider();
 		msg = new HashMap<Double, Channel>();
 		loadProperties();
+		System.out.println(properties.toString());
 		loadData();
 		checkUpdate();
 		new IncompatibleDetector(this).runTask(this);
@@ -163,7 +164,7 @@ public class Minecord extends JavaPlugin {
 		format = format.replaceAll("playeruuid", uuid);
 		format = format.replaceAll("message", message);
 		format = format.replaceAll("time", date);
-		format = format.replaceAll("&", "¡±");
+		format = format.replaceAll("&", "ï¿½ï¿½");
 		return format;
 	}
 	public static void initialize() {

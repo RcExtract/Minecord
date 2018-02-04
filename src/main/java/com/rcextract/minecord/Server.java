@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.rcextract.minecord.event.ServerEvent;
+import com.rcextract.minecord.event.server.ServerEvent;
 
 /**
  * In Minecord, a Server groups up a set of channels, usually by target or topic, and provides 

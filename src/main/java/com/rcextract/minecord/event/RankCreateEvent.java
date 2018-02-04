@@ -4,6 +4,7 @@ import org.bukkit.event.HandlerList;
 
 import com.rcextract.minecord.Rank;
 import com.rcextract.minecord.Server;
+import com.rcextract.minecord.event.server.ServerEvent;
 
 public class RankCreateEvent extends ServerEvent {
 

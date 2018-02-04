@@ -1,4 +1,4 @@
-package com.rcextract.minecord.event;
+package com.rcextract.minecord.event.server;
 
 import java.util.Set;
 
@@ -9,6 +9,7 @@ import com.rcextract.minecord.Listener;
 import com.rcextract.minecord.Rank;
 import com.rcextract.minecord.ServerIdentity;
 import com.rcextract.minecord.User;
+import com.rcextract.minecord.event.MinecordEvent;
 
 public class ServerIdentityUpdateEvent extends MinecordEvent {
 

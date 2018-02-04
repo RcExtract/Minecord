@@ -1,6 +1,7 @@
-package com.rcextract.minecord.event;
+package com.rcextract.minecord.event.server;
 
 import com.rcextract.minecord.Server;
+import com.rcextract.minecord.event.MinecordEvent;
 
 /**
  * Represents an event of a {@link Server}. This excludes the creation event of the server.

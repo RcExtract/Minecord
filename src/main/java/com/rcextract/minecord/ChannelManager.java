@@ -9,7 +9,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
-import com.rcextract.minecord.event.ChannelCreateEvent;
+import com.rcextract.minecord.event.channel.ChannelCreateEvent;
 
 /**
  * A management system for channels in a server. Currently a channel manager can only helps a 

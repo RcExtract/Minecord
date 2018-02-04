@@ -1,4 +1,4 @@
-package com.rcextract.minecord.event;
+package com.rcextract.minecord.event.server;
 
 import org.bukkit.event.HandlerList;
 
