@@ -20,8 +20,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.PluginDescriptionFile;
 
-import com.rcextract.minecord.event.ChannelSwitchEvent;
 import com.rcextract.minecord.event.MinecordEvent;
+import com.rcextract.minecord.event.ServerCreateEvent;
+//import com.rcextract.minecord.event.UserEvent;
 
 public class CommandHandler implements CommandExecutor {
 
@@ -31,6 +32,7 @@ public class CommandHandler implements CommandExecutor {
 		this.minecord = minecord;
 	}
 	public static final Map<Player, Boolean> gui = new HashMap<Player, Boolean>();
+	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if (cmd.getName().equalsIgnoreCase("minecord")) {
@@ -74,7 +76,7 @@ public class CommandHandler implements CommandExecutor {
 				sender.sendMessage("Invitation: " + (server.needInvitation() ? "activated" : "deactivated"));
 				sender.sendMessage("Permanent: " + (server.isPermanent() ? "activated" : "deactivated"));
 				sender.sendMessage("The server is " + (!(server.ready()) ? "not" : "") + " ready to join.");
-				sender.sendMessage("There " + (server.getMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(server.getMembers().size()) + "member" + (server.getMembers().size() == 1 ? "" : "s") + "online.");
+				sender.sendMessage("There " + (server.getActiveMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(server.getActiveMembers().size()) + "member" + (server.getActiveMembers().size() == 1 ? "" : "s") + "online.");
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("servers")) {
@@ -103,7 +105,7 @@ public class CommandHandler implements CommandExecutor {
 					yeah = yeah && (approvement == null ? true : server.needApprovement() == approvement);
 					yeah = yeah && (invitation == null ? true : server.needInvitation());
 					yeah = yeah && (permanent == null ? true : server.isPermanent() == permanent);
-					yeah = yeah && server.getMembers().containsAll(members);
+					yeah = yeah && server.getActiveMembers().containsAll(members);
 					if (yeah) {
 						sender.sendMessage("Server #" + Integer.toString(server.getIdentifier()) + ":");
 						sender.sendMessage("Name: " + server.getName());
@@ -112,7 +114,7 @@ public class CommandHandler implements CommandExecutor {
 						sender.sendMessage("Invitation: " + (server.needInvitation() ? "activated" : "deactivated"));
 						sender.sendMessage("Permanent: " + (server.isPermanent() ? "activated" : "deactivated"));
 						sender.sendMessage("The server is " + (!(server.ready()) ? "not " : "") + "ready to join.");
-						sender.sendMessage("There " + (server.getMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(server.getMembers().size()) + " member" + (server.getMembers().size() == 1 ? "" : "s") + " online.");
+						sender.sendMessage("There " + (server.getActiveMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(server.getActiveMembers().size()) + " member" + (server.getActiveMembers().size() == 1 ? "" : "s") + " online.");
 					}
 				}
 				return true;
@@ -142,7 +144,8 @@ public class CommandHandler implements CommandExecutor {
 				sender.sendMessage("Name: " + channel.getName());
 				sender.sendMessage("Description: " + channel.getDescription());
 				sender.sendMessage("The channel is " + (!(channel.ready()) ? "not" : "") + " ready to join.");
-				sender.sendMessage("There " + (channel.getMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(channel.getMembers().size()) + "member" + (channel.getMembers().size() == 1 ? "" : "s") + "online.");
+				int size = channel.getActiveMembers().size();
+				sender.sendMessage("There " + (size == 1 ? "is" : "are") + " " + Integer.toString(size) + "member" + (size == 1 ? "" : "s") + "online.");
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("channels")) {
@@ -170,17 +173,19 @@ public class CommandHandler implements CommandExecutor {
 				for (Channel channel : server.getChannelManager().getChannels()) {
 					boolean yeah = desc == null ? true : channel.getDescription().equals(desc);
 					yeah = yeah && (main == null ? true : channel.isMain() == main);
-					yeah = yeah && channel.getMembers().containsAll(members);
+					yeah = yeah && channel.getActiveMembers().containsAll(members);
 					if (yeah) {
 						sender.sendMessage((channel.isMain() ? "Main " : "") + "Channel #" + Integer.toString(channel.getIdentifier()) + ":");
 						sender.sendMessage("Name: " + channel.getName());
 						sender.sendMessage("Description: " + channel.getDescription());
 						sender.sendMessage("The channel is " + (!(channel.ready()) ? "not" : "") + " ready to join.");
-						sender.sendMessage("There " + (channel.getMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(channel.getMembers().size()) + " member" + (channel.getMembers().size() == 1 ? "" : "s") + " online.");
+						int size = channel.getActiveMembers().size();
+						sender.sendMessage("There " + (size == 1 ? "is" : "are") + " " + Integer.toString(size) + " member" + (size == 1 ? "" : "s") + " online.");
 					}
 				}
 				return true;
 			}
+			//Deprecated
 			if (args[0].equalsIgnoreCase("profile")) {
 				Set<User> users = new HashSet<User>();
 				if (args.length == 1) {
@@ -192,45 +197,20 @@ public class CommandHandler implements CommandExecutor {
 					sender.sendMessage(ChatColor.YELLOW + "No users found.");
 					return true;
 				}
+				/*Deprecation Message*/sender.sendMessage(ChatColor.YELLOW + "This command is deprecated.");
 				for (User target : users) {
 					sender.sendMessage("User #" + Integer.toString(target.getIdentifier()) + ":");
 					sender.sendMessage("Name: " + target.getName());
 					sender.sendMessage("Nickname: " + target.getNickName());
 					sender.sendMessage("Description: " + target.getDescription());
 					sender.sendMessage("UUID: " + target.getPlayer().getUniqueId().toString());
-					sender.sendMessage("Server: " + target.getChannel().getChannelManager().getServer().getName());
-					sender.sendMessage("Channel: " + target.getChannel().getName());
+					sender.sendMessage("Viewing Server: " + target.getMain().getChannel().getChannelManager().getServer());
+					sender.sendMessage("Channel: " + target.getMain().getChannel().getName());
 					sender.sendMessage("Rank: " + target.getRank().getName());
 				}
 				return true;
 			}
-			if (args[0].equalsIgnoreCase("create")) {
-				if (args.length == 1) {
-					sender.sendMessage(ChatColor.RED + "Please specify a name!");
-					return true;
-				}
-				String name = args[1];
-				String desc = null;
-				Boolean approvement = null;
-				Boolean invitation = null;
-				if (args.length > 2 && !(args[2].equals("null"))) {
-					desc = args[2];
-				}
-				if (args.length > 3 && !(args[3].equals("null"))) {
-					approvement = Boolean.parseBoolean(args[3]);
-				}
-				if (args.length > 4 && !(args[4].equals("null"))) {
-					invitation = Boolean.parseBoolean(args[4]);
-				}
-				try {
-					Minecord.getServerManager().createServer(name, desc, approvement, invitation, null, null);
-				} catch (DuplicatedException e) {
-					sender.sendMessage(ChatColor.RED + "A server with that name already exists!");
-					return true;
-				}
-				sender.sendMessage(ChatColor.GREEN + "A server has been successfully created!");
-				return true;
-			}
+
 			if (!(sender instanceof Player)) {
 				sender.sendMessage(ChatColor.RED + "This command can only be executed as a player!");
 				return true;
@@ -241,6 +221,35 @@ public class CommandHandler implements CommandExecutor {
 				if (gui.get(player) == null) gui.put(player, false);
 				gui.put(player, !(gui.get(player)));
 				player.sendMessage(ChatColor.GREEN + "You have selected to use the " + (gui.get(player) ? "GUI" : "Command System") + "!");
+				return true;
+			}
+			if (args[0].equalsIgnoreCase("create")) {
+				if (args.length == 1) {
+					sender.sendMessage(ChatColor.RED + "Please specify a name!");
+					return true;
+				}
+				String name = args[2];
+				String desc = null;
+				Boolean approvement = null;
+				Boolean invitation = null;
+				if (args.length > 3 && !(args[3].equals("null"))) 
+					desc = args[2];
+				if (args.length > 4 && !(args[4].equals("null"))) 
+					approvement = Boolean.parseBoolean(args[3]);
+				if (args.length > 5 && !(args[5].equals("null"))) 
+					invitation = Boolean.parseBoolean(args[4]);
+				ServerCreateEvent event = new ServerCreateEvent(name, desc, approvement, invitation, new ChannelManager(), new RankManager());
+				Bukkit.getPluginManager().callEvent(event);
+				if (event.isCancelled()) return true;
+				Server server = null;
+				try {
+					server = Minecord.getServerManager().createServer(event.getName(), event.getDescription(), event.isApprovement(), event.isInvitation(), event.getChannelManager(), event.getRankManager());
+				} catch (DuplicatedException e) {
+					sender.sendMessage(ChatColor.RED + "A server with that name already exists!");
+					return true;
+				}
+				sender.sendMessage(ChatColor.GREEN + "A server has been successfully created!");
+				Bukkit.dispatchCommand(sender, "minecord join " + server.getName());
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("join")) {
@@ -257,45 +266,90 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.RED + "Failed to join the locked server!");
 					return true;
 				}
-				if (server.getMembers().contains(user)) {
-					player.sendMessage(ChatColor.YELLOW + "You are already in the server!");
+				ServerIdentity identity = user.getIdentity(server);
+				if (identity != null && identity.isActivated()) {
+					player.sendMessage(ChatColor.RED + "You are already in the server!");
 					return true;
 				}
-				Channel channel = server.getChannelManager().getMainChannel();
-				if (args.length == 3) {
-					Channel custom = server.getChannelManager().getChannel(args[2]);
-					if (custom == null) {
-						player.sendMessage(ChatColor.RED + "Failed to find a channel with that name in the server!");
-						player.sendMessage(ChatColor.YELLOW + "Assigning you to the default channel.");
-					} else {
-						channel = custom;
-					}
-				}
-				if (!(channel.ready())) {
-					player.sendMessage(ChatColor.RED + "Failed to join the locked channel!");
-					return true;
-				}
-				if (channel.getMembers().contains(user)) {
-					player.sendMessage(ChatColor.YELLOW + "You are already in the channel!");
-					return true;
-				}
-				ChannelSwitchEvent event = new ChannelSwitchEvent(channel, user);
-				Bukkit.getPluginManager().callEvent(event);
-				if (!(event.isCancelled())) {
-					user.setChannel(event.getChannel());
+				user.join(server);
+				if (args.length != 3) {
 					player.sendMessage(ChatColor.GREEN + "You have successfully joined the server!");
 					return true;
 				}
+				Channel channel = server.getChannelManager().getChannel(args[2]);
+				if (channel == null) {
+					player.sendMessage(ChatColor.RED + "Failed to find a channel with that name in the server!");
+					player.sendMessage(ChatColor.YELLOW + "Setting your view to the default channel.");
+					channel = server.getChannelManager().getMainChannel();
+				}
+				Bukkit.dispatchCommand(sender, "minecord switchview " + args[2]);
+				return true;
+			}
+			if (args[0].equalsIgnoreCase("switchview")) {
+				if (args.length == 1) {
+					player.sendMessage(ChatColor.RED + "Please specify a server!");
+					return true;
+				}
+				Server server = Minecord.getServerManager().getServer(args[1]);
+				ServerIdentity identity = user.getIdentity(server);
+				if (server == null || identity == null || !(identity.isActivated())) {
+					player.sendMessage(ChatColor.RED + "Failed to find the server in your list of joined servers!");
+					return true;
+				}
+				if (args.length == 2) {
+					player.sendMessage(ChatColor.RED + "Please specify a channel!");
+					return true;
+				}
+				Channel channel = server.getChannelManager().getChannel(args[2]);
+				Listener listener = identity.getListener(channel);
+				if (channel == null) {
+					player.sendMessage(ChatColor.RED + "Failed to find a channel with this name!");
+					return true;
+				}
+				if (!(channel.ready())) {
+					player.sendMessage(ChatColor.RED + "Failed to switch view to a locked channel!");
+					return true;
+				}
+				user.setMain(listener);
+				player.sendMessage(ChatColor.GREEN + "You have successfully switched view to channel " + channel.getName());
+				player.sendMessage(ChatColor.YELLOW + "Loading messages...");
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("leave")) {
-				ChannelSwitchEvent event = new ChannelSwitchEvent(Minecord.getServerManager().getServer("default").getChannelManager().getMainChannel(), user);
-				
-				if (!(event.isCancelled())) {
-					user.setChannel(event.getChannel());
-					player.sendMessage(ChatColor.GREEN + "You have successfully left the channel!");
+				if (args.length == 1) {
+					player.sendMessage(ChatColor.RED + "Please specify the server of the channel to leave!");
 					return true;
 				}
+				Server server = Minecord.getServerManager().getServer(args[1]);
+				if (server == null) {
+					player.sendMessage(ChatColor.RED + "Failed to find a server with that name!");
+					return true;
+				}
+				if (!(server.getActiveMembers().contains(user))) {
+					player.sendMessage(ChatColor.YELLOW + "You are not in the server!");
+					return true;
+				}
+				if (args.length == 2) {
+					player.sendMessage(ChatColor.RED + "Please specify the channel to leave!");
+					return true;
+				}
+				Channel channel = server.getChannelManager().getChannel(args[2]);
+				if (channel == null) {
+					player.sendMessage(ChatColor.RED + "Failed to find a channel with that name!");
+					return true;
+				}
+				if (!(channel.getActiveMembers().contains(user))) {
+					player.sendMessage(ChatColor.RED + "You are not in the channel!");
+					return true;
+				}
+				
+				/*ListenerStatusUpdateEvent event = new ListenerStatusUpdateEvent(user.getListener(channel), ListenerStatus.DEACTIVATED);
+				Bukkit.getPluginManager().callEvent(event);
+				if (!(event.isCancelled())) {
+					user.leave(channel);*/
+					player.sendMessage(ChatColor.GREEN + "You have successfully left the channel!");
+					/*return true;
+				}*/
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("editserver")) {
@@ -373,6 +427,7 @@ public class CommandHandler implements CommandExecutor {
 			 *   create, setmain
 			 *       
 			 */
+			//Deprecated
 			if (!(editingTarget.keySet().contains(user))) {
 				player.sendMessage(ChatColor.RED + "You haven't selected an editing target! Please select it with /minecord select <server> <channel|null>.");
 				return true;
@@ -387,7 +442,7 @@ public class CommandHandler implements CommandExecutor {
 				return true;
 			}
 			boolean permitted = false;
-			for (Permission permission : user.getRank().getPermissions())
+			/*Deprecation Message*/for (Permission permission : user.getRank().getPermissions())
 				try {
 					permitted = permitted || permission.getName().equalsIgnoreCase("minecord." + clazz.getSimpleName().toLowerCase() + "." + (String) clazz.getMethod("getName").invoke(obj) + "." + args[0]);
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException

@@ -1,13 +1,13 @@
+//"You have 1 unread messages on channel AnnouncementsChannel" is coming soon."
+
 package com.rcextract.minecord;
 
 /*import java.util.ArrayList;*/
-import java.util.Date;
-import java.util.HashSet;
+import java.util.Random;
 /*import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;*/
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
 /*import java.util.UUID;
@@ -15,7 +15,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;*/
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -36,7 +35,9 @@ public class EventManager implements Listener {
 	 */
 	@EventHandler
 	public void onPlayerLogin(PlayerLoginEvent event) {
-		Minecord.getUserManager().registerPlayerIfAbsent(event.getPlayer(), null, null);
+		//Minecord.getUserManager().registerPlayerIfAbsent(event.getPlayer(), null, null);
+		if (!(Minecord.getUserManager().isRegistered(event.getPlayer()))) 
+			Minecord.getUserManager().registerPlayer(null, null, null, event.getPlayer(), null);
 	}
 	/**
 	 * Distributes the messages to suitable players and serialize them.
@@ -44,33 +45,23 @@ public class EventManager implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerChat(AsyncPlayerChatEvent event) {
-		//Handles the chat sender.
+		if (event.isCancelled()) return;
 		event.setCancelled(true);
-		//Raw sent message.
 		String message = event.getMessage();
-		//Sender in player form.
-		Player player = event.getPlayer();
-		//Sender in user form.
-		User sender = Minecord.getUserManager().getUser(player);
-		//Message sent time.
-		/*Date date = new Date();*/
-		//Players that will instantly receive message after finish handling.
-		/*Set<Player> recipients = new HashSet<Player>();*/
-		/*Users that will receive message, regardless of its online state. Message will be sent to 
-		online players instantly regarding to the above set. Offline players will receive the 
-		message while loading messages when joined the server.*/
-		Set<User> users = new HashSet<User>();
-		//All user tags occured in the message.
-		/*List<UserTagEvent> tags = new ArrayList<UserTagEvent>();*/
-		users.addAll(sender.getChannel().getMembers());
-		int id = ThreadLocalRandom.current().nextInt();
-		while (UserMessageEvent.REGISTERED_IDENTIFIERS.contains(id)) id = ThreadLocalRandom.current().nextInt();
-		UserMessageEvent e = new UserMessageEvent(id, sender.getChannel(), sender, message, users, null, null);
+		User sender = Minecord.getUserManager().getUser(event.getPlayer());
+		Channel channel = sender.getMain().getChannel();
+		Set<User> users = channel.getActiveMembers();
+		UserMessageEvent e = new UserMessageEvent(message, sender.getMain().getChannel(), sender, users);
 		Bukkit.getPluginManager().callEvent(e);
 		if (e.isCancelled()) return;
+		int id = new Random().nextInt();
+		while (channel.getMessage(id) != null) id = new Random().nextInt();
+		sender.getMain().getChannel().messages.add(new Message(id, sender, e.getMessage(), e.getDate()));
 		for (User user : users) 
-			if (user.isOnline()) 
-				user.getOnlinePlayer().sendMessage(Minecord.applyFormat(user.getName(), user.getNickName(), user.getPlayer().getUniqueId().toString(), e.getMessage(), new Date().toString()));
+			if (user.getMain().getChannel() == channel) 
+				user.applyMessage();
+			else if (user.getIdentity(channel.getChannelManager().getServer()).getListener(channel).isNotify()) 
+				/*Coming soon (See top)*/;
 		//Tag detection
 		/*LinkedHashMap<String, Player> segments = new LinkedHashMap<String, Player>();
 		for (String segment : event.getMessage().split("@")) segments.put(segment, null);
@@ -152,6 +143,6 @@ public class EventManager implements Listener {
 	 */
 	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent event) {
-		Minecord.updateMessage(Minecord.getUserManager().getUser(event.getPlayer()), false);
+		Minecord.getUserManager().getUser(event.getPlayer()).applyMessage();
 	}
 }

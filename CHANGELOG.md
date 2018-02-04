@@ -4,6 +4,20 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## 1.0.0 (Unstable)
+- Added Message class for storing messages. (Alternative of UserMessageEvent) They will not be saved to database.
+- Updated Command Handler to adapt to new Multi-Chat system.
+- Database manager updated from 5.1 (minecord5dot1) to 6.0 (minecord6dot0).
+- Added a method to load old version of data to new version of plugin.
+- Fixed some create event bugs
+- Channel Switch Event is deprecated
+- Finalized some fields
+- Added ListenerUpdateEvent and ServerIdentityUpdateEvent
+- Identitfier deprecated in UserMessageEvent, due to no longer stored in channels as messaging records.
+- Update message restore system. Now currently restores unread messages only.
+- Added Multi-Chat system along with switchview command.
+- Added a utility class - Pair.
+
 ## Beta 12.1
 - Executing command select without argument will now display your current editing target if selected
 - Fixed various bugs

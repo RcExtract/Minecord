@@ -5,6 +5,7 @@ import org.bukkit.event.HandlerList;
 import com.rcextract.minecord.Channel;
 import com.rcextract.minecord.User;
 
+@Deprecated
 public class ChannelSwitchEvent extends UserEvent {
 
 	private static final HandlerList handlers = new HandlerList();

@@ -7,7 +7,7 @@ import com.rcextract.minecord.Server;
  */
 public abstract class ServerEvent extends MinecordEvent {
 	
-	private Server server;
+	private final Server server;
 	/**
 	 * Constructs a new Server Event with a specific target.
 	 * @param server The target server.

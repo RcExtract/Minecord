@@ -15,6 +15,7 @@ import com.rcextract.minecord.event.ChannelCreateEvent;
  * A management system for channels in a server. Currently a channel manager can only helps a 
  * server, but servers can share the same channel manager in the future.
  */
+
 public class ChannelManager {
 
 	private Channel main;
@@ -24,7 +25,7 @@ public class ChannelManager {
 	 * @param channels The channels to be imported at instantiation. There is no difference between
 	 * importing channels and adding channels each.
 	 */
-	public ChannelManager(Channel ... channels) {
+	protected ChannelManager(Channel ... channels) {
 		this.channels = new HashSet<Channel>(Arrays.asList(channels));
 	}
 	/**
@@ -95,7 +96,7 @@ public class ChannelManager {
 	 */
 	public Channel getChannel(User user) {
 		for (Channel channel : channels) 
-			if (channel.getMembers().contains(user)) 
+			if (channel.getActiveMembers().contains(user)) 
 				return channel;
 		return null;
 	}
@@ -106,6 +107,7 @@ public class ChannelManager {
 	 * @return The channel created.
 	 * @throws DuplicatedException If the name is used by another channel.
 	 */
+	@Deprecated
 	public Channel createChannel(String name, String desc) throws DuplicatedException {
 		Validate.notNull(name);
 		if (getChannel(name) != null) throw new DuplicatedException();
@@ -113,7 +115,7 @@ public class ChannelManager {
 		int id = ThreadLocalRandom.current().nextInt();
 		while (getChannel(id) != null || id < 0) id = ThreadLocalRandom.current().nextInt();
 		Channel channel = new Channel(id, name, desc, false);
-		ChannelCreateEvent event = new ChannelCreateEvent(getServer(), channel);
+		ChannelCreateEvent event = new ChannelCreateEvent(getServer(), name, desc);
 		Bukkit.getPluginManager().callEvent(event);
 		if (!(event.isCancelled())) {
 			channels.add(channel);
@@ -122,7 +124,7 @@ public class ChannelManager {
 		return channel;
 	}
 	public boolean disbandChannel(Channel target, Channel main) {
-		Validate.notNull(main);
+		if (!(channels.contains(main))) throw new IllegalArgumentException();
 		if (target == this.main) this.main = main;
 		return channels.remove(target);
 	}

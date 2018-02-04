@@ -24,7 +24,7 @@ import com.rcextract.minecord.ServerManager;
  */
 public abstract class MinecordEvent extends Event implements Cancellable {
 
-	private Date date;
+	private final Date date;
 	private boolean cancelled;
 	{
 		Minecord.getRecordManager().record(this);

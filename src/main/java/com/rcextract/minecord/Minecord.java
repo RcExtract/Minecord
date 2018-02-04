@@ -2,6 +2,8 @@ package com.rcextract.minecord;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -30,14 +32,21 @@ public class Minecord extends JavaPlugin {
 	protected static Minecord minecord;
 	private static Permission permission;
 	protected static String dbversion;
+	protected static String olddbversion;
+	protected static Map<Double, Channel> msg;
 	
+	public static String captializeFirstLetter(String content) {
+		return content.substring(0, 1).toUpperCase() + content.substring(1);
+	}
 	@Override
 	public void onEnable() {
 		minecord = this;
-		dbversion = "5dot1";
+		dbversion = "6dot0";
+		olddbversion = "5dot1";
 		cm = new ConfigManager(this);
 		panel = new InternalManager();
 		permission = Bukkit.getServicesManager().getRegistration(Permission.class).getProvider();
+		msg = new HashMap<Double, Channel>();
 		loadProperties();
 		loadData();
 		checkUpdate();
@@ -122,13 +131,15 @@ public class Minecord extends JavaPlugin {
 	 * Loads messages for a user.
 	 * @param user The target user.
 	 * @param wash Determination of clearing out old messages.
+	 * @deprecated This method no longer works.
 	 */
+	@Deprecated
 	public static void updateMessage(User user, boolean wash) {
 		if (user.isOnline()) {
 			Player player = user.getOnlinePlayer();
 			if (wash) user.clear();
 			for (UserMessageEvent event : panel.getRecords(UserMessageEvent.class)) {
-				if (event.getChannel() == user.getChannel()) 
+				if (event.getChannel() == null) 
 					player.sendMessage(event.getMessage());
 			}
 		}
@@ -168,7 +179,7 @@ public class Minecord extends JavaPlugin {
 			}
 		for (OfflinePlayer player : Bukkit.getOfflinePlayers()) 
 			if (!(Minecord.getUserManager().isRegistered(player))) 
-				Minecord.getUserManager().registerPlayer(player, null, null);
+				Minecord.getUserManager().registerPlayer(null, null, null, player, new Listener(panel.getMain().getChannelManager().getMainChannel(), true, 0));
 		panel.initialize();
 	}
 	public static void loadProperties() {
@@ -195,7 +206,9 @@ public class Minecord extends JavaPlugin {
 					minecord.getLogger().log(Level.INFO, "Loading data from database...");
 					dm = new DatabaseManager();
 					dm.initialize();
-					dm.load();
+					if (dm.loadDataFromOldDb) 
+						dm.loadFromOld();
+					else dm.load();
 					minecord.getLogger().log(Level.INFO, "Data are successfully loaded.");
 				} catch (ClassNotFoundException | SQLException e) {
 					minecord.getLogger().log(Level.SEVERE, "An error occured while attempting to load the data.", e);

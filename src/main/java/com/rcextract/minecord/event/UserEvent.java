@@ -4,7 +4,7 @@ import com.rcextract.minecord.User;
 
 public abstract class UserEvent extends MinecordEvent {
 
-	private User user;
+	private final User user;
 	public UserEvent(User user) {
 		super();
 		this.user = user;

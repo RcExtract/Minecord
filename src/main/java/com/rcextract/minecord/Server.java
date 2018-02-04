@@ -163,10 +163,10 @@ public class Server implements RecordManager<ServerEvent> {
 	 * Gets all online players joined the server. Modifying this HashSet does not affect anything.
 	 * @return The total online players added from channels.
 	 */
-	public Set<User> getMembers() {
+	public Set<User> getActiveMembers() {
 		Set<User> onlines = new HashSet<User>();
 		for (Channel channel : channelManager.getChannels()) 
-			onlines.addAll(channel.getMembers());
+			onlines.addAll(channel.getActiveMembers());
 		return onlines;
 	}
 	/**
@@ -174,6 +174,7 @@ public class Server implements RecordManager<ServerEvent> {
 	 * method, redirecting the user to the default channel.
 	 * @param user The target user.
 	 */
+	@Deprecated
 	public void remove(User user) {
 		user.setChannel(null);
 	}

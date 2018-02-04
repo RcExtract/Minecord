@@ -2,7 +2,6 @@ package com.rcextract.minecord.event;
 
 import org.bukkit.event.HandlerList;
 
-import com.rcextract.minecord.Channel;
 import com.rcextract.minecord.Server;
 
 public class ChannelCreateEvent extends ServerEvent {
@@ -11,16 +10,26 @@ public class ChannelCreateEvent extends ServerEvent {
 	public static HandlerList getHandlerList() {
 		return handlers;
 	}
-	private Channel channel;
-	public ChannelCreateEvent(Server server, Channel channel) {
+	private String name;
+	private String desc;
+	public ChannelCreateEvent(Server server, String name, String desc) {
 		super(server);
-		this.channel = channel;
+		this.name = name;
+		this.desc = desc;
 	}
 
-	public Channel getChannel() {
-		return channel;
+	public String getName() {
+		return name;
 	}
-
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getDescription() {
+		return desc;
+	}
+	public void setDescription(String desc) {
+		this.desc = desc;
+	}
 	@Override
 	public HandlerList getHandlers() {
 		return handlers;

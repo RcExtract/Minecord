@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.rcextract.minecord.event.ChannelEvent;
-import com.rcextract.minecord.event.UserMessageEvent;
 
 /**
  * In Minecord, a Channel groups up a set of users, usually by small topic of a big topic. Main 
@@ -29,7 +28,7 @@ public class Channel implements RecordManager<ChannelEvent> {
 	private String name;
 	private String desc;
 	private boolean locked;
-	protected List<UserMessageEvent> recent;
+	protected List<Message> messages;
 	/**
 	 * This constructor is reserved for initialization.
 	 */
@@ -38,7 +37,7 @@ public class Channel implements RecordManager<ChannelEvent> {
 		this.name = name;
 		this.desc = desc;
 		this.locked = locked;
-		this.recent = new ArrayList<UserMessageEvent>();
+		this.messages = new ArrayList<Message>();
 	}
 	/**
 	 * Gets the identifier of the channel.
@@ -104,11 +103,13 @@ public class Channel implements RecordManager<ChannelEvent> {
 	 * Gets all online players joined the channel. Modifying this HashSet does not affect anything.
 	 * @return All online players joined the channel.
 	 */
-	public Set<User> getMembers() {
+	public Set<User> getActiveMembers() {
 		Set<User> users = new HashSet<User>();
-		for (User user : Minecord.getUserManager().getUsers()) 
-			if (user.getChannel() == this) 
+		for (User user : Minecord.getUserManager().getUsers()) {
+			Listener listener = user.getListener(this);
+			if (listener != null && user.getIdentity(listener).isActivated()) 
 				users.add(user);
+		}
 		return users;
 	}
 	/**
@@ -151,21 +152,27 @@ public class Channel implements RecordManager<ChannelEvent> {
 	public <E extends ChannelEvent> E getOldestRecord(Class<E> clazz) {
 		return Minecord.getRecordManager().getOldestRecord(clazz);
 	}
-	public List<UserMessageEvent> getMessages() {
-		return recent;
+	public List<Message> getMessages() {
+		return messages;
 	}
-	public UserMessageEvent getLatestMessage() {
-		if (recent.isEmpty()) return null;
-		return recent.get(recent.size() - 1);
+	public Message getLatestMessage() {
+		if (messages.isEmpty()) return null;
+		return messages.get(messages.size() - 1);
 	}
-	public UserMessageEvent getOldestMessage() {
-		if (recent.isEmpty()) return null;
-		return recent.get(0);
+	public Message getOldestMessage() {
+		if (messages.isEmpty()) return null;
+		return messages.get(0);
 	}
-	public UserMessageEvent getMessage(String message) {
-		for (UserMessageEvent event : recent) 
-			if (event.getMessage().equals(message)) 
-				return event;
+	public Message getMessage(int id) {
+		for (Message message : messages) 
+			if (message.getIdentifier() == id) 
+				return message;
+		return null;
+	}
+	public Message getMessage(String message) {
+		for (Message messageobj : messages) 
+			if (messageobj.getMessage().equals(message)) 
+				return messageobj;
 		return null;
 	}
 }
