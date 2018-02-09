@@ -1,6 +1,7 @@
 package com.rcextract.minecord;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -147,17 +148,18 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		if (name == null) name = player.getName();
 		if (nickname == null) nickname = name;
 		if (desc == null) desc = "A default user description.";
+		Set<ServerIdentity> identityset = new HashSet<ServerIdentity>(Arrays.asList(identities));
 		if (identities.length == 0) 
 			if (main == null) {
-				identities[0] = new ServerIdentity(this.getMain(), true, null);
+				identityset.add(new ServerIdentity(this.getMain(), true, null));
 				main = new Listener(getMain().getChannelManager().getMainChannel(), true, 0);
 			} else 
-				identities[0] = new ServerIdentity(main.getChannel().getChannelManager().getServer(), true, null, main);
+				identityset.add(new ServerIdentity(main.getChannel().getChannelManager().getServer(), true, null, main));
 		boolean contains = false;
-		for (ServerIdentity identity : identities) 
+		for (ServerIdentity identity : identityset) 
 			contains = contains || identity.getListeners().contains(main);
 		if (!(contains)) throw new IllegalArgumentException();
-		user = new User(id, name, nickname, desc, player, main, identities);
+		user = new User(id, name, nickname, desc, player, main, identityset.toArray(new ServerIdentity[identityset.size()]));
 		users.add(user);
 		return user;
 	}

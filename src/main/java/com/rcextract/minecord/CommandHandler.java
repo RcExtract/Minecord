@@ -209,6 +209,12 @@ public class CommandHandler implements CommandExecutor {
 				}
 				return true;
 			}
+			if (args[0].equalsIgnoreCase("users")) {
+				for (User user : Minecord.getUserManager().getUsers()) {
+					System.out.println(user.getName());
+				}
+				return true;
+			}
 
 			if (!(sender instanceof Player)) {
 				sender.sendMessage(ChatColor.RED + "This command can only be executed as a player!");

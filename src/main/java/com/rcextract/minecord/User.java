@@ -115,8 +115,9 @@ public class User implements RecordManager<UserEvent>, ListenerHolder {
 			identities.add(nidentity);
 			return;
 		}
-		if (!(identity.isJoined())) 
-			identity.setJoined(true);
+		if (identity.isJoined()) return;
+		identity.setJoined(true);
+		setMain(identity.getListener(identity.getServer().getChannelManager().getMainChannel()));
 	}
 	/**
 	 * Deactivates the preference towards the server. If permanently, removes the preference towards the server.

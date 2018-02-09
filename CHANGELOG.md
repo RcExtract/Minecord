@@ -4,6 +4,11 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## 1.0.2
+- Fixed a bug that prints minecord.properties
+- Fixed automatic ServerIdentity generation bug
+- Joining servers now change the view of a user to the main channel in it
+
 ## 1.0.1
 - Fixed all initial bugs
 - Fixed Jar builder (Not visible from source)

@@ -18,11 +18,11 @@ public class ServerIdentity implements Cloneable, ListenerHolder {
 	public ServerIdentity(Server server, boolean joined, Rank rank, Listener ... listeners) {
 		Validate.notNull(server);
 		if (rank == null) rank = server.getRankManager().getMain();
-		if (listeners.length == 0) listeners[0] = new Listener(server.getChannelManager().getMainChannel(), true, 0);
 		this.server = server;
 		this.joined = joined;
 		this.rank = rank;
 		this.listeners = new HashSet<Listener>(Arrays.asList(listeners));
+		if (this.listeners.isEmpty()) this.listeners.add(new Listener(server.getChannelManager().getMainChannel(), true, 0));
 		validate();
 		registerAllAbsentListeners(true, 0);
 	}

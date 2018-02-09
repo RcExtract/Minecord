@@ -48,7 +48,6 @@ public class Minecord extends JavaPlugin {
 		permission = Bukkit.getServicesManager().getRegistration(Permission.class).getProvider();
 		msg = new HashMap<Double, Channel>();
 		loadProperties();
-		System.out.println(properties.toString());
 		loadData();
 		checkUpdate();
 		new IncompatibleDetector(this).runTask(this);
