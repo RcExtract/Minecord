@@ -94,12 +94,9 @@ public class User implements RecordManager<UserEvent>, ListenerHolder {
 	/**
 	 * Adds a preference towards the server. Does not affect the current situation of user.
 	 * @param identity The preference.
-	 * @throws DuplicatedException If a preference with the same server exists on the user.
 	 */
-	public void addIdentity(ServerIdentity identity) throws DuplicatedException {
-		if (identities.contains(identity)) return;
-		if (getIdentity(identity.getServer()) != null) throw new DuplicatedException();
-		identities.add(identity);
+	public boolean addIdentity(ServerIdentity identity) {
+		return identities.add(identity);
 	}
 	/**
 	 * Activates the current preference towards the server. Creates an activated preference towards the server if not existed.

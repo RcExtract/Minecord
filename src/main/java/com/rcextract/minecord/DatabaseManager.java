@@ -146,11 +146,7 @@ public class DatabaseManager {
 			}
 			for (User user : Minecord.getUserManager().getUsers()) {
 				for (ServerIdentity identity : identities.row(user).keySet())
-					try {
-						user.addIdentity(identity);
-					} catch (DuplicatedException e) {
-						e.printStackTrace();
-					}
+					user.addIdentity(identity);
 				user.setMain(listeners.column(user).values().iterator().next());
 			}
 		}

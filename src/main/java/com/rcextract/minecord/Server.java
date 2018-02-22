@@ -37,11 +37,13 @@ public class Server implements RecordManager<ServerEvent> {
 	private boolean invitation;
 	private boolean permanent;
 	private boolean locked;
+	@Deprecated
 	private ChannelManager channelManager;
 	private RankManager rankManager;
 	/**
 	 * This constructor is reserved for initialization.
 	 */
+	@Deprecated
 	protected Server(int id, String name, String desc, boolean approvement, boolean invitation, boolean permanent, boolean locked, ChannelManager channelManager, RankManager rankManager) {
 		this.id = id;
 		this.name = name;
@@ -182,6 +184,7 @@ public class Server implements RecordManager<ServerEvent> {
 	 * Gets the channel manager.
 	 * @return The channel manager.
 	 */
+	@Deprecated
 	public ChannelManager getChannelManager() {
 		return channelManager;
 	}
@@ -191,6 +194,7 @@ public class Server implements RecordManager<ServerEvent> {
 	 * This method is reserved for initialization.
 	 * @param channelManager The channel manager.
 	 */
+	@Deprecated
 	protected void setChannelManager(ChannelManager channelManager) {
 		this.channelManager = channelManager;
 	}

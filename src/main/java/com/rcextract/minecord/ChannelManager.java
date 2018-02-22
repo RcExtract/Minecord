@@ -14,8 +14,10 @@ import com.rcextract.minecord.event.channel.ChannelCreateEvent;
 /**
  * A management system for channels in a server. Currently a channel manager can only helps a 
  * server, but servers can share the same channel manager in the future.
+ * @deprecated This class will be removed soon, and its fields will be moved to Server class.
  */
 
+@Deprecated
 public class ChannelManager {
 
 	private Channel main;
