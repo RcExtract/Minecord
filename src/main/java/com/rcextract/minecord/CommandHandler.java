@@ -134,7 +134,7 @@ public class CommandHandler implements CommandExecutor {
 					sender.sendMessage(ChatColor.RED + "Please specify a channel name!");
 					return true;
 				}
-				Channel channel = server.getChannelManager().getChannel(args[2]);
+				Channel channel = server.getChannel(args[2]);
 				if (channel == null) {
 					sender.sendMessage(ChatColor.RED + "The channel does not exist!");
 					return true;
@@ -170,7 +170,7 @@ public class CommandHandler implements CommandExecutor {
 				for (int i = 4; i < args.length; i++) {
 					members.addAll(Minecord.getUserManager().getUsers(args[i]));
 				}
-				for (Channel channel : server.getChannelManager().getChannels()) {
+				for (Channel channel : server.getChannels()) {
 					boolean yeah = desc == null ? true : channel.getDescription().equals(desc);
 					yeah = yeah && (main == null ? true : channel.isMain() == main);
 					yeah = yeah && channel.getActiveMembers().containsAll(members);
@@ -204,7 +204,7 @@ public class CommandHandler implements CommandExecutor {
 					sender.sendMessage("Nickname: " + target.getNickName());
 					sender.sendMessage("Description: " + target.getDescription());
 					sender.sendMessage("UUID: " + target.getPlayer().getUniqueId().toString());
-					sender.sendMessage("Viewing Server: " + target.getMain().getChannel().getChannelManager().getServer());
+					sender.sendMessage("Viewing Server: " + target.getMain().getChannel().getServer());
 					sender.sendMessage("Channel: " + target.getMain().getChannel().getName());
 					sender.sendMessage("Rank: " + target.getRank().getName());
 				}
@@ -244,12 +244,13 @@ public class CommandHandler implements CommandExecutor {
 					approvement = Boolean.parseBoolean(args[3]);
 				if (args.length > 5 && !(args[5].equals("null"))) 
 					invitation = Boolean.parseBoolean(args[4]);
-				ServerCreateEvent event = new ServerCreateEvent(name, desc, approvement, invitation, new ChannelManager(), new RankManager());
+				//Not fully implemented the new API. Should trigger ChannelCreateEvent first.
+				ServerCreateEvent event = new ServerCreateEvent(name, desc, approvement, invitation, new RankManager(), null);
 				Bukkit.getPluginManager().callEvent(event);
 				if (event.isCancelled()) return true;
 				Server server = null;
 				try {
-					server = Minecord.getServerManager().createServer(event.getName(), event.getDescription(), event.isApprovement(), event.isInvitation(), event.getChannelManager(), event.getRankManager());
+					server = Minecord.getServerManager().createServer(event.getName(), event.getDescription(), event.isApprovement(), event.isInvitation(), event.getRankManager(), event.getMain(), event.getChannels().toArray(new Channel[event.getChannels().size() - 1]));
 				} catch (DuplicatedException e) {
 					sender.sendMessage(ChatColor.RED + "A server with that name already exists!");
 					return true;
@@ -282,11 +283,11 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.GREEN + "You have successfully joined the server!");
 					return true;
 				}
-				Channel channel = server.getChannelManager().getChannel(args[2]);
+				Channel channel = server.getChannel(args[2]);
 				if (channel == null) {
 					player.sendMessage(ChatColor.RED + "Failed to find a channel with that name in the server!");
 					player.sendMessage(ChatColor.YELLOW + "Setting your view to the default channel.");
-					channel = server.getChannelManager().getMainChannel();
+					channel = server.getMain();
 				}
 				Bukkit.dispatchCommand(sender, "minecord switchview " + args[2]);
 				return true;
@@ -306,7 +307,7 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.RED + "Please specify a channel!");
 					return true;
 				}
-				Channel channel = server.getChannelManager().getChannel(args[2]);
+				Channel channel = server.getChannel(args[2]);
 				Listener listener = identity.getListener(channel);
 				if (channel == null) {
 					player.sendMessage(ChatColor.RED + "Failed to find a channel with this name!");
@@ -339,7 +340,7 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.RED + "Please specify the channel to leave!");
 					return true;
 				}
-				Channel channel = server.getChannelManager().getChannel(args[2]);
+				Channel channel = server.getChannel(args[2]);
 				if (channel == null) {
 					player.sendMessage(ChatColor.RED + "Failed to find a channel with that name!");
 					return true;
@@ -397,7 +398,7 @@ public class CommandHandler implements CommandExecutor {
 					return true;
 				}
 				if (args.length == 3) {
-					channel = server.getChannelManager().getChannel(args[2]);
+					channel = server.getChannel(args[2]);
 					if (channel == null) {
 						player.sendMessage(ChatColor.YELLOW + "The channel does not exist. Selection has changed to the server " + server.getName() + "itself.");
 					}

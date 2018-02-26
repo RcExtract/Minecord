@@ -12,21 +12,30 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.OfflinePlayer;
 
 import com.rcextract.minecord.event.MinecordEvent;
+import com.rcextract.minecord.utils.ComparativeSet;
+import com.rcextract.minecord.utils.Pair;
 
 /**
  * The control panel of Minecord system.
  */
 public final class InternalManager implements ServerManager, UserManager, Recordable<MinecordEvent> {
 
-	protected final Set<Server> servers = new HashSet<Server>();
+	protected final ComparativeSet<Server> servers;
 	protected final Set<User> users = new HashSet<User>();
 	private final List<MinecordEvent> records = new ArrayList<MinecordEvent>();
 
-	protected InternalManager() {}
+	protected InternalManager() {
+		try {
+			servers = new ComparativeSet<Server>(Server.class, new Pair<String, Boolean>("getIdentifier", true), new Pair<String, Boolean>("getName", false));
+		} catch (NoSuchMethodException | SecurityException e) {
+			//This exception is never thrown.
+			throw new RuntimeException();
+		}
+	}
 	
 	public void initialize() {
 		for (Server server : getServers()) {
-			server.getChannelManager().initialize();
+			server.initialize();
 			server.getRankManager().initialize();
 		}
 		for (User user : Minecord.getUserManager().getUsers()) 
@@ -35,8 +44,8 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	}
 	
 	@Override
-	public Set<Server> getServers() {
-		return new HashSet<Server>(servers);
+	public ComparativeSet<Server> getServers() {
+		return servers;
 	}
 
 	@Override
@@ -52,23 +61,24 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	}
 
 	@Override
-	public Server getServer(OfflinePlayer player) {
+	public Set<Server> getServers(OfflinePlayer player) {
 		User user = getUser(player);
 		if (user == null) return null;
-		return getServer(user);
+		return getServers(user);
 	}
 	
 	@Override
-	public Server getServer(User user) {
+	public Set<Server> getServers(User user) {
+		Set<Server> servers = new HashSet<Server>();
 		for (Server server : servers) 
 			if (server.getActiveMembers().contains(user)) 
-				return server;
-		return null;
+				servers.add(server);
+		return servers;
 	}
 	
 	@Override
 	public Server getServer(Channel channel) {
-		for (Server server : servers) if (server.getChannelManager().getChannels().contains(channel)) return server;
+		for (Server server : servers) if (server.getChannels().contains(channel)) return server;
 		return null;
 	}
 	@Override
@@ -76,18 +86,19 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		return getServer("default");
 	}
 	@Override
-	public Server createServer(String name, String desc, Boolean approvement, Boolean invitation, ChannelManager channelManager, RankManager rankManager) throws DuplicatedException {
+	public Server createServer(String name, String desc, Boolean approvement, Boolean invitation, RankManager rankManager, Channel main, Channel ... channels) throws DuplicatedException {
 		Validate.notNull(name);
 		if (getServer(name) != null) throw new DuplicatedException();
 		if (desc == null) desc = "A default server description.";
 		if (approvement == null) approvement = true;
 		if (invitation == null) invitation = false;
-		if (channelManager == null) channelManager = new ChannelManager();
 		if (rankManager == null) rankManager = new RankManager();
-		int id = ThreadLocalRandom.current().nextInt();
-		while (getServer(id) != null || id < 0) id = ThreadLocalRandom.current().nextInt();
-		Server server = new Server(id, name, desc, approvement, invitation, false, false, channelManager, rankManager);
-		server.getChannelManager().initialize();
+		Set<Channel> channelset = new HashSet<Channel>(Arrays.asList(channels));
+		if (!(channelset.contains(main))) throw new IllegalArgumentException();
+		int id = new Random().nextInt();
+		while (getServer(id) != null) id = ThreadLocalRandom.current().nextInt();
+		Server server = new Server(id, name, desc, approvement, invitation, false, false, rankManager, main, channels);
+		server.initialize();
 		server.getRankManager().initialize();
 		servers.add(server);
 		return server;
@@ -131,9 +142,9 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		//String name = player.getName();
 		//String nickname = name;
 		//String desc = "A default user description";
-		if (channel == null) channel = getMain().getChannelManager().getMainChannel();
-		if (rank == null) rank = channel.getChannelManager().getServer().getRankManager().getMain();
-		else if (rank.getRankManager().getServer() != channel.getChannelManager().getServer()) throw new IllegalStateException("Both channel and rank must be in the same server!");
+		if (channel == null) channel = getMain().getMain();
+		if (rank == null) rank = channel.getServer().getRankManager().getMain();
+		else if (rank.getRankManager().getServer() != channel.getServer()) throw new IllegalStateException("Both channel and rank must be in the same server!");
 		/*User user = new User(id, name, nickname, desc, player, rank, new Listener(channel, ListenerStatus.VIEW, 0));
 		user.applyRank();
 		users.add(user);*/
@@ -152,9 +163,9 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		if (identities.length == 0) 
 			if (main == null) {
 				identityset.add(new ServerIdentity(this.getMain(), true, null));
-				main = new Listener(getMain().getChannelManager().getMainChannel(), true, 0);
+				main = new Listener(getMain().getMain(), true, 0);
 			} else 
-				identityset.add(new ServerIdentity(main.getChannel().getChannelManager().getServer(), true, null, main));
+				identityset.add(new ServerIdentity(main.getChannel().getServer(), true, null, main));
 		boolean contains = false;
 		for (ServerIdentity identity : identityset) 
 			contains = contains || identity.getListeners().contains(main);

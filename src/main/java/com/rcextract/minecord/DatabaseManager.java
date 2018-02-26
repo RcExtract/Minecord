@@ -79,7 +79,7 @@ public class DatabaseManager {
 				boolean invitation = serverset.getBoolean("invitation");
 				boolean permanent = serverset.getBoolean("permanent");
 				boolean locked = serverset.getBoolean("locked");
-				Server server = new Server(id, name, desc, approvement, invitation, permanent, locked, new ChannelManager(), new RankManager());
+				Server server = new Server(id, name, desc, approvement, invitation, permanent, locked, new RankManager(), null);
 				Minecord.getControlPanel().servers.add(server); 
 			}
 			ResultSet channelset = statement.executeQuery("SELECT * FROM channels;");
@@ -90,8 +90,8 @@ public class DatabaseManager {
 				String desc = channelset.getString("description");
 				boolean locked = channelset.getBoolean("locked");
 				Channel channel = new Channel(id, name, desc, locked);
-				if (server != null) server.getChannelManager().channels.add(channel);
-				if (channelset.getBoolean("main")) server.getChannelManager().setMainChannel(channel);
+				if (server != null) server.getChannels().add(channel);
+				if (channelset.getBoolean("main")) server.setMain(channel);
 			}
 			ResultSet rankset = statement.executeQuery("SELECT * FROM ranks");
 			while (rankset.next()) {
@@ -112,7 +112,7 @@ public class DatabaseManager {
 			ResultSet userset = statement.executeQuery("SELECT * FROM users;");
 			while (userset.next()) {
 				//Server server = Minecord.getServerManager().getServer(userset.getInt("server"));
-				//Channel channel = server == null ? null : server.getChannelManager().getChannel(userset.getInt("channel"));
+				//Channel channel = server == null ? null : server.getChannel(userset.getInt("channel"));
 				//Rank rank = server == null ? null : server.getRankManager().getRankByTag(userset.getString("rank"));
 				int id = userset.getInt("id");
 				String name = userset.getString("name");
@@ -127,7 +127,7 @@ public class DatabaseManager {
 			while (listenerset.next()) {
 				Integer identityid = listenerset.getInt("identity");
 				Server server = Minecord.getServerManager().getServer(listenerset.getInt("server"));
-				Channel channel = server == null ? null : server.getChannelManager().getChannel(listenerset.getInt("channel"));
+				Channel channel = server == null ? null : server.getChannel(listenerset.getInt("channel"));
 				boolean notify = listenerset.getBoolean("notify");
 				int index = listenerset.getInt("count");
 				User user = Minecord.getUserManager().getUser(listenerset.getInt("id"));
@@ -166,7 +166,7 @@ public class DatabaseManager {
 				boolean invitation = serverset.getBoolean("invitation");
 				boolean permanent = serverset.getBoolean("permanent");
 				boolean locked = serverset.getBoolean("locked");
-				Server server = new Server(id, name, desc, approvement, invitation, permanent, locked, new ChannelManager(), new RankManager());
+				Server server = new Server(id, name, desc, approvement, invitation, permanent, locked, new RankManager(), null);
 				Minecord.getControlPanel().servers.add(server); 
 			}
 			ResultSet channelset = statement.executeQuery("SELECT * FROM channels;");
@@ -177,8 +177,8 @@ public class DatabaseManager {
 				String desc = channelset.getString("description");
 				boolean locked = channelset.getBoolean("locked");
 				Channel channel = new Channel(id, name, desc, locked);
-				if (server != null) server.getChannelManager().channels.add(channel);
-				if (channelset.getBoolean("main")) server.getChannelManager().setMainChannel(channel);
+				if (server != null) server.getChannels().add(channel);
+				if (channelset.getBoolean("main")) server.setMain(channel);
 			}
 			ResultSet rankset = statement.executeQuery("SELECT * FROM ranks");
 			while (rankset.next()) {
@@ -199,7 +199,7 @@ public class DatabaseManager {
 			ResultSet userset = statement.executeQuery("SELECT * FROM users;");
 			while (userset.next()) {
 				Server server = Minecord.getServerManager().getServer(userset.getInt("server"));
-				Channel channel = server == null ? null : server.getChannelManager().getChannel(userset.getInt("channel"));
+				Channel channel = server == null ? null : server.getChannel(userset.getInt("channel"));
 				Rank rank = server == null ? null : server.getRankManager().getRankByTag(userset.getString("rank"));
 				int id = userset.getInt("id");
 				String name = userset.getString("name");
@@ -227,7 +227,7 @@ public class DatabaseManager {
 					serverstmt.setBoolean(6, server.isPermanent());
 					serverstmt.setBoolean(7, !(server.ready()));
 					serverstmt.executeUpdate();
-					for (Channel channel : server.getChannelManager().getChannels()) {
+					for (Channel channel : server.getChannels()) {
 						channelstmt.setInt(1, server.getIdentifier());
 						channelstmt.setInt(2, channel.getIdentifier());
 						channelstmt.setString(3, channel.getName());
@@ -264,14 +264,11 @@ public class DatabaseManager {
 			}
 			try (PreparedStatement userstmt = connection.prepareStatement("INSERT INTO users VALUES (?, ?, ?, ?, ?);")) {
 				for (User user : Minecord.getUserManager().getUsers()) {
-					/*statement.setInt(1, user.getChannel().getChannelManager().getServer().getIdentifier());
-					statement.setInt(2, user.getChannel().getIdentifier());
-					statement.setString(3, user.getRank().getTag());*/
-					userstmt.setInt(/*4*/1, user.getIdentifier());
-					userstmt.setString(/*5*/2, user.getName());
-					userstmt.setString(/*6*/3, user.getNickName());
-					userstmt.setString(/*7*/4, user.getDescription());
-					userstmt.setString(/*8*/5, user.getPlayer().getUniqueId().toString());
+					userstmt.setInt(1, user.getIdentifier());
+					userstmt.setString(2, user.getName());
+					userstmt.setString(3, user.getNickName());
+					userstmt.setString(4, user.getDescription());
+					userstmt.setString(5, user.getPlayer().getUniqueId().toString());
 					userstmt.executeUpdate();
 					try (PreparedStatement istmt = connection.prepareStatement("INSERT INTO identities VALUES (?, ?, ?, ?, ?)")) {
 						Set<Integer> usedids = new HashSet<Integer>();

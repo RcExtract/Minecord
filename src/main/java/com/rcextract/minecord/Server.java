@@ -2,9 +2,12 @@ package com.rcextract.minecord;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import com.rcextract.minecord.event.server.ServerEvent;
+import com.rcextract.minecord.utils.ComparativeSet;
+import com.rcextract.minecord.utils.Pair;
 
 /**
  * In Minecord, a Server groups up a set of channels, usually by target or topic, and provides 
@@ -28,7 +31,7 @@ import com.rcextract.minecord.event.server.ServerEvent;
  * A {@link ServerRecordManager} helps a server to manage records. It is separated into a class
  * for merging purposes which feature will be provided in the future.
  */
-public class Server implements RecordManager<ServerEvent> {
+public class Server implements RecordManager<ServerEvent>, ChannelGetter {
 
 	private int id;
 	private String name;
@@ -37,14 +40,14 @@ public class Server implements RecordManager<ServerEvent> {
 	private boolean invitation;
 	private boolean permanent;
 	private boolean locked;
-	@Deprecated
-	private ChannelManager channelManager;
+	private ComparativeSet<Channel> channels;
+	private Channel main;
 	private RankManager rankManager;
 	/**
 	 * This constructor is reserved for initialization.
 	 */
-	@Deprecated
-	protected Server(int id, String name, String desc, boolean approvement, boolean invitation, boolean permanent, boolean locked, ChannelManager channelManager, RankManager rankManager) {
+	//@Deprecated
+	protected Server(int id, String name, String desc, boolean approvement, boolean invitation, boolean permanent, boolean locked, /*ChannelManager channelManager, */RankManager rankManager, Channel main, Channel ... channels) {
 		this.id = id;
 		this.name = name;
 		this.desc = desc;
@@ -52,7 +55,13 @@ public class Server implements RecordManager<ServerEvent> {
 		this.invitation = invitation;
 		this.permanent = permanent;
 		this.locked = locked;
-		this.channelManager = channelManager;
+		//this.channelManager = channelManager;
+		try {
+			this.channels = new ComparativeSet<Channel>(Channel.class, new Pair<String, Boolean>("getIdentifier", true), new Pair<String, Boolean>("getName", false));
+		} catch (NoSuchMethodException | SecurityException | IllegalArgumentException e) {
+			//This exception is never thrown.
+		}
+		this.main = main;
 		this.rankManager = rankManager;
 	}
 	/**
@@ -167,7 +176,7 @@ public class Server implements RecordManager<ServerEvent> {
 	 */
 	public Set<User> getActiveMembers() {
 		Set<User> onlines = new HashSet<User>();
-		for (Channel channel : channelManager.getChannels()) 
+		for (Channel channel : /*channelManager.getChannels()*/channels) 
 			onlines.addAll(channel.getActiveMembers());
 		return onlines;
 	}
@@ -180,24 +189,36 @@ public class Server implements RecordManager<ServerEvent> {
 	public void remove(User user) {
 		user.setChannel(null);
 	}
+	public ComparativeSet<Channel> getChannels() {
+		return channels;
+	}
+	
+	public Channel getMain() {
+		return main;
+	}
+	
+	public void setMain(Channel main) {
+		if (!(channels.contains(main))) throw new IllegalArgumentException();
+		this.main = main;
+	}
 	/**
 	 * Gets the channel manager.
 	 * @return The channel manager.
 	 */
-	@Deprecated
+	/*@Deprecated
 	public ChannelManager getChannelManager() {
 		return channelManager;
-	}
+	}*/
 	/**
 	 * Sets the channel manager.
 	 * <p>
 	 * This method is reserved for initialization.
 	 * @param channelManager The channel manager.
 	 */
-	@Deprecated
+	/*@Deprecated
 	protected void setChannelManager(ChannelManager channelManager) {
 		this.channelManager = channelManager;
-	}
+	}*/
 	/**
 	 * Gets the rank manager. It currently does nothing and always return null.
 	 * @return The rank manager.
@@ -240,6 +261,27 @@ public class Server implements RecordManager<ServerEvent> {
 	public <E extends ServerEvent> E getOldestRecord(Class<E> clazz) {
 		return Minecord.getRecordManager().getOldestRecord(clazz);
 	}
+	@Override
+	public Channel getChannel(int id) {
+		for (Channel channel : channels) 
+			if (channel.getIdentifier() == id) 
+				return channel;
+		return null;
+	}
+	@Override
+	public Channel getChannel(String name) {
+		for (Channel channel : channels) 
+			if (channel.getName().equals(name)) 
+				return channel;
+		return null;
+	}
 	
-	
+	public Channel initialize() {
+		if (channels.isEmpty()) {
+			Channel channel = new Channel(new Random().nextInt(), "general", "A default channel description.");
+			channels.add(channel);
+			return channel;
+		}
+		return null;
+	}
 }

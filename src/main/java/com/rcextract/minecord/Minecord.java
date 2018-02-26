@@ -179,7 +179,7 @@ public class Minecord extends JavaPlugin {
 			}
 		for (OfflinePlayer player : Bukkit.getOfflinePlayers()) 
 			if (!(Minecord.getUserManager().isRegistered(player))) 
-				Minecord.getUserManager().registerPlayer(null, null, null, player, new Listener(panel.getMain().getChannelManager().getMainChannel(), true, 0));
+				Minecord.getUserManager().registerPlayer(null, null, null, player, new Listener(panel.getMain().getMain(), true, 0));
 		panel.initialize();
 	}
 	public static void loadProperties() {

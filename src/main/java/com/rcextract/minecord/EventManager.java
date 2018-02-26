@@ -43,9 +43,8 @@ public class EventManager implements Listener {
 	 * Distributes the messages to suitable players and serialize them.
 	 * @param event The message sent event.
 	 */
-	@EventHandler(priority = EventPriority.HIGHEST)
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerChat(AsyncPlayerChatEvent event) {
-		if (event.isCancelled()) return;
 		event.setCancelled(true);
 		String message = event.getMessage();
 		User sender = Minecord.getUserManager().getUser(event.getPlayer());
@@ -60,7 +59,7 @@ public class EventManager implements Listener {
 		for (User user : users) 
 			if (user.getMain().getChannel() == channel) 
 				user.applyMessage();
-			else if (user.getIdentity(channel.getChannelManager().getServer()).getListener(channel).isNotify()) 
+			else if (user.getIdentity(channel.getServer()).getListener(channel).isNotify()) 
 				/*Coming soon (See top)*/;
 		//Tag detection
 		/*LinkedHashMap<String, Player> segments = new LinkedHashMap<String, Player>();

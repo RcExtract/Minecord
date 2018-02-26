@@ -22,14 +22,14 @@ public class ServerIdentity implements Cloneable, ListenerHolder {
 		this.joined = joined;
 		this.rank = rank;
 		this.listeners = new HashSet<Listener>(Arrays.asList(listeners));
-		if (this.listeners.isEmpty()) this.listeners.add(new Listener(server.getChannelManager().getMainChannel(), true, 0));
+		if (this.listeners.isEmpty()) this.listeners.add(new Listener(server.getMain(), true, 0));
 		validate();
 		registerAllAbsentListeners(true, 0);
 	}
 	private void validate() {
 		boolean sameserver = true;
 		for (Listener listener : listeners) 
-			sameserver = sameserver && listener.getChannel().getChannelManager().getServer() == server;
+			sameserver = sameserver && listener.getChannel().getServer() == server;
 		sameserver = sameserver && rank.getRankManager().getServer() == server;
 		if (!(sameserver)) throw new IllegalArgumentException();
 	}
@@ -88,13 +88,13 @@ public class ServerIdentity implements Cloneable, ListenerHolder {
 	}
 	public Listener registerListener(Listener listener) throws DuplicatedException {
 		if (getListener(listener.getChannel()) != null) throw new DuplicatedException();
-		if (listener.getChannel().getChannelManager().getServer() != server) throw new IllegalArgumentException();
+		if (listener.getChannel().getServer() != server) throw new IllegalArgumentException();
 		listeners.add(listener);
 		return listener;
 	}
 	public Set<Listener> registerAllAbsentListeners(boolean allNotify, int allIndex, Channel ... exceptions) {
 		Set<Listener> listeners = new HashSet<Listener>();
-		for (Channel channel : server.getChannelManager().getChannels()) 
+		for (Channel channel : server.getChannels()) 
 			if (getListener(channel) == null && !(Arrays.asList(exceptions).contains(channel))) 
 				listeners.add(new Listener(channel, allNotify, allIndex));
 		this.listeners.addAll(listeners);

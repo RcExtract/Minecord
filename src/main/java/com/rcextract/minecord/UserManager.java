@@ -1,15 +1,9 @@
 package com.rcextract.minecord;
 
-import java.util.Set;
-
 import org.bukkit.OfflinePlayer;
 
-public interface UserManager {
+public interface UserManager extends UserGetter {
 
-	public Set<User> getUsers();
-	public User getUser(int id);
-	public Set<User> getUsers(String name);
-	public User getUser(OfflinePlayer player);
 	public boolean isRegistered(OfflinePlayer player);
 	/**
 	 * Registers a player and returns the fresh generated user instance.

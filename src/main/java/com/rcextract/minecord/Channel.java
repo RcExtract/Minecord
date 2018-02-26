@@ -29,6 +29,12 @@ public class Channel implements RecordManager<ChannelEvent> {
 	private String desc;
 	private boolean locked;
 	protected List<Message> messages;
+	public Channel(int id, String name, String desc) {
+		this.id = id;
+		this.name = name;
+		this.desc = desc;
+		this.messages = new ArrayList<Message>();
+	}
 	/**
 	 * This constructor is reserved for initialization.
 	 */
@@ -59,8 +65,8 @@ public class Channel implements RecordManager<ChannelEvent> {
 	 * @throws DuplicatedException If the name is used by another channel.
 	 */
 	public void setName(String name) throws DuplicatedException {
-		ChannelManager cm = getChannelManager();
-		if (cm != null && cm.getChannel(name) != null) throw new DuplicatedException();
+		Server server = getServer();
+		if (server != null && server.getChannel(name) != null) throw new DuplicatedException();
 		this.name = name;
 	}
 	/**
@@ -116,8 +122,14 @@ public class Channel implements RecordManager<ChannelEvent> {
 	 * Gets the channel manager managing this channel.
 	 * @return The channel manager managing this channel.
 	 */
-	public ChannelManager getChannelManager() {
+	/*public ChannelManager getChannelManager() {
 		for (Server server : Minecord.getServerManager().getServers()) if (server.getChannelManager().getChannels().contains(this)) return server.getChannelManager();
+		return null;
+	}*/
+	public Server getServer() {
+		for (Server server : Minecord.getServerManager().getServers()) 
+			if (server.getChannels().contains(this)) 
+				return server;
 		return null;
 	}
 
@@ -126,7 +138,7 @@ public class Channel implements RecordManager<ChannelEvent> {
 	 * @return If this channel is main in the channel manager defined.
 	 */
 	public boolean isMain() {
-		return getChannelManager().getMainChannel() == this;
+		return getServer().getMain() == this;
 	}
 	@Override
 	public List<ChannelEvent> getRecords() {

@@ -7,7 +7,7 @@ public abstract class ChannelEvent extends ServerEvent {
 
 	private final Channel channel;
 	public ChannelEvent(Channel channel) {
-		super(channel.getChannelManager().getServer());
+		super(channel.getServer());
 		this.channel = channel;
 	}
 	public Channel getChannel() {

@@ -4,6 +4,13 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## 1.1.0 SNAPSHOT 1.0 (New API not fully implemented, about 98%)
+- Removed ChannelManager
+- Most classes fully implemented the new change of ChannelManager removal, except for CommandHandler.
+- Added new utility class ComparativeSet
+- Added a few getter interfaces
+- Improved the implementation of the multi-channel system
+
 ## 1.0.3
 - Adding identities now doesn't throw DuplicatedException, and replaced with returning boolean value.
 - Planning to remove ChannelManager

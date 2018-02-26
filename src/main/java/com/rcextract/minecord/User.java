@@ -114,7 +114,7 @@ public class User implements RecordManager<UserEvent>, ListenerHolder {
 		}
 		if (identity.isJoined()) return;
 		identity.setJoined(true);
-		setMain(identity.getListener(identity.getServer().getChannelManager().getMainChannel()));
+		setMain(identity.getListener(identity.getServer().getMain()));
 	}
 	/**
 	 * Deactivates the preference towards the server. If permanently, removes the preference towards the server.
@@ -178,7 +178,7 @@ public class User implements RecordManager<UserEvent>, ListenerHolder {
 	 */
 	@Deprecated
 	public void setChannel(Channel channel) {
-		if (channel == null) channel = Minecord.getServerManager().getMain().getChannelManager().getMainChannel();
+		if (channel == null) channel = Minecord.getServerManager().getMain().getMain();
 		/*this.channel = channel;*/
 		Minecord.updateMessage(this, true);
 	}
@@ -188,7 +188,7 @@ public class User implements RecordManager<UserEvent>, ListenerHolder {
 	}
 	@Deprecated
 	public void setRank(Rank rank) {
-		if (rank == null) rank = main.getChannel().getChannelManager().getServer().getRankManager().getMain();
+		if (rank == null) rank = main.getChannel().getServer().getRankManager().getMain();
 		this.rank = rank;
 		applyRank();
 	}
