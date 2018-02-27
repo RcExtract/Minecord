@@ -1,9 +1,12 @@
-package com.rcextract.minecord;
+package com.rcextract.minecord.getters;
 
 import java.util.Set;
 
 import org.bukkit.OfflinePlayer;
 
+import com.rcextract.minecord.Channel;
+import com.rcextract.minecord.Server;
+import com.rcextract.minecord.User;
 import com.rcextract.minecord.utils.ComparativeSet;
 
 public interface ServerGetter {
@@ -30,12 +33,14 @@ public interface ServerGetter {
 	 * @param player The parameter of members of the target server.
 	 * @return The server the player is inside, regardless of its online state. Null if not found.
 	 */
+	@Deprecated
 	public Set<Server> getServers(OfflinePlayer player);
 	/**
 	 * Gets a server by if the user is inside.
 	 * @param user The parameter of members of the target server.
 	 * @return The server the user is inside, regardless of its online state. Null if not found.
 	 */
+	@Deprecated
 	public Set<Server> getServers(User user);
 	/**
 	 * Gets a server by if the channel is inside.

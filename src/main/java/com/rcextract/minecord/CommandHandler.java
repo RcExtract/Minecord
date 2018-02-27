@@ -1,5 +1,5 @@
+//Not implemented!
 package com.rcextract.minecord;
-
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -18,7 +18,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.Permission;
+//import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.PluginDescriptionFile;
 
 import com.rcextract.minecord.event.MinecordEvent;
@@ -144,8 +144,8 @@ public class CommandHandler implements CommandExecutor {
 				sender.sendMessage("Name: " + channel.getName());
 				sender.sendMessage("Description: " + channel.getDescription());
 				sender.sendMessage("The channel is " + (!(channel.ready()) ? "not" : "") + " ready to join.");
-				int size = channel.getActiveMembers().size();
-				sender.sendMessage("There " + (size == 1 ? "is" : "are") + " " + Integer.toString(size) + "member" + (size == 1 ? "" : "s") + "online.");
+				//int size = channel.getActiveMembers().size();
+				//sender.sendMessage("There " + (size == 1 ? "is" : "are") + " " + Integer.toString(size) + "member" + (size == 1 ? "" : "s") + "online.");
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("channels")) {
@@ -173,14 +173,14 @@ public class CommandHandler implements CommandExecutor {
 				for (Channel channel : server.getChannels()) {
 					boolean yeah = desc == null ? true : channel.getDescription().equals(desc);
 					yeah = yeah && (main == null ? true : channel.isMain() == main);
-					yeah = yeah && channel.getActiveMembers().containsAll(members);
+					//yeah = yeah && channel.getActiveMembers().containsAll(members);
 					if (yeah) {
 						sender.sendMessage((channel.isMain() ? "Main " : "") + "Channel #" + Integer.toString(channel.getIdentifier()) + ":");
 						sender.sendMessage("Name: " + channel.getName());
 						sender.sendMessage("Description: " + channel.getDescription());
 						sender.sendMessage("The channel is " + (!(channel.ready()) ? "not" : "") + " ready to join.");
-						int size = channel.getActiveMembers().size();
-						sender.sendMessage("There " + (size == 1 ? "is" : "are") + " " + Integer.toString(size) + " member" + (size == 1 ? "" : "s") + " online.");
+						//int size = channel.getActiveMembers().size();
+						//sender.sendMessage("There " + (size == 1 ? "is" : "are") + " " + Integer.toString(size) + " member" + (size == 1 ? "" : "s") + " online.");
 					}
 				}
 				return true;
@@ -204,9 +204,9 @@ public class CommandHandler implements CommandExecutor {
 					sender.sendMessage("Nickname: " + target.getNickName());
 					sender.sendMessage("Description: " + target.getDescription());
 					sender.sendMessage("UUID: " + target.getPlayer().getUniqueId().toString());
-					sender.sendMessage("Viewing Server: " + target.getMain().getChannel().getServer());
-					sender.sendMessage("Channel: " + target.getMain().getChannel().getName());
-					sender.sendMessage("Rank: " + target.getRank().getName());
+					sender.sendMessage("Viewing Server: " + target.getMain().getServer());
+					sender.sendMessage("Channel: " + target.getMain().getName());
+					//sender.sendMessage("Rank: " + target.getRank().getName());
 				}
 				return true;
 			}
@@ -278,7 +278,7 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.RED + "You are already in the server!");
 					return true;
 				}
-				user.join(server);
+				//user.join(server);
 				if (args.length != 3) {
 					player.sendMessage(ChatColor.GREEN + "You have successfully joined the server!");
 					return true;
@@ -308,7 +308,7 @@ public class CommandHandler implements CommandExecutor {
 					return true;
 				}
 				Channel channel = server.getChannel(args[2]);
-				Listener listener = identity.getListener(channel);
+				//Listener listener = identity.getListener(channel);
 				if (channel == null) {
 					player.sendMessage(ChatColor.RED + "Failed to find a channel with this name!");
 					return true;
@@ -317,7 +317,7 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.RED + "Failed to switch view to a locked channel!");
 					return true;
 				}
-				user.setMain(listener);
+				//user.setMain(listener);
 				player.sendMessage(ChatColor.GREEN + "You have successfully switched view to channel " + channel.getName());
 				player.sendMessage(ChatColor.YELLOW + "Loading messages...");
 				return true;
@@ -345,10 +345,10 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.RED + "Failed to find a channel with that name!");
 					return true;
 				}
-				if (!(channel.getActiveMembers().contains(user))) {
+				/*if (!(channel.getActiveMembers().contains(user))) {
 					player.sendMessage(ChatColor.RED + "You are not in the channel!");
 					return true;
-				}
+				}*/
 				
 				/*ListenerStatusUpdateEvent event = new ListenerStatusUpdateEvent(user.getListener(channel), ListenerStatus.DEACTIVATED);
 				Bukkit.getPluginManager().callEvent(event);
@@ -449,8 +449,8 @@ public class CommandHandler implements CommandExecutor {
 				return true;
 			}
 			boolean permitted = false;
-			/*Deprecation Message*/for (Permission permission : user.getRank().getPermissions())
-				try {
+			/*Deprecation Message*///for (Permission permission : user.getRank().getPermissions())
+				/*try {
 					permitted = permitted || permission.getName().equalsIgnoreCase("minecord." + clazz.getSimpleName().toLowerCase() + "." + (String) clazz.getMethod("getName").invoke(obj) + "." + args[0]);
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 						| NoSuchMethodException | SecurityException e) {
@@ -458,7 +458,7 @@ public class CommandHandler implements CommandExecutor {
 					Minecord.minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
 					e.printStackTrace();
 					return true;
-				}
+				}*/
 			if (!(permitted)) {
 				try {
 					player.sendMessage(ChatColor.RED + "You are not permitted to do " + args[0] + "-ing in " + clazz.getSimpleName() + " " + (String) clazz.getMethod("getName").invoke(obj) + "!");

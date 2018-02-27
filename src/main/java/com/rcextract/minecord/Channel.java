@@ -1,9 +1,7 @@
 package com.rcextract.minecord;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.rcextract.minecord.event.channel.ChannelEvent;
 
@@ -104,19 +102,6 @@ public class Channel implements RecordManager<ChannelEvent> {
 	 */
 	public void unlock() {
 		this.locked = false;
-	}
-	/**
-	 * Gets all online players joined the channel. Modifying this HashSet does not affect anything.
-	 * @return All online players joined the channel.
-	 */
-	public Set<User> getActiveMembers() {
-		Set<User> users = new HashSet<User>();
-		for (User user : Minecord.getUserManager().getUsers()) {
-			Listener listener = user.getListener(this);
-			if (listener != null && user.getIdentity(listener).isJoined()) 
-				users.add(user);
-		}
-		return users;
 	}
 	/**
 	 * Gets the channel manager managing this channel.

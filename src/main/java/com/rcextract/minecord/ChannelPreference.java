@@ -2,18 +2,21 @@ package com.rcextract.minecord;
 
 import java.util.List;
 
-public class Listener implements Cloneable {
+public class ChannelPreference implements Cloneable {
 
 	private final Channel channel;
 	private boolean notify;
 	private int index;
-	public Listener(Channel channel, boolean notify, int index) {
+	public ChannelPreference(Channel channel, boolean notify, int index) {
 		this.channel = channel;
 		this.notify = notify;
 		this.index = index;
 	}
 	public Channel getChannel() {
 		return channel;
+	}
+	public Server getServer() {
+		return channel.getServer();
 	}
 	public boolean isNotify() {
 		return notify;
@@ -48,16 +51,13 @@ public class Listener implements Cloneable {
 	}
 	public User getUser() {
 		for (User user : Minecord.getUserManager().getUsers()) 
-			if (user.getIdentity(this) != null) 
+			if (user.getChannelPreferences().contains(this)) 
 				return user;
 		return null;
 	}
-	public boolean isMain() {
-		return getUser().getMain() == this;
-	}
-	public Listener clone() {
+	public ChannelPreference clone() {
 		try {
-			return (Listener) super.clone();
+			return (ChannelPreference) super.clone();
 		} catch (CloneNotSupportedException e) {
 			//This exception is never thrown.
 			return null;

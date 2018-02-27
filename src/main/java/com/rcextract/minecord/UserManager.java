@@ -2,6 +2,8 @@ package com.rcextract.minecord;
 
 import org.bukkit.OfflinePlayer;
 
+import com.rcextract.minecord.getters.UserGetter;
+
 public interface UserManager extends UserGetter {
 
 	public boolean isRegistered(OfflinePlayer player);
@@ -14,7 +16,8 @@ public interface UserManager extends UserGetter {
 	 */
 	@Deprecated
 	public User registerPlayer(OfflinePlayer player, Channel channel, Rank rank) throws IllegalStateException;
-	public User registerPlayer(String name, String nickname, String desc, OfflinePlayer player, Listener main, ServerIdentity ... identities);
+	@Deprecated
+	public User registerPlayer(String name, String nickname, String desc, OfflinePlayer player/*, Listener main, ServerIdentity ... identities*/);
 	/**
 	 * Registers a player and returns the fresh generated user instance.
 	 * @param player The target player.

@@ -4,6 +4,17 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## 1.1.0 SNAPSHOT 2.0 (New API not fully implemented, about 40%)
+- Improved the implementation of the multi-channel system
+- Renamed Listener to ChannelPreference
+- Removed ServerIdentity
+- Added ConversablePreference for server to configure member settings
+- Added a few getter interfaces
+- Added ConversationSender interface to indicate a class that it can be used to send message inside a channel.
+- Added Conversable class to indicate that it can read messages beside from the features of the implementing ConversationSender
+- User class now inherits Conversable
+- Renamed a few methods
+
 ## 1.1.0 SNAPSHOT 1.0 (New API not fully implemented, about 98%)
 - Removed ChannelManager
 - Most classes fully implemented the new change of ChannelManager removal, except for CommandHandler.

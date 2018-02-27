@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.Set;
 
 import com.rcextract.minecord.event.server.ServerEvent;
+import com.rcextract.minecord.getters.ChannelGetter;
 import com.rcextract.minecord.utils.ComparativeSet;
 import com.rcextract.minecord.utils.Pair;
 
@@ -33,16 +34,17 @@ import com.rcextract.minecord.utils.Pair;
  */
 public class Server implements RecordManager<ServerEvent>, ChannelGetter {
 
-	private int id;
+	private final int id;
 	private String name;
 	private String desc;
 	private boolean approvement;
 	private boolean invitation;
 	private boolean permanent;
 	private boolean locked;
-	private ComparativeSet<Channel> channels;
+	private final ComparativeSet<Channel> channels;
 	private Channel main;
 	private RankManager rankManager;
+	private final ComparativeSet<ConversablePreference> preferences;
 	/**
 	 * This constructor is reserved for initialization.
 	 */
@@ -60,9 +62,16 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter {
 			this.channels = new ComparativeSet<Channel>(Channel.class, new Pair<String, Boolean>("getIdentifier", true), new Pair<String, Boolean>("getName", false));
 		} catch (NoSuchMethodException | SecurityException | IllegalArgumentException e) {
 			//This exception is never thrown.
+			throw new UnsupportedOperationException();
 		}
 		this.main = main;
 		this.rankManager = rankManager;
+		try {
+			this.preferences = new ComparativeSet<ConversablePreference>(ConversablePreference.class, new Pair<String, Boolean>("getUser", true));
+		} catch (NoSuchMethodException | SecurityException | IllegalArgumentException e) {
+			//This exception is never thrown.
+			throw new UnsupportedOperationException();
+		}
 	}
 	/**
 	 * Gets the identifier of the server.
@@ -173,21 +182,25 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter {
 	/**
 	 * Gets all online players joined the server. Modifying this HashSet does not affect anything.
 	 * @return The total online players added from channels.
+	 * @deprecated Use getConversables
 	 */
+	@Deprecated
 	public Set<User> getActiveMembers() {
-		Set<User> onlines = new HashSet<User>();
-		for (Channel channel : /*channelManager.getChannels()*/channels) 
+		/*Set<User> onlines = new HashSet<User>();
+		for (Channel channel : channels) 
 			onlines.addAll(channel.getActiveMembers());
-		return onlines;
+		return onlines;*/
+		return null;
 	}
 	/**
 	 * Removes a player from this channel. This method simply invokes the User.switchChannel(Channel)
 	 * method, redirecting the user to the default channel.
 	 * @param user The target user.
+	 * @deprecated Obtain ComparativeSet through getConversablePreferneces() method and remove the ConversablePreference corresponding to the Conversable.
 	 */
 	@Deprecated
 	public void remove(User user) {
-		user.setChannel(null);
+		//user.setChannel(null);
 	}
 	public ComparativeSet<Channel> getChannels() {
 		return channels;
@@ -237,6 +250,21 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter {
 		this.rankManager = rankManager;
 	}
 	
+	public Set<Conversable> getConversables() {
+		Set<Conversable> conversables = new HashSet<Conversable>();
+		for (ConversablePreference preference : preferences) 
+			conversables.add(preference.getConversable());
+		return conversables;
+	}
+	public ComparativeSet<ConversablePreference> getConversablePreferences() {
+		return preferences;
+	}
+	public ConversablePreference getPreference(Conversable conversable) {
+		for (ConversablePreference preference : preferences) 
+			if (preference.getConversable() == conversable) 
+				return preference;
+		return null;
+	}
 	@Override
 	public List<ServerEvent> getRecords() {
 		return Minecord.getRecordManager().getRecords(ServerEvent.class);

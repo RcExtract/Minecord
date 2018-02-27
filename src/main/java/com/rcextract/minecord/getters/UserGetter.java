@@ -1,8 +1,10 @@
-package com.rcextract.minecord;
+package com.rcextract.minecord.getters;
 
 import java.util.Set;
 
 import org.bukkit.OfflinePlayer;
+
+import com.rcextract.minecord.User;
 
 public interface UserGetter {
 

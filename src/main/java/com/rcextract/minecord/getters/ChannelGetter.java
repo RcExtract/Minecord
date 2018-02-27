@@ -1,5 +1,6 @@
-package com.rcextract.minecord;
+package com.rcextract.minecord.getters;
 
+import com.rcextract.minecord.Channel;
 import com.rcextract.minecord.utils.ComparativeSet;
 
 public interface ChannelGetter {

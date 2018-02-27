@@ -5,12 +5,13 @@ import java.util.Set;
 import org.apache.commons.lang.Validate;
 import org.bukkit.event.HandlerList;
 
-import com.rcextract.minecord.Listener;
+import com.rcextract.minecord.ChannelPreference;
 import com.rcextract.minecord.Rank;
 import com.rcextract.minecord.ServerIdentity;
 import com.rcextract.minecord.User;
 import com.rcextract.minecord.event.MinecordEvent;
 
+@Deprecated
 public class ServerIdentityUpdateEvent extends MinecordEvent {
 
 	private static final HandlerList handlers = new HandlerList();
@@ -20,16 +21,16 @@ public class ServerIdentityUpdateEvent extends MinecordEvent {
 	private final ServerIdentity identity;
 	private boolean activated;
 	private Rank rank;
-	private final Set<Listener> listeners;
+	private final Set<ChannelPreference> ChannelPreferences;
 	private final Set<User> users;
-	public ServerIdentityUpdateEvent(ServerIdentity identity, boolean activated, Rank rank, Set<Listener> listeners, Set<User> users) {
+	public ServerIdentityUpdateEvent(ServerIdentity identity, boolean activated, Rank rank, Set<ChannelPreference> ChannelPreferences, Set<User> users) {
 		Validate.notNull(identity);
-		Validate.notNull(listeners);
+		Validate.notNull(ChannelPreferences);
 		Validate.notNull(users);
 		this.identity = identity;
 		this.activated = activated;
 		this.rank = rank;
-		this.listeners = listeners;
+		this.ChannelPreferences = ChannelPreferences;
 		this.users = users;
 	}
 	public ServerIdentity getIdentity() {
@@ -47,8 +48,8 @@ public class ServerIdentityUpdateEvent extends MinecordEvent {
 	public void setRank(Rank rank) {
 		this.rank = rank;
 	}
-	public Set<Listener> getListeners() {
-		return listeners;
+	public Set<ChannelPreference> getChannelPreferences() {
+		return ChannelPreferences;
 	}
 	public Set<User> getAffectingUsers() {
 		return users;

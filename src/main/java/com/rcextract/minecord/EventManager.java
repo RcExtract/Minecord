@@ -1,5 +1,5 @@
 //"You have 1 unread messages on channel AnnouncementsChannel" is coming soon."
-
+//Not implemented!
 package com.rcextract.minecord;
 
 /*import java.util.ArrayList;*/
@@ -36,8 +36,8 @@ public class EventManager implements Listener {
 	@EventHandler
 	public void onPlayerLogin(PlayerLoginEvent event) {
 		//Minecord.getUserManager().registerPlayerIfAbsent(event.getPlayer(), null, null);
-		if (!(Minecord.getUserManager().isRegistered(event.getPlayer()))) 
-			Minecord.getUserManager().registerPlayer(null, null, null, event.getPlayer(), null);
+		//if (!(Minecord.getUserManager().isRegistered(event.getPlayer()))) 
+			//Minecord.getUserManager().registerPlayer(null, null, null, event.getPlayer(), null);
 	}
 	/**
 	 * Distributes the messages to suitable players and serialize them.
@@ -48,18 +48,18 @@ public class EventManager implements Listener {
 		event.setCancelled(true);
 		String message = event.getMessage();
 		User sender = Minecord.getUserManager().getUser(event.getPlayer());
-		Channel channel = sender.getMain().getChannel();
-		Set<User> users = channel.getActiveMembers();
-		UserMessageEvent e = new UserMessageEvent(message, sender.getMain().getChannel(), sender, users);
+		Channel channel = sender.getMain();
+		/*Deprecation Message*/Set<User> users = null;
+		UserMessageEvent e = new UserMessageEvent(message, sender.getMain(), sender, users);
 		Bukkit.getPluginManager().callEvent(e);
 		if (e.isCancelled()) return;
 		int id = new Random().nextInt();
 		while (channel.getMessage(id) != null) id = new Random().nextInt();
-		sender.getMain().getChannel().messages.add(new Message(id, sender, e.getMessage(), e.getDate()));
-		for (User user : users) 
-			if (user.getMain().getChannel() == channel) 
-				user.applyMessage();
-			else if (user.getIdentity(channel.getServer()).getListener(channel).isNotify()) 
+		sender.getMain().messages.add(new Message(id, sender, e.getMessage(), e.getDate()));
+		/*for (User user : users) 
+			if (user.getMain() == channel) 
+				user.applyMessage();*/
+			//else if (user.getIdentity(channel.getServer()).getListener(channel).isNotify()) 
 				/*Coming soon (See top)*/;
 		//Tag detection
 		/*LinkedHashMap<String, Player> segments = new LinkedHashMap<String, Player>();

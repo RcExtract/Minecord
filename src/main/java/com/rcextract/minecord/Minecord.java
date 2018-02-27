@@ -1,3 +1,4 @@
+//Not implemented!
 package com.rcextract.minecord;
 
 import java.io.IOException;
@@ -8,7 +9,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
+//import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -177,9 +178,9 @@ public class Minecord extends JavaPlugin {
 			} catch (DuplicatedException e) {
 				//This exception is never thrown.
 			}
-		for (OfflinePlayer player : Bukkit.getOfflinePlayers()) 
-			if (!(Minecord.getUserManager().isRegistered(player))) 
-				Minecord.getUserManager().registerPlayer(null, null, null, player, new Listener(panel.getMain().getMain(), true, 0));
+		//for (OfflinePlayer player : Bukkit.getOfflinePlayers()) 
+			//if (!(Minecord.getUserManager().isRegistered(player))) 
+				//Minecord.getUserManager().registerPlayer(null, null, null, player, new Listener(panel.getMain().getMain(), true, 0));
 		panel.initialize();
 	}
 	public static void loadProperties() {

@@ -1,5 +1,7 @@
 package com.rcextract.minecord;
 
+import com.rcextract.minecord.getters.ServerGetter;
+
 /**
  * A management system for Minecord Servers. This class only allows one instance to exist in the 
  * JVM, therefore instantiation is reserved for the main Minecord class.

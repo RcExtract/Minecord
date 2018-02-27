@@ -2,7 +2,7 @@ package com.rcextract.minecord.event;
 
 import org.bukkit.event.HandlerList;
 
-import com.rcextract.minecord.Listener;
+import com.rcextract.minecord.ChannelPreference;
 
 public class ListenerUpdateEvent extends MinecordEvent {
 
@@ -10,16 +10,16 @@ public class ListenerUpdateEvent extends MinecordEvent {
 	public static HandlerList getHandlerList() {
 		return handlers;
 	}
-	private final Listener listener;
+	private final ChannelPreference ChannelPreference;
 	private boolean notify;
 	private int index;
-	public ListenerUpdateEvent(Listener listener, boolean notify, int index) {
-		this.listener = listener;
+	public ListenerUpdateEvent(ChannelPreference ChannelPreference, boolean notify, int index) {
+		this.ChannelPreference = ChannelPreference;
 		this.notify = notify;
 		this.index = index;
 	}
-	public Listener getListener() {
-		return listener;
+	public ChannelPreference getChannelPreference() {
+		return ChannelPreference;
 	}
 	public boolean isNotify() {
 		return notify;

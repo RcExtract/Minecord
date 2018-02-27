@@ -1,3 +1,4 @@
+//Not fully implemented!
 package com.rcextract.minecord;
 
 import java.util.ArrayList;
@@ -39,8 +40,8 @@ public final class InternalManager implements ServerManager, UserManager, Record
 			server.getRankManager().initialize();
 		}
 		for (User user : Minecord.getUserManager().getUsers()) 
-			if (user.getListeners().isEmpty()) 
-				user.join(getMain());
+			if (user.getServers().isEmpty()) 
+				getMain().getConversablePreferences().add(new ConversablePreference(user, true, getMain().getRankManager().getMain()));
 	}
 	
 	@Override
@@ -60,6 +61,7 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		return null;
 	}
 
+	@Deprecated
 	@Override
 	public Set<Server> getServers(OfflinePlayer player) {
 		User user = getUser(player);
@@ -67,12 +69,13 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		return getServers(user);
 	}
 	
+	@Deprecated
 	@Override
 	public Set<Server> getServers(User user) {
 		Set<Server> servers = new HashSet<Server>();
-		for (Server server : servers) 
+		/*for (Server server : servers) 
 			if (server.getActiveMembers().contains(user)) 
-				servers.add(server);
+				servers.add(server);*/
 		return servers;
 	}
 	
@@ -150,8 +153,8 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		users.add(user);*/
 		return /*user*/null;
 	}
-	@Override
-	public User registerPlayer(String name, String nickname, String desc, final OfflinePlayer player, Listener main, ServerIdentity ... identities) {
+	@Deprecated
+	public User registerPlayer(String name, String nickname, String desc, final OfflinePlayer player/*, Listener main, ServerIdentity ... identities*/) {
 		User user = getUser(player);
 		if (user != null) return user;
 		int id = new Random().nextInt();
@@ -159,18 +162,18 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		if (name == null) name = player.getName();
 		if (nickname == null) nickname = name;
 		if (desc == null) desc = "A default user description.";
-		Set<ServerIdentity> identityset = new HashSet<ServerIdentity>(Arrays.asList(identities));
+		/*Set<ServerIdentity> identityset = new HashSet<ServerIdentity>(Arrays.asList(identities));
 		if (identities.length == 0) 
 			if (main == null) {
 				identityset.add(new ServerIdentity(this.getMain(), true, null));
 				main = new Listener(getMain().getMain(), true, 0);
 			} else 
-				identityset.add(new ServerIdentity(main.getChannel().getServer(), true, null, main));
+				identityset.add(new ServerIdentity(main.getChannel().getServer(), true, null, main));*/
 		boolean contains = false;
-		for (ServerIdentity identity : identityset) 
-			contains = contains || identity.getListeners().contains(main);
+		//for (ServerIdentity identity : identityset) 
+			//contains = contains || identity.getListeners().contains(main);
 		if (!(contains)) throw new IllegalArgumentException();
-		user = new User(id, name, nickname, desc, player, main, identityset.toArray(new ServerIdentity[identityset.size()]));
+		//user = new User(id, name, nickname, desc, player, main, identityset.toArray(new ServerIdentity[identityset.size()]));
 		users.add(user);
 		return user;
 	}
@@ -187,6 +190,7 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		users.remove(user);
 	}
 
+	@Override
 	public void record(MinecordEvent event) {
 		records.add(event);
 	}

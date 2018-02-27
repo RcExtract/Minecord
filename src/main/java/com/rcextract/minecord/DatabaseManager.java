@@ -1,3 +1,4 @@
+//Not implemented!
 package com.rcextract.minecord;
 
 import java.sql.Connection;
@@ -6,12 +7,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
+//import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Collection;
+//import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
+//import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -60,7 +61,7 @@ public class DatabaseManager {
 			//statement.executeUpdate("CREATE TABLE IF NOT EXISTS users (server INT UNSIGNED NOT NULL, channel INT UNSIGNED NOT NULL, rank VARCHAR(255) NOT NULL, id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, nickname VARCHAR(255) NOT NULL, description VARCHAR(255), uuid VARCHAR(255) NOT NULL);");
 			statement.executeUpdate("CREATE TABLE IF NOT EXISTS users (id INT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE KEY, nickname VARCHAR(255) NOT NULL, description VARCHAR(255), uuid VARCHAR(255) NOT NULL);");
 			statement.executeUpdate("CREATE TABLE IF NOT EXISTS identities (id INT UNSIGNED NOT NULL, user INT UNSIGNED NOT NULL, server INT UNSIGNED NOT NULL, activated BOOLEAN NOT NULL, rank VARCHAR(255) NOT NULL);");
-			statement.executeUpdate("CREATE TABLE IF NOT EXISTS listeners (identity INT UNSIGNED NOT NULL, server INT UNSIGNED NOT NULL, channel INT UNSIGNED NOT NULL, notify BOOLEAN NOT NULL, count INT UNSIGNED NOT NULL, user INT UNSIGNED);");
+			statement.executeUpdate("CREATE TABLE IF NOT EXISTS ChannelPreferences (identity INT UNSIGNED NOT NULL, server INT UNSIGNED NOT NULL, channel INT UNSIGNED NOT NULL, notify BOOLEAN NOT NULL, count INT UNSIGNED NOT NULL, user INT UNSIGNED);");
 			statement.executeUpdate("CREATE TABLE IF NOT EXISTS permissions (id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT, permission VARCHAR(255) NOT NULL UNIQUE KEY);");
 		}
 	}
@@ -122,18 +123,18 @@ public class DatabaseManager {
 				User user = new User(id, name, nickname, desc, player, null);
 				Minecord.getControlPanel().users.add(user);
 			}
-			Table<Integer, User, Listener> listeners = HashBasedTable.create();
-			ResultSet listenerset = statement.executeQuery("SELECT * FROM listeners;");
-			while (listenerset.next()) {
-				Integer identityid = listenerset.getInt("identity");
-				Server server = Minecord.getServerManager().getServer(listenerset.getInt("server"));
-				Channel channel = server == null ? null : server.getChannel(listenerset.getInt("channel"));
-				boolean notify = listenerset.getBoolean("notify");
-				int index = listenerset.getInt("count");
-				User user = Minecord.getUserManager().getUser(listenerset.getInt("id"));
-				listeners.put(identityid, user, new Listener(channel, notify, index));
+			Table<Integer, User, ChannelPreference> ChannelPreferences = HashBasedTable.create();
+			ResultSet ChannelPreferenceset = statement.executeQuery("SELECT * FROM ChannelPreferences;");
+			while (ChannelPreferenceset.next()) {
+				Integer identityid = ChannelPreferenceset.getInt("identity");
+				Server server = Minecord.getServerManager().getServer(ChannelPreferenceset.getInt("server"));
+				Channel channel = server == null ? null : server.getChannel(ChannelPreferenceset.getInt("channel"));
+				boolean notify = ChannelPreferenceset.getBoolean("notify");
+				int index = ChannelPreferenceset.getInt("count");
+				User user = Minecord.getUserManager().getUser(ChannelPreferenceset.getInt("id"));
+				ChannelPreferences.put(identityid, user, new ChannelPreference(channel, notify, index));
 			}
-			Table<User, ServerIdentity, Integer> identities = HashBasedTable.create();
+			/*Table<User, ServerIdentity, Integer> identities = HashBasedTable.create();
 			ResultSet identityset = statement.executeQuery("SELECT * FROM identities;");
 			while (identityset.next()) {
 				User user = Minecord.getUserManager().getUser(identityset.getInt("user"));
@@ -141,14 +142,14 @@ public class DatabaseManager {
 				boolean activated = identityset.getBoolean("activated");
 				Rank rank = server == null ? null : server.getRankManager().getRankByTag(identityset.getString("rank"));
 				int id = identityset.getInt("id");
-				Collection<Listener> putlisteners = listeners.row(id).values();
-				identities.put(user, new ServerIdentity(server, activated, rank, putlisteners.toArray(new Listener[putlisteners.size()])), id);
+				Collection<ChannelPreference> putChannelPreferences = ChannelPreferences.row(id).values();
+				identities.put(user, new ServerIdentity(server, activated, rank, putChannelPreferences.toArray(new ChannelPreference[putChannelPreferences.size()])), id);
 			}
 			for (User user : Minecord.getUserManager().getUsers()) {
 				for (ServerIdentity identity : identities.row(user).keySet())
 					user.addIdentity(identity);
-				user.setMain(listeners.column(user).values().iterator().next());
-			}
+				user.setMain(ChannelPreferences.column(user).values().iterator().next());
+			}*/
 		}
 	}
 	public synchronized void loadFromOld() throws SQLException {
@@ -196,7 +197,7 @@ public class DatabaseManager {
 				if (server != null) server.getRankManager().ranks.add(rank);
 				if (rankset.getBoolean("main")) server.getRankManager().setMain(rank);
 			}
-			ResultSet userset = statement.executeQuery("SELECT * FROM users;");
+			/*ResultSet userset = statement.executeQuery("SELECT * FROM users;");
 			while (userset.next()) {
 				Server server = Minecord.getServerManager().getServer(userset.getInt("server"));
 				Channel channel = server == null ? null : server.getChannel(userset.getInt("channel"));
@@ -206,10 +207,10 @@ public class DatabaseManager {
 				String nickname = userset.getString("nickname");
 				String desc = userset.getString("description");
 				OfflinePlayer player = Bukkit.getOfflinePlayer(UUID.fromString(userset.getString("uuid")));
-				Listener listener = new Listener(channel, true, 0);
-				User user = new User(id, name, nickname, desc, player, listener, new ServerIdentity(server, true, rank, listener));
+				ChannelPreference ChannelPreference = new ChannelPreference(channel, true, 0);
+				User user = new User(id, name, nickname, desc, player, ChannelPreference, new ServerIdentity(server, true, rank, ChannelPreference));
 				Minecord.getControlPanel().users.add(user);
-			}
+			}*/
 		}
 	}
 	public synchronized void save() throws SQLException {
@@ -271,7 +272,7 @@ public class DatabaseManager {
 					userstmt.setString(5, user.getPlayer().getUniqueId().toString());
 					userstmt.executeUpdate();
 					try (PreparedStatement istmt = connection.prepareStatement("INSERT INTO identities VALUES (?, ?, ?, ?, ?)")) {
-						Set<Integer> usedids = new HashSet<Integer>();
+						/*Set<Integer> usedids = new HashSet<Integer>();
 						for (ServerIdentity identity : user.getIdentities()) {
 							int id = new Random().nextInt();
 							while (usedids.contains(id)) id = new Random().nextInt();
@@ -280,20 +281,20 @@ public class DatabaseManager {
 							istmt.setInt(3, identity.getServer().getIdentifier());
 							istmt.setBoolean(4, identity.isJoined());
 							istmt.setString(5, identity.getRank().getTag());
-							try (PreparedStatement lstmt = connection.prepareStatement("INSERT INTO listeners VALUES (?, ?, ?, ?, ?, ?)")) {
-								for (Listener listener : identity.getListeners()) {
+							try (PreparedStatement lstmt = connection.prepareStatement("INSERT INTO ChannelPreferences VALUES (?, ?, ?, ?, ?, ?)")) {
+								for (ChannelPreference ChannelPreference : identity.getChannelPreferences()) {
 									lstmt.setInt(1, id);
 									lstmt.setInt(2, identity.getServer().getIdentifier());
-									lstmt.setInt(3, listener.getChannel().getIdentifier());
-									lstmt.setBoolean(4, listener.isNotify());
-									lstmt.setInt(5, listener.getIndex());
-									if (listener.isMain()) 
+									lstmt.setInt(3, ChannelPreference.getChannel().getIdentifier());
+									lstmt.setBoolean(4, ChannelPreference.isNotify());
+									lstmt.setInt(5, ChannelPreference.getIndex());
+									if (ChannelPreference.isMain()) 
 										lstmt.setInt(6, user.getIdentifier());
 									else 
 										lstmt.setNull(6, Types.INTEGER);
 								}
 							}
-						}
+						}*/
 					}
 				}
 			}
