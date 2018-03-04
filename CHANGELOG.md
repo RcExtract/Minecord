@@ -4,6 +4,12 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## 1.1.0 SNAPSHOT 3.0 (New API not fully implemented, about 45%)
+- Renamed ChannelPreference to ChannelOptions
+- Renamed ConversablePreference to SendableOptions
+- Options inside servers changed from pointing to Conversable to Sendable
+- New data saving method created, DataManipulator (replacement of DatabaseManager) can now save sendables of subclasses of Sendable.
+
 ## 1.1.0 SNAPSHOT 2.0 (New API not fully implemented, about 40%)
 - Improved the implementation of the multi-channel system
 - Renamed Listener to ChannelPreference

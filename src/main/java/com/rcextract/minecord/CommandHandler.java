@@ -98,7 +98,7 @@ public class CommandHandler implements CommandExecutor {
 						approvement = Boolean.parseBoolean(args[4]);
 				Set<User> members = new HashSet<User>();
 				for (int i = 5; i < args.length; i++) {
-					members.addAll(Minecord.getUserManager().getUsers(args[i]));
+					//members.addAll(Minecord.getUserManager().getUsers(args[i]));
 				}
 				for (Server server : Minecord.getServerManager().getServers()) {
 					boolean yeah = desc == null ? true : server.getDescription().equals(desc);
@@ -166,9 +166,9 @@ public class CommandHandler implements CommandExecutor {
 				if (args.length > 3) 
 					if (!(args[3].equals("null"))) 
 						main = Boolean.parseBoolean(args[3]);
-				Set<User> members = new HashSet<User>();
+				//Set<User> members = new HashSet<User>();
 				for (int i = 4; i < args.length; i++) {
-					members.addAll(Minecord.getUserManager().getUsers(args[i]));
+					//members.addAll(Minecord.getUserManager().getUsers(args[i]));
 				}
 				for (Channel channel : server.getChannels()) {
 					boolean yeah = desc == null ? true : channel.getDescription().equals(desc);
@@ -192,7 +192,7 @@ public class CommandHandler implements CommandExecutor {
 					sender.sendMessage(ChatColor.RED + "Please specify a user name!");
 					return true;
 				}
-				users.addAll(Minecord.getUserManager().getUsers(args[1]));
+				//users.addAll(Minecord.getUserManager().getUsers(args[1]));
 				if (users.isEmpty()) {
 					sender.sendMessage(ChatColor.YELLOW + "No users found.");
 					return true;
@@ -211,8 +211,8 @@ public class CommandHandler implements CommandExecutor {
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("users")) {
-				for (User user : Minecord.getUserManager().getUsers()) {
-					System.out.println(user.getName());
+				//for (User user : Minecord.getUserManager().getUsers()) {
+					//System.out.println(user.getName());
 				}
 				return true;
 			}
@@ -222,7 +222,8 @@ public class CommandHandler implements CommandExecutor {
 				return true;
 			}
 			Player player = (Player) sender;
-			User user = Minecord.getUserManager().getUser(player);
+			User user = //Minecord.getUserManager().getUser(player);
+					null;
 			if (args[0].equalsIgnoreCase("gui")) {
 				if (gui.get(player) == null) gui.put(player, false);
 				gui.put(player, !(gui.get(player)));
@@ -273,11 +274,11 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.RED + "Failed to join the locked server!");
 					return true;
 				}
-				ServerIdentity identity = user.getIdentity(server);
-				if (identity != null && identity.isJoined()) {
+				//ServerIdentity identity = user.getIdentity(server);
+				//if (identity != null && identity.isJoined()) {
 					player.sendMessage(ChatColor.RED + "You are already in the server!");
-					return true;
-				}
+					//return true;
+				//}
 				//user.join(server);
 				if (args.length != 3) {
 					player.sendMessage(ChatColor.GREEN + "You have successfully joined the server!");
@@ -298,11 +299,11 @@ public class CommandHandler implements CommandExecutor {
 					return true;
 				}
 				Server server = Minecord.getServerManager().getServer(args[1]);
-				ServerIdentity identity = user.getIdentity(server);
-				if (server == null || identity == null || !(identity.isJoined())) {
+				//ServerIdentity identity = user.getIdentity(server);
+				//if (server == null || identity == null || !(identity.isJoined())) {
 					player.sendMessage(ChatColor.RED + "Failed to find the server in your list of joined servers!");
-					return true;
-				}
+					//return true;
+				//}
 				if (args.length == 2) {
 					player.sendMessage(ChatColor.RED + "Please specify a channel!");
 					return true;
@@ -520,7 +521,5 @@ public class CommandHandler implements CommandExecutor {
 				}
 			player.sendMessage(ChatColor.GREEN + "Configuration has been successfully applied.");
 			return true;
-		}
-		return false;
 	}
 }

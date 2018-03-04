@@ -1,4 +1,4 @@
-package com.rcextract.minecord.event.server;
+/*package com.rcextract.minecord.event.server;
 
 import java.util.Set;
 
@@ -59,4 +59,4 @@ public class ServerIdentityUpdateEvent extends MinecordEvent {
 		return handlers;
 	}
 
-}
+}*/

@@ -27,7 +27,7 @@ public class Minecord extends JavaPlugin {
 
 	private static InternalManager panel;
 	private static ConfigManager cm;
-	private static DatabaseManager dm;
+	private static DataManipulator dm;
 	protected static Properties properties;
 	private static boolean errorDisable;
 	protected static Minecord minecord;
@@ -88,7 +88,7 @@ public class Minecord extends JavaPlugin {
 	 * Gets the database manager.
 	 * @return The database manager.
 	 */
-	public static DatabaseManager getDatabaseManager() {
+	public static DataManipulator getDatabaseManager() {
 		return dm;
 	}
 	/**
@@ -146,16 +146,16 @@ public class Minecord extends JavaPlugin {
 		}
 	}
 	public static void reloadConfiguration() {
-		String format = getFormat();
+		//String format = getFormat();
 		try {
 			cm.load(properties);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return;
 		}
-		if (!(getFormat().equals(format))) 
-			for (User user : Minecord.getUserManager().getUsers()) 
-				updateMessage(user, true);
+		//if (!(getFormat().equals(format))) 
+			//for (User user : Minecord.getUserManager().getUsers()) 
+				//updateMessage(user, true);
 	}
 	public static String applyFormat(String name, String nickname, String uuid, String message, String date) {
 		String format = new String(getFormat());
@@ -205,13 +205,14 @@ public class Minecord extends JavaPlugin {
 			public void run() {
 				try {
 					minecord.getLogger().log(Level.INFO, "Loading data from database...");
-					dm = new DatabaseManager();
-					dm.initialize();
-					if (dm.loadDataFromOldDb) 
-						dm.loadFromOld();
-					else dm.load();
+					dm = new DataManipulator(getHost(), getUsername(), getPassword());
+					//dm.initialize();
+					//if (dm.loadDataFromOldDb) 
+						//dm.loadFromOld();
+					//else dm.load();
+					dm.load();
 					minecord.getLogger().log(Level.INFO, "Data are successfully loaded.");
-				} catch (ClassNotFoundException | SQLException e) {
+				} catch (SQLException | DataLoadException | SQLConnectException e) {
 					minecord.getLogger().log(Level.SEVERE, "An error occured while attempting to load the data.", e);
 					errorDisable = true;
 					Bukkit.getPluginManager().disablePlugin(minecord);
@@ -236,12 +237,12 @@ public class Minecord extends JavaPlugin {
 	private static void saveDataInternal() {
 		try {
 			minecord.getLogger().log(Level.INFO, "Saving data to database...");
-			dm.dropDatabase();
-			dm.initialize();
+			//dm.dropDatabase();
+			//dm.initialize();
 			dm.save();
-			dm.close();
+			//dm.close();
 			minecord.getLogger().log(Level.INFO, "Data are successfully saved.");
-		} catch (SQLException e) {
+		} catch (DataLoadException e) {
 			minecord.getLogger().log(Level.SEVERE, "An error occurred while attempting to save the data.", e);
 		}
 	}

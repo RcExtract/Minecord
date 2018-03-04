@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.rcextract.minecord.event.server.ServerEvent;
 import com.rcextract.minecord.getters.ChannelGetter;
+import com.rcextract.minecord.getters.SendableOptionsGetter;
 import com.rcextract.minecord.utils.ComparativeSet;
 import com.rcextract.minecord.utils.Pair;
 
@@ -32,7 +33,7 @@ import com.rcextract.minecord.utils.Pair;
  * A {@link ServerRecordManager} helps a server to manage records. It is separated into a class
  * for merging purposes which feature will be provided in the future.
  */
-public class Server implements RecordManager<ServerEvent>, ChannelGetter {
+public class Server implements RecordManager<ServerEvent>, ChannelGetter, SendableOptionsGetter {
 
 	private final int id;
 	private String name;
@@ -44,7 +45,7 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter {
 	private final ComparativeSet<Channel> channels;
 	private Channel main;
 	private RankManager rankManager;
-	private final ComparativeSet<ConversablePreference> preferences;
+	private final ComparativeSet<SendableOptions> options;
 	/**
 	 * This constructor is reserved for initialization.
 	 */
@@ -67,7 +68,7 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter {
 		this.main = main;
 		this.rankManager = rankManager;
 		try {
-			this.preferences = new ComparativeSet<ConversablePreference>(ConversablePreference.class, new Pair<String, Boolean>("getUser", true));
+			this.options = new ComparativeSet<SendableOptions>(SendableOptions.class, new Pair<String, Boolean>("getUser", true));
 		} catch (NoSuchMethodException | SecurityException | IllegalArgumentException e) {
 			//This exception is never thrown.
 			throw new UnsupportedOperationException();
@@ -249,21 +250,39 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter {
 	protected void setRankManager(RankManager rankManager) {
 		this.rankManager = rankManager;
 	}
-	
-	public Set<Conversable> getConversables() {
-		Set<Conversable> conversables = new HashSet<Conversable>();
-		for (ConversablePreference preference : preferences) 
-			conversables.add(preference.getConversable());
-		return conversables;
+	@Override
+	public Set<Sendable> getSendables() {
+		Set<Sendable> sendables = new HashSet<Sendable>();
+		for (SendableOptions option : options) 
+			sendables.add(option.getSendable());
+		return sendables;
 	}
-	public ComparativeSet<ConversablePreference> getConversablePreferences() {
-		return preferences;
+	@Override
+	public ComparativeSet<SendableOptions> getSendableOptions() {
+		return options;
 	}
-	public ConversablePreference getPreference(Conversable conversable) {
-		for (ConversablePreference preference : preferences) 
-			if (preference.getConversable() == conversable) 
-				return preference;
+	@Override
+	public SendableOptions getSendableOption(Sendable sendable) {
+		for (SendableOptions option : options) 
+			if (option.getSendable() == sendable) 
+				return option;
 		return null;
+	}
+	@Override
+	public Set<SendableOptions> getSendableOptions(JoinState state) {
+		Set<SendableOptions> options = new HashSet<SendableOptions>();
+		for (SendableOptions option : options) 
+			if (option.getState() == state) 
+				options.add(option);
+		return options;
+	}
+	@Override
+	public Set<SendableOptions> getSendableOptions(Rank rank) {
+		Set<SendableOptions> options = new HashSet<SendableOptions>();
+		for (SendableOptions option : options) 
+			if (option.getRank() == rank) 
+				options.add(option);
+		return options;
 	}
 	@Override
 	public List<ServerEvent> getRecords() {

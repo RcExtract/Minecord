@@ -4,30 +4,33 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.permissions.Permission;
 
-public class ConversablePreference {
+public class SendableOptions {
 
-	private final Conversable conversable;
-	private boolean joined;
+	private final Sendable sendable;
+	private JoinState state;
 	private Rank rank;
 	private final Set<Permission> permissions;
 	
-	public ConversablePreference(Conversable conversable, boolean joined, Rank rank, Permission ... permissions) {
-		this.conversable = conversable;
-		this.joined = joined;
+	public SendableOptions(Sendable sendable, JoinState state, Rank rank, Permission ... permissions) {
+		Validate.notNull(sendable);
+		Validate.notNull(state);
+		this.sendable = sendable;
+		this.state = state;
 		this.rank = rank;
 		this.permissions = new HashSet<Permission>(Arrays.asList(permissions));
 	}
 	
-	public Conversable getConversable() {
-		return conversable;
+	public Sendable getSendable() {
+		return sendable;
 	}
-	public boolean isJoined() {
-		return joined;
+	public JoinState getState() {
+		return state;
 	}
-	public void setJoined(boolean joined) {
-		this.joined = joined;
+	public void setSate(JoinState state) {
+		this.state = state;
 	}
 	public Rank getRank() {
 		return rank;
@@ -40,7 +43,7 @@ public class ConversablePreference {
 	}
 	public Server getServer() {
 		for (Server server : Minecord.getServerManager().getServers()) 
-			if (server.getConversablePreferences().contains(this)) 
+			if (server.getSendableOptions().contains(this)) 
 				return server;
 		return null;
 	}

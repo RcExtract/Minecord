@@ -1,4 +1,4 @@
-package com.rcextract.minecord.event;
+/*package com.rcextract.minecord.event;
 
 import org.bukkit.event.HandlerList;
 
@@ -37,4 +37,4 @@ public class ListenerUpdateEvent extends MinecordEvent {
 	public HandlerList getHandlers() {
 		return handlers;
 	}
-}
+}*/

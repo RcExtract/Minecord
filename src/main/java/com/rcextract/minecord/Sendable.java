@@ -1,8 +1,11 @@
 package com.rcextract.minecord;
 
+import java.util.List;
 import java.util.Set;
 
-public interface ConversationSender {
+import com.rcextract.minecord.getters.ChannelOptionsGetter;
+
+public interface Sendable extends ChannelOptionsGetter {
 	
 	public int getIdentifier();
 	public String getName();
@@ -12,4 +15,5 @@ public interface ConversationSender {
 	public Set<Server> getServers();
 	public Channel getMain();
 	public void setMain(Channel channel);
+	public List<Object> values();
 }

@@ -3,13 +3,13 @@
 package com.rcextract.minecord;
 
 /*import java.util.ArrayList;*/
-import java.util.Random;
+//import java.util.Random;
 /*import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;*/
-import java.util.Set;
+//import java.util.Set;
 
-import org.bukkit.Bukkit;
+//import org.bukkit.Bukkit;
 /*import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -22,7 +22,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 
-import com.rcextract.minecord.event.user.UserMessageEvent;
+//import com.rcextract.minecord.event.user.UserMessageEvent;
 
 /*import com.rcextract.minecord.event.UserMessageEvent;
 import com.rcextract.minecord.event.UserTagEvent;*/
@@ -46,16 +46,16 @@ public class EventManager implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerChat(AsyncPlayerChatEvent event) {
 		event.setCancelled(true);
-		String message = event.getMessage();
-		User sender = Minecord.getUserManager().getUser(event.getPlayer());
-		Channel channel = sender.getMain();
-		/*Deprecation Message*/Set<User> users = null;
-		UserMessageEvent e = new UserMessageEvent(message, sender.getMain(), sender, users);
-		Bukkit.getPluginManager().callEvent(e);
-		if (e.isCancelled()) return;
-		int id = new Random().nextInt();
-		while (channel.getMessage(id) != null) id = new Random().nextInt();
-		sender.getMain().messages.add(new Message(id, sender, e.getMessage(), e.getDate()));
+		//String message = event.getMessage();
+		//User sender = Minecord.getUserManager().getUser(event.getPlayer());
+		//Channel channel = sender.getMain();
+		/*Deprecation Message*///Set<User> users = null;
+		//UserMessageEvent e = new UserMessageEvent(message, sender.getMain(), sender, users);
+		//Bukkit.getPluginManager().callEvent(e);
+		//if (e.isCancelled()) return;
+		//int id = new Random().nextInt();
+		//while (channel.getMessage(id) != null) id = new Random().nextInt();
+		//sender.getMain().messages.add(new Message(id, sender, e.getMessage(), e.getDate()));
 		/*for (User user : users) 
 			if (user.getMain() == channel) 
 				user.applyMessage();*/
@@ -142,6 +142,6 @@ public class EventManager implements Listener {
 	 */
 	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent event) {
-		Minecord.getUserManager().getUser(event.getPlayer()).applyMessage();
+		//Minecord.getUserManager().getUser(event.getPlayer()).applyMessage();
 	}
 }

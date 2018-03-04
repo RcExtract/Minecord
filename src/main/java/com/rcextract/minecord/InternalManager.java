@@ -22,7 +22,7 @@ import com.rcextract.minecord.utils.Pair;
 public final class InternalManager implements ServerManager, UserManager, Recordable<MinecordEvent> {
 
 	protected final ComparativeSet<Server> servers;
-	protected final Set<User> users = new HashSet<User>();
+	protected final Set<Sendable> sendables = new HashSet<Sendable>();
 	private final List<MinecordEvent> records = new ArrayList<MinecordEvent>();
 
 	protected InternalManager() {
@@ -39,9 +39,9 @@ public final class InternalManager implements ServerManager, UserManager, Record
 			server.initialize();
 			server.getRankManager().initialize();
 		}
-		for (User user : Minecord.getUserManager().getUsers()) 
+		for (Sendable user : Minecord.getUserManager().getSendables()) 
 			if (user.getServers().isEmpty()) 
-				getMain().getConversablePreferences().add(new ConversablePreference(user, true, getMain().getRankManager().getMain()));
+				getMain().getSendableOptions().add(new SendableOptions(user, JoinState.JOINED, getMain().getRankManager().getMain()));
 	}
 	
 	@Override
@@ -64,9 +64,10 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	@Deprecated
 	@Override
 	public Set<Server> getServers(OfflinePlayer player) {
-		User user = getUser(player);
-		if (user == null) return null;
-		return getServers(user);
+		//User user = getUser(player);
+		//if (user == null) return null;
+		//return getServers(user);
+		return null;
 	}
 	
 	@Deprecated
@@ -108,40 +109,43 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	}
 
 	@Override
-	public Set<User> getUsers() {
-		return users;
+	public Set<Sendable> getSendables() {
+		return sendables;
 	}
 	
 	@Override
-	public User getUser(int id) {
-		for (User user : users) if (user.getIdentifier() == id) return user;
+	public Sendable getSendable(int id) {
+		for (Sendable sendable : sendables) 
+			if (sendable.getIdentifier() == id) 
+				return sendable;
 		return null;
 	}
 
 	@Override
-	public Set<User> getUsers(String name) {
-		Set<User> users = new HashSet<User>();
-		for (User user : this.users) if (user.getName() == name) users.add(user);
+	public Set<Sendable> getUsers(String name) {
+		Set<Sendable> users = new HashSet<Sendable>();
+		for (Sendable user : this.sendables) if (user.getName() == name) users.add(user);
 		return users;
 	}
 
-	@Override
-	public User getUser(OfflinePlayer player) {
+	/*@Override
+	public Sendable getSendable(OfflinePlayer player) {
 		for (User user : users) 
 			if (user.getPlayer().getUniqueId().equals(player.getUniqueId())) 
 				return user;
 		return null;
-	}
+	}*/
 
 	@Override
 	public boolean isRegistered(OfflinePlayer player) {
-		return getUser(player) != null;
+		//return getUser(player) != null;
+		return false;
 	}
 	@Deprecated
 	@Override
 	public User registerPlayer(OfflinePlayer player, Channel channel, Rank rank) throws IllegalStateException {
-		int id = ThreadLocalRandom.current().nextInt();
-		while (getUser(id) != null || id < 0) id = ThreadLocalRandom.current().nextInt();
+		//int id = ThreadLocalRandom.current().nextInt();
+		//while (getUser(id) != null || id < 0) id = ThreadLocalRandom.current().nextInt();
 		//String name = player.getName();
 		//String nickname = name;
 		//String desc = "A default user description";
@@ -155,10 +159,10 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	}
 	@Deprecated
 	public User registerPlayer(String name, String nickname, String desc, final OfflinePlayer player/*, Listener main, ServerIdentity ... identities*/) {
-		User user = getUser(player);
-		if (user != null) return user;
-		int id = new Random().nextInt();
-		if (getUser(id) != null || id < 0) id = new Random().nextInt();
+		//User user = getUser(player);
+		//if (user != null) return user;
+		//int id = new Random().nextInt();
+		//if (getUser(id) != null || id < 0) id = new Random().nextInt();
 		if (name == null) name = player.getName();
 		if (nickname == null) nickname = name;
 		if (desc == null) desc = "A default user description.";
@@ -174,20 +178,22 @@ public final class InternalManager implements ServerManager, UserManager, Record
 			//contains = contains || identity.getListeners().contains(main);
 		if (!(contains)) throw new IllegalArgumentException();
 		//user = new User(id, name, nickname, desc, player, main, identityset.toArray(new ServerIdentity[identityset.size()]));
-		users.add(user);
-		return user;
+		//users.add(user);
+		//return user;
+		return null;
 	}
 	@Deprecated
 	@Override
 	public User registerPlayerIfAbsent(OfflinePlayer player, Channel channel, Rank rank) {
-		if (getUser(player) == null) return registerPlayer(player, channel, rank);
-		return getUser(player);
+		//if (getUser(player) == null) return registerPlayer(player, channel, rank);
+		//return getUser(player);
+		return null;
 	}
 
 	@Override
 	@Deprecated
 	public void unregisterPlayer(User user) {
-		users.remove(user);
+		//users.remove(user);
 	}
 
 	@Override
