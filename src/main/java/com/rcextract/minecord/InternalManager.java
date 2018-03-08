@@ -14,7 +14,7 @@ import org.bukkit.OfflinePlayer;
 
 import com.rcextract.minecord.event.MinecordEvent;
 import com.rcextract.minecord.utils.ComparativeSet;
-import com.rcextract.minecord.utils.Pair;
+//import com.rcextract.minecord.utils.Pair;
 
 /**
  * The control panel of Minecord system.
@@ -27,8 +27,9 @@ public final class InternalManager implements ServerManager, UserManager, Record
 
 	protected InternalManager() {
 		try {
-			servers = new ComparativeSet<Server>(Server.class, new Pair<String, Boolean>("getIdentifier", true), new Pair<String, Boolean>("getName", false));
-		} catch (NoSuchMethodException | SecurityException e) {
+			servers = null;
+			//servers = new ComparativeSet<Server>(Server.class, new Pair<String, Boolean>("getIdentifier", true), new Pair<String, Boolean>("getName", false));
+		} catch (RuntimeException e) {
 			//This exception is never thrown.
 			throw new RuntimeException();
 		}

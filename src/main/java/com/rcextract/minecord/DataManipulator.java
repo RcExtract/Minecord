@@ -1,12 +1,15 @@
-package com.rcextract.minecord;
+/*package com.rcextract.minecord;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.sql.Statement;
@@ -18,68 +21,89 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.event.Listener;
 import org.bukkit.permissions.Permission;
 
+import com.rcextract.minecord.sql.Deserializer;
+import com.rcextract.minecord.sql.Serializer;
+import com.rcextract.minecord.utils.ComparativeSet;
 import com.rcextract.minecord.utils.Pair;
 import com.rcextract.minecord.utils.Table;
 
-/*
- * servers: id, name, description, approvement, invitation, permanent, locked
- * channels: server, id, name, description, locked, main
- * ranks: server, name, description, tag, admin, override, permissions, main
- * sendables: arg1, arg2, arg3...
- * sendables_tableinfo: column_id, column_type, sendable_class, arg_id
- * channelopts: user, channel, notify, i
- * sendableopts: sendable, server, state("none"/"invited"/"approving"/"joined"), rank, permissions
- * permissions: id, permission
- */
-
-public final class DataManipulator implements Listener {
+public final class DataManipulator {
 
 	private static final String PROTOCOL = "jdbc:mysql://";
-	private static final Set<SendableClass<? extends Sendable>> classes = new HashSet<SendableClass<? extends Sendable>>();
 	public static String getProtocol() {
 		return PROTOCOL;
 	}
-	public static Set<SendableClass<? extends Sendable>> getRegisteredClasses() {
-		return Collections.unmodifiableSet(classes);
+	private static final Map<Serializer<?, ?>, Deserializer<?, ?>> conversions;
+	public static Map<Serializer<?, ?>, Deserializer<?, ?>> getConversions() {
+		return Collections.unmodifiableMap(conversions);
 	}
-	public static <T extends Sendable> boolean register(Class<T> clazz, String serializer, String deserializer) throws NoSuchMethodException, SecurityException {
-		Method method = null;
-		for (Method m : clazz.getDeclaredMethods()) 
-			if (m.getName() == serializer) {
-				method = m;
-				break;
+	public static <A, R> void register(Serializer<A, R> serializer, Deserializer<R, A> deserializer) {
+		Validate.notNull(serializer);
+		Validate.notNull(deserializer);
+		conversions.put(serializer, deserializer);
+	}
+	public static <A, R> boolean unregister(Serializer<A, R> serializer, Deserializer<R, A> deserializer) {
+		return conversions.remove(serializer, deserializer);
+	}
+	@SuppressWarnings("unchecked")
+	public static <A, R> Deserializer<R, A> unregister(Serializer<A, R> serializer) {
+		return (Deserializer<R, A>) conversions.remove(serializer);
+	}
+	public static final Set<Class<?>> CONVERSION_EXEMPTIONS;
+	private static final ComparativeSet<Class<? extends Sendable>> classes;
+	public static ComparativeSet<Class<? extends Sendable>> getClasses() {
+		return classes;
+	}
+	static {
+		Set<Class<?>> set = new HashSet<Class<?>>();
+		set.add(Boolean.class);
+		set.add(Character.class);
+		set.add(Double.class);
+		set.add(Float.class);
+		set.add(Integer.class);
+		set.add(Long.class);
+		set.add(Short.class);
+		set.add(String.class);
+		CONVERSION_EXEMPTIONS = Collections.unmodifiableSet(set);
+		conversions = new HashMap<Serializer<?, ?>, Deserializer<?, ?>>();
+		classes = new ComparativeSet<Class<? extends Sendable>>(clazz -> {
+			try {
+				return clazz.getConstructor(Map.class).isAccessible();
+			} catch (NoSuchMethodException | SecurityException e) {
+				return false;
 			}
-		Method de = null;
-		for (Method m : clazz.getDeclaredMethods()) 
-			if (m.getName() == deserializer && Modifier.isStatic(m.getModifiers()) && m.getReturnType() == clazz) {
-				method = m;
-				break;
-			}
-		return classes.add(new SendableClass<T>(clazz, method, de));
+		});
+		conversions.put((UUID uuid) -> {
+			return uuid.toString();
+		}, (String uuid) -> {
+			return UUID.fromString(uuid);
+		});
+		conversions.put((OfflinePlayer player) -> {
+			return player.getUniqueId().toString();
+		}, (String player) -> {
+			return Bukkit.getOfflinePlayer(UUID.fromString(player));
+		});
 	}
-	public static boolean unregister(Class<?> clazz) {
-		for (SendableClass<? extends Sendable> s : classes) 
-			if (s.getDeclaringClass() == clazz) 
-				return classes.remove(s);
-		return false;
-	}
-	public static SendableClass<? extends Sendable> getSendableClass(Class<?> clazz) {
-		for (SendableClass<? extends Sendable> s : classes) 
-			if (s.getDeclaringClass() == clazz) 
-				return s;
-		return null;
-	}
+
 	private final Connection connection;
-	public DataManipulator(String url, String user, String password) throws SQLTimeoutException, SQLConnectException {
+	public DataManipulator(String url, String user, String password) throws SQLTimeoutException, SQLConnectException, DriverNotFoundException {
 		this(url, user, password, true);
 	}
-	public DataManipulator(String url, String user, String password, boolean autoreconnect) throws SQLTimeoutException, SQLConnectException {
+	public DataManipulator(String url, String user, String password, boolean autoreconnect) throws SQLTimeoutException, SQLConnectException, DriverNotFoundException {
 		Validate.notNull(url);
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+		} catch (ClassNotFoundException e) {
+			throw new DriverNotFoundException();
+		}
 		try {
 			this.connection = DriverManager.getConnection(PROTOCOL + url + "?autoReconnect=" + Boolean.toString(autoreconnect) + "&useSSL=false", user, password);
 		} catch (SQLTimeoutException e) {
@@ -112,6 +136,7 @@ public final class DataManipulator implements Listener {
 			throw new SQLConnectException();
 		}
 	}
+
 	public synchronized void load() throws DataLoadException {
 		try (Statement statement = connection.createStatement()) {
 			ResultSet permset = statement.executeQuery("SELECT * FROM permissions;");
@@ -161,6 +186,40 @@ public final class DataManipulator implements Listener {
 				if (server != null) server.getRankManager().ranks.add(rank);
 				if (rankset.getBoolean("main")) server.getRankManager().setMain(rank);
 			}
+			PreparedStatement stmt = connection.prepareStatement("SELECT * FROM ?");
+			DatabaseMetaData meta = connection.getMetaData();
+			ResultSet tables = meta.getTables(null, null, "&", null);
+			while (tables.next()) 
+				if (tables.getString(3).startsWith("sendable_")) {
+					Class<?> clazz = Class.forName(tables.getString(3).substring(9));
+					stmt.setString(1, tables.getString(3));
+					ResultSet set = stmt.executeQuery();
+					ResultSetMetaData data = set.getMetaData();
+					while (set.next()) {
+						Map<String, Object> list = new HashMap<String, Object>();
+						for (int i = 1; i <= data.getColumnCount(); i++) {
+							String name = data.getColumnName(i);
+							Object object = set.getObject(i, Class.forName(data.getColumnClassName(i)));
+							list.put(name, object);
+						}
+						Minecord.getControlPanel().sendables.add((Sendable) clazz.getMethod("deserialize", list.getClass()).invoke(null, list));
+					}
+				}
+			/*Table<Integer, String, Class<?>> orders = new Table<Integer, String, Class<?>>();
+			ResultSet loadorder = statement.executeQuery("SELECT * FROM load_orders");
+			while (loadorder.next()) {
+				int order = loadorder.getInt("load_order");
+				String name = loadorder.getString("table_name");
+				Class<?> clazz = Class.forName(loadorder.getString("class"));
+				orders.put(order, name, clazz);
+			}
+			for (int i = 1; i <= orders.size(); i++) {
+				Map<String, Class<?>> map = orders.a(i);
+				ResultSet set = statement.executeQuery("SELECT * FROM " + map.keySet().iterator().next());
+				while (set.next()) {
+					
+				}
+			}
 			ResultSet sendableset = statement.executeQuery("SELECT * FROM sendables");
 			ResultSet info = statement.executeQuery("SELECT * FROM sendables_tableinfo");
 			//The first one is for storing the column id, or index in the table, exists due to entries inside Table does not store in orders.
@@ -203,8 +262,8 @@ public final class DataManipulator implements Listener {
 				//The sendable object.
 				Minecord.getControlPanel().sendables.add((Sendable) getSendableClass(clazz).getDeserializer().invoke(null, list));
 				//Sendables done
-			}
-			ResultSet sendableoptset = statement.executeQuery("SELECT * FROM sendableopts");
+			}*/
+			/*ResultSet sendableoptset = statement.executeQuery("SELECT * FROM sendableopts");
 			while (sendableoptset.next()) {
 				Sendable sendable = Minecord.getUserManager().getSendable(sendableoptset.getInt("sendable"));
 				Server server = Minecord.getServerManager().getServer(sendableoptset.getInt("server"));
@@ -358,4 +417,4 @@ public final class DataManipulator implements Listener {
 		statement.executeUpdate(stmt.toString().substring(0, stmt.length() - 3) + ");");
 		return columns;
 	}
-}
+}*/

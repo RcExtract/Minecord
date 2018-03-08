@@ -9,7 +9,6 @@ import com.rcextract.minecord.event.server.ServerEvent;
 import com.rcextract.minecord.getters.ChannelGetter;
 import com.rcextract.minecord.getters.SendableOptionsGetter;
 import com.rcextract.minecord.utils.ComparativeSet;
-import com.rcextract.minecord.utils.Pair;
 
 /**
  * In Minecord, a Server groups up a set of channels, usually by target or topic, and provides 
@@ -46,11 +45,8 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter, Sendab
 	private Channel main;
 	private RankManager rankManager;
 	private final ComparativeSet<SendableOptions> options;
-	/**
-	 * This constructor is reserved for initialization.
-	 */
-	//@Deprecated
-	protected Server(int id, String name, String desc, boolean approvement, boolean invitation, boolean permanent, boolean locked, /*ChannelManager channelManager, */RankManager rankManager, Channel main, Channel ... channels) {
+
+	public Server(int id, String name, String desc, boolean approvement, boolean invitation, boolean permanent, boolean locked, /*ChannelManager channelManager, */RankManager rankManager, Channel main, Channel ... channels) {
 		this.id = id;
 		this.name = name;
 		this.desc = desc;
@@ -58,21 +54,10 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter, Sendab
 		this.invitation = invitation;
 		this.permanent = permanent;
 		this.locked = locked;
-		//this.channelManager = channelManager;
-		try {
-			this.channels = new ComparativeSet<Channel>(Channel.class, new Pair<String, Boolean>("getIdentifier", true), new Pair<String, Boolean>("getName", false));
-		} catch (NoSuchMethodException | SecurityException | IllegalArgumentException e) {
-			//This exception is never thrown.
-			throw new UnsupportedOperationException();
-		}
+		this.channels = new ComparativeSet<Channel>((Channel element) -> getChannel(element.getIdentifier()) == null);
 		this.main = main;
 		this.rankManager = rankManager;
-		try {
-			this.options = new ComparativeSet<SendableOptions>(SendableOptions.class, new Pair<String, Boolean>("getUser", true));
-		} catch (NoSuchMethodException | SecurityException | IllegalArgumentException e) {
-			//This exception is never thrown.
-			throw new UnsupportedOperationException();
-		}
+		this.options = new ComparativeSet<SendableOptions>((SendableOptions element) -> getSendableOption(element.getSendable()) == null);
 	}
 	/**
 	 * Gets the identifier of the server.
@@ -91,10 +76,8 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter, Sendab
 	/**
 	 * Renames the server.
 	 * @param name The new name of the server.
-	 * @throws DuplicatedException If the name is used by another server.
 	 */
-	public void setName(String name) throws DuplicatedException {
-		if (Minecord.getServerManager().getServer(name) != null) throw new DuplicatedException();
+	public void setName(String name) {
 		this.name = name;
 	}
 	/**
@@ -115,7 +98,7 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter, Sendab
 	 * Determines the approvement requirement to join this server.
 	 * @return The approvement requirement to join this server.
 	 */
-	public boolean needApprovement() {
+	public boolean isApprovement() {
 		return approvement;
 	}
 	/**
@@ -129,7 +112,7 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter, Sendab
 	 * Determines the invitation requirement to join this server.
 	 * @return The invitation requirement to join this server.
 	 */
-	public boolean needInvitation() {
+	public boolean isInvitation() {
 		return invitation;
 	}
 	/**
@@ -156,20 +139,18 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter, Sendab
 		this.permanent = permanent;
 	}
 	/**
-	 * Determines if the server is ready to join.
-	 * @return The reversed boolean of locked.
+	 * Determines if the server is locked.
+	 * @return Whether if the server is locked.
 	 */
-	public boolean ready() {
-		return !locked;
+	public boolean isLocked() {
+		return locked;
 	}
 	/**
-	 * Locks the server. All functions should be disabled for normal users and they all should 
-	 * be kicked.
-	 * @return 
+	 * Sets the locked state of the server.
+	 * @param locked The locked state of the server.
 	 */
-	public void lock() throws IllegalStateException {
-		if (locked) throw new IllegalStateException();
-		this.locked = true;
+	public void setLocked(boolean locked) {
+		this.locked = locked;
 	}
 	/**
 	 * Unlocks the server. All functions should be enabled for normal users according to the 
@@ -179,29 +160,6 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter, Sendab
 	public void unlock() throws IllegalStateException {
 		if (!(locked)) throw new IllegalStateException();
 		this.locked = false;
-	}
-	/**
-	 * Gets all online players joined the server. Modifying this HashSet does not affect anything.
-	 * @return The total online players added from channels.
-	 * @deprecated Use getConversables
-	 */
-	@Deprecated
-	public Set<User> getActiveMembers() {
-		/*Set<User> onlines = new HashSet<User>();
-		for (Channel channel : channels) 
-			onlines.addAll(channel.getActiveMembers());
-		return onlines;*/
-		return null;
-	}
-	/**
-	 * Removes a player from this channel. This method simply invokes the User.switchChannel(Channel)
-	 * method, redirecting the user to the default channel.
-	 * @param user The target user.
-	 * @deprecated Obtain ComparativeSet through getConversablePreferneces() method and remove the ConversablePreference corresponding to the Conversable.
-	 */
-	@Deprecated
-	public void remove(User user) {
-		//user.setChannel(null);
 	}
 	public ComparativeSet<Channel> getChannels() {
 		return channels;
@@ -215,24 +173,6 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter, Sendab
 		if (!(channels.contains(main))) throw new IllegalArgumentException();
 		this.main = main;
 	}
-	/**
-	 * Gets the channel manager.
-	 * @return The channel manager.
-	 */
-	/*@Deprecated
-	public ChannelManager getChannelManager() {
-		return channelManager;
-	}*/
-	/**
-	 * Sets the channel manager.
-	 * <p>
-	 * This method is reserved for initialization.
-	 * @param channelManager The channel manager.
-	 */
-	/*@Deprecated
-	protected void setChannelManager(ChannelManager channelManager) {
-		this.channelManager = channelManager;
-	}*/
 	/**
 	 * Gets the rank manager. It currently does nothing and always return null.
 	 * @return The rank manager.

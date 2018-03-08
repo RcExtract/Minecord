@@ -218,4 +218,8 @@ public class Table<A, B, C> {
 		entries.add(new Entry<A, B, C>(a, b, c));
 		return true;
 	}
+	
+	public int size() {
+		return entries.size();
+	}
 }

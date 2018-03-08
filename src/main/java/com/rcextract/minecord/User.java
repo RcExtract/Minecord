@@ -1,6 +1,6 @@
 package com.rcextract.minecord;
 
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.OfflinePlayer;
@@ -51,12 +51,12 @@ public class User extends Conversable implements RecordManager<UserEvent> {
 			player.sendMessage(Minecord.applyFormat(message.getSender().getName(), message.getSender().getNickName(), message.getSender().getPlayer().getUniqueId().toString(), message.getMessage(), message.getDate().toString()));
 		main.setIndex(main.getChannel().getMessages().size() - main.getUnreadMessages().size());
 	}
-	@Override
+	/*@Override
 	public List<Object> values() {
 		return Arrays.asList(new Object[] {
 				nickName, player.getUniqueId().toString()
 		});
-	}
+	}*/
 	@Override
 	public List<UserEvent> getRecords() {
 		return Minecord.getRecordManager().getRecords(UserEvent.class);

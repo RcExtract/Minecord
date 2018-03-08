@@ -1,6 +1,6 @@
 package com.rcextract.minecord;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.rcextract.minecord.getters.ChannelOptionsGetter;
@@ -15,5 +15,5 @@ public interface Sendable extends ChannelOptionsGetter {
 	public Set<Server> getServers();
 	public Channel getMain();
 	public void setMain(Channel channel);
-	public List<Object> values();
+	public Map<String, Object> serialize();
 }

@@ -81,12 +81,7 @@ public class ServerEditor implements Listener {
 			if (closed == true) throw new IllegalStateException();
 			event.setCancelled(true);
 			switch (property) {
-			case NAME: try {
-					server.setName(message);
-				} catch (DuplicatedException e) {
-					player.sendMessage("The server with the same name exists. Renaming failed.");
-					return;
-				}
+			case NAME: server.setName(message);
 			break;
 			case DESCRIPTION: server.setDescription(message);
 			break;

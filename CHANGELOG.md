@@ -4,6 +4,13 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## 1.1.0 SNAPSHOT 4.0 (New API not fully implemented, about 60%)
+- Now finally supports loading and saving any Sendables (including instances of subclasses') correctly.
+- Now plugin only supports Java 8+ due to using Lambda expressions and APIs only available on Java 8+.
+- Updated ComparativeSet filter from Method to Predicate.
+- Added method getIf(Predicate) in ComparativeSet
+- Added a few utility classes for loading and saving data
+
 ## 1.1.0 SNAPSHOT 3.0 (New API not fully implemented, about 45%)
 - Renamed ChannelPreference to ChannelOptions
 - Renamed ConversablePreference to SendableOptions

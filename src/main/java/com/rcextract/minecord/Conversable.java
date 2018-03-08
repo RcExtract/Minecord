@@ -1,35 +1,25 @@
 package com.rcextract.minecord;
 
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.rcextract.minecord.utils.ComparativeSet;
-import com.rcextract.minecord.utils.Pair;
 
 public abstract class Conversable implements Sendable {
 
-	static {
-		//DataManipulator.register(Conversable.class);
-	}
 	private final int id;
 	private String name;
 	private String desc;
 	private final ComparativeSet<ChannelOptions> options;
 	private Channel main;
 	
-	@SafeVarargs
 	public Conversable(int id, String name, String desc, Channel main, ChannelOptions ... options) {
 		this.id = id;
 		this.name = name;
 		this.desc = desc;
-		try {
-			this.options = new ComparativeSet<ChannelOptions>(ChannelOptions.class, new Pair<String, Boolean>("getChannel", true));
-		} catch (NoSuchMethodException | SecurityException | IllegalArgumentException e) {
-			//This exception is never thrown.
-			throw new UnsupportedOperationException();
-		}
+		this.options = new ComparativeSet<ChannelOptions>((ChannelOptions element) -> getChannelOptions(element.getChannel()) == null);
 		this.main = main;
 	}
 	
@@ -96,11 +86,11 @@ public abstract class Conversable implements Sendable {
 	}
 	public abstract void clear();
 	public abstract void applyMessage();
+	
 	@Override
-	public List<Object> values() {
-		return Arrays.asList(new Object[] {
-				id, name, desc, main.getIdentifier()
-		});
+	public Map<String, Object> serialize() {
+		Map<String, Object> map = new HashMap<String, Object>();
+		return map;
 	}
-
+	
 }

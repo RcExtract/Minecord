@@ -1,72 +1,87 @@
 package com.rcextract.minecord.utils;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
+/**
+ * This is a subclass of HashSet<T> which allows implementation to add filter and 
+ * prevent some elements from being added. If the element matches the requirements of 
+ * the filter, it will be added. The filter also applies on the pre-added elements.
+ * @param <T> The type of elements.
+ */
 public class ComparativeSet<T> extends HashSet<T> {
-
+	
 	private static final long serialVersionUID = -2222981329974385110L;
 
-	private final List<Pair<Method, Boolean>> methods = new ArrayList<Pair<Method, Boolean>>();
+	private final Predicate<? super T> filter;
 	
-	@SafeVarargs
-	public ComparativeSet(Class<T> clazz, Pair<String, Boolean> ... methods) throws NoSuchMethodException, SecurityException {
-		super();
-		for (Pair<String, Boolean> pair : methods) {
-			Method method = clazz.getMethod(pair.getKey());
-			if (method.getReturnType() == null) throw new IllegalArgumentException();
-			this.methods.add(new Pair<Method, Boolean>(method, pair.getValue()));
-		}
-	}
-	
-	@SafeVarargs
-	public ComparativeSet(Class<T> clazz, Collection<? extends T> collection, Pair<String, Boolean> ... methods) throws NoSuchMethodException, SecurityException {
-		super(collection);
-		for (Pair<String, Boolean> pair : methods) {
-			Method method = clazz.getMethod(pair.getKey());
-			if (method.getReturnType() == null) throw new IllegalArgumentException();
-			this.methods.add(new Pair<Method, Boolean>(method, pair.getValue()));
-		}
+	/**
+	 * Constructs a ComparativeSet with a filter.
+	 * @param filter The filter.
+	 */
+	public ComparativeSet(Predicate<? super T> filter) {
+		this.filter = filter;
 	}
 
-	public List<Pair<Method, Boolean>> getMethods() {
-		return methods;
+	/**
+	 * Constructs a ComparativeSet with a collection of elements after filtering.
+	 * @param filter The filter.
+	 * @param collection The collection of elements.
+	 */
+	public ComparativeSet(Predicate<? super T> filter, Collection<T> collection) {
+		this.filter = filter;
+		collection.forEach(element -> {
+			if (!(filter.test(element))) super.add(element);
+		});
 	}
 
-	public Collection<T> getElements(List<? extends Object> objects) {
-		if (objects.size() != methods.size()) throw new IllegalArgumentException();
+	/**
+	 * Constructs a ComparativeSet with filters.
+	 * @param filter The main filter.
+	 * @param filters The sub-filters.
+	 */
+	@SafeVarargs
+	public ComparativeSet(Predicate<? super T> filter, Predicate<? super Object> ... filters) {
+		this(filter);
+		Arrays.asList(filters).forEach((Predicate<? super Object> f) -> filter.and(f));
+	}
+	
+	/**
+	 * Gets the filter.
+	 * @return The filter.
+	 */
+	public Predicate<? super T> getFilter() {
+		return filter;
+	}
+
+	/**
+	 * Adds a new element after filtering. If the element matches the requirements of 
+	 * the filter, it will be added.
+	 * @return Whether the element is added.
+	 */
+	@Override
+	public boolean add(T t) {
+		if (filter.test(t)) return super.add(t);
+		return false;
+	}
+
+	/**
+	 * Returns all the elements which match the requirements of the filter.
+	 * @param filter The filter.
+	 * @return All the elements which match the requirements of the filter.
+	 */
+	public Set<T> getIf(Predicate<? super T> filter) {
 		Set<T> set = new HashSet<T>();
-		for (T t : this) 
-			try {
-				boolean add = true;
-				for (int i = 0; i < objects.size(); i++) {
-					Pair<Method, Boolean> pair = methods.get(i);
-					add = add && pair.getValue() ? pair.getKey().invoke(t) == objects.get(i) : pair.getKey().invoke(t).equals(objects.get(i));
-				}
-				if (add) set.add(t);
-			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-				continue;
-			}
+		forEach((T t) -> { if (filter.test(t)) set.add(t); });
 		return set;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
-	public boolean add(T t) {
-		try {
-			List<Object> objects = new ArrayList<Object>();
-			for (Pair<Method, Boolean> pair : methods) 
-				objects.add(pair.getKey().invoke(t));
-			boolean empty = getElements(objects).isEmpty();
-			if (empty) super.add(t);
-			return empty;
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			return false;
-		}
+	public ComparativeSet<T> clone() {
+		return (ComparativeSet<T>) super.clone();
 	}
-	
 }

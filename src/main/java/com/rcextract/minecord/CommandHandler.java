@@ -32,7 +32,7 @@ public class CommandHandler implements CommandExecutor {
 		this.minecord = minecord;
 	}
 	public static final Map<Player, Boolean> gui = new HashMap<Player, Boolean>();
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({ "unused" })
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if (cmd.getName().equalsIgnoreCase("minecord")) {
@@ -72,11 +72,11 @@ public class CommandHandler implements CommandExecutor {
 				sender.sendMessage("Server #" + Integer.toString(server.getIdentifier()) + ":");
 				sender.sendMessage("Name: " + server.getName());
 				sender.sendMessage("Description: " + server.getDescription());
-				sender.sendMessage("Approvement: " + (server.needApprovement() ? "activated" : "deactivated"));
-				sender.sendMessage("Invitation: " + (server.needInvitation() ? "activated" : "deactivated"));
+				sender.sendMessage("Approvement: " + (server.isApprovement() ? "activated" : "deactivated"));
+				sender.sendMessage("Invitation: " + (server.isInvitation() ? "activated" : "deactivated"));
 				sender.sendMessage("Permanent: " + (server.isPermanent() ? "activated" : "deactivated"));
-				sender.sendMessage("The server is " + (!(server.ready()) ? "not" : "") + " ready to join.");
-				sender.sendMessage("There " + (server.getActiveMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(server.getActiveMembers().size()) + "member" + (server.getActiveMembers().size() == 1 ? "" : "s") + "online.");
+				//sender.sendMessage("The server is " + (!(server.ready()) ? "not" : "") + " ready to join.");
+				//sender.sendMessage("There " + (server.getSendables().size() == 1 ? "is" : "are") + " " + Integer.toString(server.getActiveMembers().size()) + "member" + (server.getActiveMembers().size() == 1 ? "" : "s") + "online.");
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("servers")) {
@@ -102,19 +102,19 @@ public class CommandHandler implements CommandExecutor {
 				}
 				for (Server server : Minecord.getServerManager().getServers()) {
 					boolean yeah = desc == null ? true : server.getDescription().equals(desc);
-					yeah = yeah && (approvement == null ? true : server.needApprovement() == approvement);
-					yeah = yeah && (invitation == null ? true : server.needInvitation());
-					yeah = yeah && (permanent == null ? true : server.isPermanent() == permanent);
-					yeah = yeah && server.getActiveMembers().containsAll(members);
+					//yeah = yeah && (approvement == null ? true : server.needApprovement() == approvement);
+					//yeah = yeah && (invitation == null ? true : server.needInvitation());
+					//yeah = yeah && (permanent == null ? true : server.isPermanent() == permanent);
+					//yeah = yeah && server.getActiveMembers().containsAll(members);
 					if (yeah) {
 						sender.sendMessage("Server #" + Integer.toString(server.getIdentifier()) + ":");
 						sender.sendMessage("Name: " + server.getName());
 						sender.sendMessage("Description: " + server.getDescription());
-						sender.sendMessage("Approvement: " + (server.needApprovement() ? "activated" : "deactivated"));
-						sender.sendMessage("Invitation: " + (server.needInvitation() ? "activated" : "deactivated"));
+						//sender.sendMessage("Approvement: " + (server.needApprovement() ? "activated" : "deactivated"));
+						//sender.sendMessage("Invitation: " + (server.needInvitation() ? "activated" : "deactivated"));
 						sender.sendMessage("Permanent: " + (server.isPermanent() ? "activated" : "deactivated"));
-						sender.sendMessage("The server is " + (!(server.ready()) ? "not " : "") + "ready to join.");
-						sender.sendMessage("There " + (server.getActiveMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(server.getActiveMembers().size()) + " member" + (server.getActiveMembers().size() == 1 ? "" : "s") + " online.");
+						//sender.sendMessage("The server is " + (!(server.ready()) ? "not " : "") + "ready to join.");
+						//sender.sendMessage("There " + (server.getActiveMembers().size() == 1 ? "is" : "are") + " " + Integer.toString(server.getActiveMembers().size()) + " member" + (server.getActiveMembers().size() == 1 ? "" : "s") + " online.");
 					}
 				}
 				return true;
@@ -270,10 +270,10 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.RED + "Failed to find a server with that name!");
 					return true;
 				}
-				if (!(server.ready())) {
+				//if (!(server.ready())) {
 					player.sendMessage(ChatColor.RED + "Failed to join the locked server!");
-					return true;
-				}
+					//return true;
+				//}
 				//ServerIdentity identity = user.getIdentity(server);
 				//if (identity != null && identity.isJoined()) {
 					player.sendMessage(ChatColor.RED + "You are already in the server!");
@@ -333,10 +333,10 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.RED + "Failed to find a server with that name!");
 					return true;
 				}
-				if (!(server.getActiveMembers().contains(user))) {
+				//if (!(server.getActiveMembers().contains(user))) {
 					player.sendMessage(ChatColor.YELLOW + "You are not in the server!");
-					return true;
-				}
+					//return true;
+				//}
 				if (args.length == 2) {
 					player.sendMessage(ChatColor.RED + "Please specify the channel to leave!");
 					return true;
