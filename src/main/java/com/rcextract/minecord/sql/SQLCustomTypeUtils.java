@@ -13,35 +13,30 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.rcextract.minecord.utils.ComparativeSet;
 import com.rcextract.minecord.utils.Table;
 
 public class SQLCustomTypeUtils {
 
-	private final Table<Class<?>, Serializer<?, ?>, Deserializer<?, ?>> conversions;
-	private final ComparativeSet<Class<? extends DatabaseSerializable>> classes;
+	private ComparativeSet<TypeConvertor<?, ?>> convertors;
 	private final Connection connection;
+
 	public SQLCustomTypeUtils(String url, String user, String password) throws SQLException {
 		this.connection = DriverManager.getConnection(url, user, password);
-		this.classes = new ComparativeSet<Class<? extends DatabaseSerializable>>((Class<? extends DatabaseSerializable> clazz) -> {
-			try {
-				clazz.getConstructor(Map.class);
-			} catch (NoSuchMethodException | SecurityException e) {
-				return false;
-			}
-			return clazz.getDeclaredAnnotationsByType(SerializableAs.class).length == 1;
+		this.convertors = new ComparativeSet<TypeConvertor<?, ?>>(convertor -> {
+			for (TypeConvertor<?, ?> c : convertors) 
+				if (convertor.getA() == c.getA() || convertor.getR() == c.getR()) 
+					return false;
+			return true;
 		});
-		this.conversions = new Table<Class<?>, Serializer<?, ?>, Deserializer<?, ?>>();
 	}
 	public Connection getConnection() {
 		return connection;
 	}
-	public ComparativeSet<Class<? extends DatabaseSerializable>> getClasses() {
-		return classes;
-	}
-	public Table<Class<?>, Serializer<?, ?>, Deserializer<?, ?>> getConversions() {
-		return conversions;
+	public ComparativeSet<TypeConvertor<?, ?>> getConvertors() {
+		return convertors;
 	}
 	public List<?> load(String table) throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		try (Statement statement = connection.createStatement()) {
@@ -72,6 +67,12 @@ public class SQLCustomTypeUtils {
 				}
 				if (object instanceof String && ((String) object).startsWith("list_from_table_")) 
 					object = load(((String) object).substring(15));
+				final Class<?> newtype = object.getClass();
+				Set<TypeConvertor<?, ?>> cs = convertors.getIf(convertor -> convertor.getR() == newtype);
+				if (!(cs.isEmpty())) {
+					TypeConvertor<?, ?> c = cs.iterator().next();
+					object = c.getDeserializer().getClass().getMethod("convert", c.getR()).invoke(c.getDeserializer(), object);
+				}
 				map.put(name, object);
 			}
 			return map;
@@ -113,6 +114,12 @@ public class SQLCustomTypeUtils {
 							object = Arrays.asList((Object[]) object);
 						if (object instanceof SQLList) 
 							object = "list_from_table_" + save((SQLList<?>) object);
+						final Class<?> type = object.getClass();
+						Set<TypeConvertor<?, ?>> cs = convertors.getIf(convertor -> convertor.getA() == type);
+						if (!(cs.isEmpty())) {
+							TypeConvertor<?, ?> c = cs.iterator().next();
+							object = c.getSerializer().getClass().getMethod("serialize", c.getA()).invoke(c.getSerializer(), object);
+						}
 						stmt.getClass().getMethod("set" + object.getClass().getSimpleName(), int.class, object.getClass()).invoke(stmt, table.bc(entry.getKey(), object), object);
 					}
 					stmt.executeUpdate();

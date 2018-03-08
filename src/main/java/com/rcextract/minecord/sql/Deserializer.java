@@ -1,5 +1,6 @@
 package com.rcextract.minecord.sql;
 
+@Deprecated
 @FunctionalInterface
 public interface Deserializer<A, R> {
 
