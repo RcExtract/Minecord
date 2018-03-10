@@ -1,6 +1,5 @@
 package com.rcextract.minecord.utils;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -9,8 +8,13 @@ import java.util.function.Predicate;
 /**
  * This is a subclass of HashSet<T> which allows implementation to add filter and 
  * prevent some elements from being added. If the element matches the requirements of 
- * the filter, it will be added. The filter also applies on the pre-added elements.
+ * the filter, it will be added. The filter also applies on the pre-added elements. 
+ * Also, this class provides {@link #getIf(Predicate)} to get elements that matches 
+ * the requirements of the filter provided through the parameter.
+ * 
  * @param <T> The type of elements.
+ * 
+ * @since 1.1.0 SNAPSHOT 1.0
  */
 public class ComparativeSet<T> extends HashSet<T> {
 	
@@ -36,17 +40,6 @@ public class ComparativeSet<T> extends HashSet<T> {
 		collection.forEach(element -> {
 			if (!(filter.test(element))) super.add(element);
 		});
-	}
-
-	/**
-	 * Constructs a ComparativeSet with filters.
-	 * @param filter The main filter.
-	 * @param filters The sub-filters.
-	 */
-	@SafeVarargs
-	public ComparativeSet(Predicate<? super T> filter, Predicate<? super Object> ... filters) {
-		this(filter);
-		Arrays.asList(filters).forEach((Predicate<? super Object> f) -> filter.and(f));
 	}
 	
 	/**

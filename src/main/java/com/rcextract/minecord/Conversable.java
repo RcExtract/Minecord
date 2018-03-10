@@ -1,5 +1,6 @@
 package com.rcextract.minecord;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -21,6 +22,15 @@ public abstract class Conversable implements Sendable {
 		this.desc = desc;
 		this.options = new ComparativeSet<ChannelOptions>((ChannelOptions element) -> getChannelOptions(element.getChannel()) == null);
 		this.main = main;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Conversable(Map<String, Object> map) {
+		this.id = (int) map.get("id");
+		this.name = (String) map.get("name");
+		this.desc = (String) map.get(desc);
+		this.options = new ComparativeSet<ChannelOptions>(options -> getChannelOptions(options.getChannel()) == null, (Collection<ChannelOptions>) map.get("options"));
+		this.main = Minecord.getServerManager().getServer((int) map.get("server")).getChannel((int) map.get("main"));
 	}
 	
 	@Override
@@ -90,6 +100,12 @@ public abstract class Conversable implements Sendable {
 	@Override
 	public Map<String, Object> serialize() {
 		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("id", id);
+		map.put("name", name);
+		map.put("desc", desc);
+		map.put("options", options);
+		map.put("server", main.getServer().getIdentifier());
+		map.put("main", main.getIdentifier());
 		return map;
 	}
 	

@@ -2,18 +2,13 @@
 package com.rcextract.minecord;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
-//import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.rcextract.minecord.event.MinecordEvent;
-import com.rcextract.minecord.event.user.UserMessageEvent;
 
 import net.milkbowl.vault.permission.Permission;
 
@@ -26,14 +21,12 @@ public class Minecord extends JavaPlugin {
 
 	private static InternalManager panel;
 	private static ConfigManager cm;
-	//private static DataManipulator dm;
 	protected static Properties properties;
 	private static boolean errorDisable;
 	protected static Minecord minecord;
 	private static Permission permission;
 	protected static String dbversion;
 	protected static String olddbversion;
-	protected static Map<Double, Channel> msg;
 	
 	public static String captializeFirstLetter(String content) {
 		return content.substring(0, 1).toUpperCase() + content.substring(1);
@@ -41,12 +34,11 @@ public class Minecord extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		minecord = this;
-		dbversion = "6dot0";
-		olddbversion = "5dot1";
+		dbversion = "7dot0";
+		olddbversion = "6dot0";
 		cm = new ConfigManager(this);
 		panel = new InternalManager();
 		permission = Bukkit.getServicesManager().getRegistration(Permission.class).getProvider();
-		msg = new HashMap<Double, Channel>();
 		loadProperties();
 		loadData();
 		checkUpdate();
@@ -126,23 +118,6 @@ public class Minecord extends JavaPlugin {
 	 */
 	public static int getMessageLoadCount() {
 		return Integer.parseInt(properties.getProperty("message-load-count"));
-	}
-	/**
-	 * Loads messages for a user.
-	 * @param user The target user.
-	 * @param wash Determination of clearing out old messages.
-	 * @deprecated This method no longer works.
-	 */
-	@Deprecated
-	public static void updateMessage(User user, boolean wash) {
-		if (user.isOnline()) {
-			Player player = user.getOnlinePlayer();
-			if (wash) user.clear();
-			for (UserMessageEvent event : panel.getRecords(UserMessageEvent.class)) {
-				if (event.getChannel() == null) 
-					player.sendMessage(event.getMessage());
-			}
-		}
 	}
 	public static void reloadConfiguration() {
 		//String format = getFormat();

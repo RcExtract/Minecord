@@ -4,6 +4,13 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## 1.1.0 SNAPSHOT 5.0 (New API not fully implemented, about 65%)
+- Conversable and User class implemented the new API.
+- DataManipulator reimplementing the new API.
+- Added a few exceptions to the SQLObjectConverter API.
+- Added TypeConverter for conversions between types that either one of them does not implement this API.
+- Added many Javadoc comments.
+
 ## 1.1.0 SNAPSHOT 4.1 (New API not fully implemented, about 60%)
 - Added TypeConvertor for supporting serializations and deserializations between SQL types and java classes that haven't implemented this API
 - Added utility FunctionalInterface Convertor

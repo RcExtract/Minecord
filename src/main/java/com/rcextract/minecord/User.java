@@ -1,7 +1,7 @@
 package com.rcextract.minecord;
 
-//import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -10,23 +10,27 @@ import com.rcextract.minecord.event.user.UserEvent;
 
 public class User extends Conversable implements RecordManager<UserEvent> {
 
-	static {
-		//DataManipulator.register(User.class);
-	}
-	private String nickName;
+	private String nickname;
 	private final OfflinePlayer player;
-		public User(int id, String name, String desc, String nickName, OfflinePlayer player, Channel main, ChannelOptions ... options) {
+	
+	public User(int id, String name, String desc, String nickName, OfflinePlayer player, Channel main, ChannelOptions ... options) {
 		super(id, name, desc, main, options);
-		this.nickName = nickName;
+		this.nickname = nickName;
 		this.player = player;
+	}
+		
+	public User(Map<String, Object> map) {
+		super(map);
+		this.nickname = (String) map.get("nickname");
+		this.player = (OfflinePlayer) map.get("player");
 	}
 
 	public String getNickName() {
-		return nickName;
+		return nickname;
 	}
 
 	public void setNickName(String nickName) {
-		this.nickName = nickName;
+		this.nickname = nickName;
 	}
 
 	public OfflinePlayer getPlayer() {
@@ -51,12 +55,15 @@ public class User extends Conversable implements RecordManager<UserEvent> {
 			player.sendMessage(Minecord.applyFormat(message.getSender().getName(), message.getSender().getNickName(), message.getSender().getPlayer().getUniqueId().toString(), message.getMessage(), message.getDate().toString()));
 		main.setIndex(main.getChannel().getMessages().size() - main.getUnreadMessages().size());
 	}
-	/*@Override
-	public List<Object> values() {
-		return Arrays.asList(new Object[] {
-				nickName, player.getUniqueId().toString()
-		});
-	}*/
+
+	@Override
+	public Map<String, Object> serialize() {
+		Map<String, Object> map = super.serialize();
+		map.put("nickname", nickname);
+		map.put("player", player);
+		return map;
+	}
+	
 	@Override
 	public List<UserEvent> getRecords() {
 		return Minecord.getRecordManager().getRecords(UserEvent.class);

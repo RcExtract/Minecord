@@ -2,13 +2,14 @@ package com.rcextract.minecord.sql;
 
 import com.rcextract.minecord.utils.Convertor;
 
-public class TypeConvertor<A, R> {
+@Deprecated
+public class TypeConvertorOld<A, R> {
 
 	private Convertor<A, R> serializer;
 	private Convertor<R, A> deserializer;
 	private final Class<A> a;
 	private final Class<R> r;
-	public TypeConvertor(Convertor<A, R> serializer, Convertor<R, A> deserializer, Class<A> a, Class<R> r) {
+	public TypeConvertorOld(Convertor<A, R> serializer, Convertor<R, A> deserializer, Class<A> a, Class<R> r) {
 		this.serializer = serializer;
 		this.deserializer = deserializer;
 		this.a = a;
