@@ -1,8 +1,8 @@
 package com.rcextract.minecord.sql;
 
-import java.util.Map;
+import com.rcextract.minecord.utils.ArrayMap;
 
 public interface DatabaseSerializable {
 
-	public Map<String, Object> serialize();
+	public ArrayMap<String, Object> serialize();
 }

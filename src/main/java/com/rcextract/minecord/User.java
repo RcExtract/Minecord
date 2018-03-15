@@ -1,12 +1,12 @@
 package com.rcextract.minecord;
 
 import java.util.List;
-import java.util.Map;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import com.rcextract.minecord.event.user.UserEvent;
+import com.rcextract.minecord.utils.ArrayMap;
 
 public class User extends Conversable implements RecordManager<UserEvent> {
 
@@ -19,10 +19,10 @@ public class User extends Conversable implements RecordManager<UserEvent> {
 		this.player = player;
 	}
 		
-	public User(Map<String, Object> map) {
+	public User(ArrayMap<String, Object> map) {
 		super(map);
-		this.nickname = (String) map.get("nickname");
-		this.player = (OfflinePlayer) map.get("player");
+		this.nickname = (String) map.valueList().get(7);
+		this.player = (OfflinePlayer) map.valueList().get(8);
 	}
 
 	public String getNickName() {
@@ -57,8 +57,8 @@ public class User extends Conversable implements RecordManager<UserEvent> {
 	}
 
 	@Override
-	public Map<String, Object> serialize() {
-		Map<String, Object> map = super.serialize();
+	public ArrayMap<String, Object> serialize() {
+		ArrayMap<String, Object> map = super.serialize();
 		map.put("nickname", nickname);
 		map.put("player", player);
 		return map;

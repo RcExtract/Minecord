@@ -8,8 +8,8 @@ package com.rcextract.minecord.sql;
  * <p>
  * To create a <code>TypeConverter</code>, you should first create a class inheriting 
  * it. It can be an anonymous class. Then, specify the types you want to convert 
- * between, and implement the method {@see #serialize(Object)} and 
- * {@see #deserialize(Object)}. Be careful that the type parameter I is the input type 
+ * between, and implement the method {@link #serialize(Object)} and 
+ * {@link #deserialize(Object)}. Be careful that the type parameter I is the input type 
  * for {@see #serialize(Object)} and O is the input type for 
  * {@see #deserialize(Object)}. Below is an example of <code>TypeConverter</code> 
  * between {@link UUID} and {@link String}:
@@ -20,12 +20,10 @@ package com.rcextract.minecord.sql;
  * 			super(UUID.class, String.class);
  * 		}
  * 
- * 		@Override
  * 		public String serialize(UUID uuid) {
  * 			return uuid.toString();
  * 		}
  * 
- * 		@Override
  * 		public UUID deserialize(String string) {
  * 			return UUID.fromString(string);
  * 		}

@@ -20,6 +20,7 @@ public class ComparativeSet<T> extends HashSet<T> {
 	
 	private static final long serialVersionUID = -2222981329974385110L;
 
+	private T last;
 	private final Predicate<? super T> filter;
 	
 	/**
@@ -57,7 +58,10 @@ public class ComparativeSet<T> extends HashSet<T> {
 	 */
 	@Override
 	public boolean add(T t) {
-		if (filter.test(t)) return super.add(t);
+		if (filter.test(t)) {
+			last = t;
+			return super.add(t);
+		}
 		return false;
 	}
 
@@ -71,7 +75,20 @@ public class ComparativeSet<T> extends HashSet<T> {
 		forEach((T t) -> { if (filter.test(t)) set.add(t); });
 		return set;
 	}
+
+	/**
+	 * Returns the unique value when the size of this set is 1, otherwise null.
+	 * @return The unique value when the size of this set is 1, otherwise null.
+	 */
+	public T get() {
+		if (super.size() == 1) return super.iterator().next();
+		return null;
+	}
 	
+	public T getLast() {
+		return last;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public ComparativeSet<T> clone() {

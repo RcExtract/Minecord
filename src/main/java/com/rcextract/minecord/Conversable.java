@@ -1,11 +1,11 @@
 package com.rcextract.minecord;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
+import com.rcextract.minecord.sql.SQLList;
+import com.rcextract.minecord.utils.ArrayMap;
 import com.rcextract.minecord.utils.ComparativeSet;
 
 public abstract class Conversable implements Sendable {
@@ -25,12 +25,12 @@ public abstract class Conversable implements Sendable {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Conversable(Map<String, Object> map) {
-		this.id = (int) map.get("id");
-		this.name = (String) map.get("name");
-		this.desc = (String) map.get(desc);
-		this.options = new ComparativeSet<ChannelOptions>(options -> getChannelOptions(options.getChannel()) == null, (Collection<ChannelOptions>) map.get("options"));
-		this.main = Minecord.getServerManager().getServer((int) map.get("server")).getChannel((int) map.get("main"));
+	public Conversable(ArrayMap<String, Object> map) {
+		this.id = (int) map.valueList().get(1);
+		this.name = (String) map.valueList().get(2);
+		this.desc = (String) map.valueList().get(3);
+		this.options = new ComparativeSet<ChannelOptions>(options -> getChannelOptions(options.getChannel()) == null, (Collection<ChannelOptions>) map.valueList().get(4));
+		this.main = Minecord.getServerManager().getServer((int) map.valueList().get(5)).getChannel((int) map.valueList().get(6));
 	}
 	
 	@Override
@@ -98,12 +98,12 @@ public abstract class Conversable implements Sendable {
 	public abstract void applyMessage();
 	
 	@Override
-	public Map<String, Object> serialize() {
-		Map<String, Object> map = new HashMap<String, Object>();
+	public ArrayMap<String, Object> serialize() {
+		ArrayMap<String, Object> map = new ArrayMap<String, Object>();
 		map.put("id", id);
 		map.put("name", name);
 		map.put("desc", desc);
-		map.put("options", options);
+		map.put("options", new SQLList<ChannelOptions>(ChannelOptions.class, options));
 		map.put("server", main.getServer().getIdentifier());
 		map.put("main", main.getIdentifier());
 		return map;

@@ -2,6 +2,7 @@
 package com.rcextract.minecord;
 
 import java.io.IOException;
+import java.sql.SQLTimeoutException;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -9,6 +10,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.rcextract.minecord.event.MinecordEvent;
+import com.rcextract.minecord.sql.DriverNotFoundException;
+import com.rcextract.minecord.sql.SQLConnectException;
 
 import net.milkbowl.vault.permission.Permission;
 
@@ -21,6 +24,7 @@ public class Minecord extends JavaPlugin {
 
 	private static InternalManager panel;
 	private static ConfigManager cm;
+	private static DataManipulator dm;
 	protected static Properties properties;
 	private static boolean errorDisable;
 	protected static Minecord minecord;
@@ -179,14 +183,11 @@ public class Minecord extends JavaPlugin {
 			public void run() {
 				try {
 					minecord.getLogger().log(Level.INFO, "Loading data from database...");
-					//dm = new DataManipulator(getHost(), getUsername(), getPassword());
-					//dm.initialize();
-					//if (dm.loadDataFromOldDb) 
-						//dm.loadFromOld();
-					//else dm.load();
-					//dm.load();
+					dm = new DataManipulator(getHost(), getUsername(), getPassword());
+					dm.initialize();
+					dm.load();
 					minecord.getLogger().log(Level.INFO, "Data are successfully loaded.");
-				} catch (RuntimeException e) {
+				} catch (RuntimeException | SQLTimeoutException | SQLConnectException | DriverNotFoundException e) {
 					minecord.getLogger().log(Level.SEVERE, "An error occured while attempting to load the data.", e);
 					errorDisable = true;
 					Bukkit.getPluginManager().disablePlugin(minecord);
@@ -211,10 +212,7 @@ public class Minecord extends JavaPlugin {
 	private static void saveDataInternal() {
 		try {
 			minecord.getLogger().log(Level.INFO, "Saving data to database...");
-			//dm.dropDatabase();
-			//dm.initialize();
-			//dm.save();
-			//dm.close();
+			dm.save();
 			minecord.getLogger().log(Level.INFO, "Data are successfully saved.");
 		} catch (RuntimeException e) {
 			minecord.getLogger().log(Level.SEVERE, "An error occurred while attempting to save the data.", e);
