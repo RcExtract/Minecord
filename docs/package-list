@@ -1,0 +1,8 @@
+com.rcextract.minecord
+com.rcextract.minecord.event
+com.rcextract.minecord.event.channel
+com.rcextract.minecord.event.server
+com.rcextract.minecord.event.user
+com.rcextract.minecord.getters
+com.rcextract.minecord.sql
+com.rcextract.minecord.utils
