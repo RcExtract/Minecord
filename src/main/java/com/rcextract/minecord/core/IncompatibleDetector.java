@@ -1,4 +1,4 @@
-package com.rcextract.minecord;
+package com.rcextract.minecord.core;
 
 import java.util.logging.Level;
 
@@ -9,8 +9,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 public class IncompatibleDetector extends BukkitRunnable {
 
-	private Minecord minecord;
-	public IncompatibleDetector(Minecord minecord) {
+	private BukkitMinecord minecord;
+	public IncompatibleDetector(BukkitMinecord minecord) {
 		this.minecord = minecord;
 	}
 	@Override

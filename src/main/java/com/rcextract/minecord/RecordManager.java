@@ -2,6 +2,7 @@ package com.rcextract.minecord;
 
 import java.util.List;
 
+@Deprecated
 public interface RecordManager<T> {
 
 	public List<T> getRecords();

@@ -22,7 +22,7 @@ public class ServerEditor implements Listener {
 	private ServerElement property;
 	private HumanEntity editor;
 	private boolean closed;
-	public ServerEditor(Server server, Minecord minecord) {
+	public ServerEditor(Server server, MinecordPlugin minecord) {
 		this.server = server;
 		this.inventory = Bukkit.createInventory(null, 27, "Server Editor: " + server.getIdentifier());
 		ItemStack name = new ItemStack(Material.CONCRETE);

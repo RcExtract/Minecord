@@ -22,7 +22,7 @@ public class RankManager {
 		this.ranks = new HashSet<Rank>(Arrays.asList(ranks));
 	}
 	public Server getServer() {
-		for (Server server : Minecord.getServerManager().getServers()) 
+		for (Server server : Minecord.getServers()) 
 			if (server.getRankManager() == this) return server;
 		return null;
 	}

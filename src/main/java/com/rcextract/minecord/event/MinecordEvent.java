@@ -5,7 +5,6 @@ import java.util.Date;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 
-import com.rcextract.minecord.Minecord;
 import com.rcextract.minecord.ServerManager;
 
 /**
@@ -27,21 +26,13 @@ public abstract class MinecordEvent extends Event implements Cancellable {
 	private final Date date;
 	private boolean cancelled;
 	{
-		Minecord.getRecordManager().record(this);
+		//Minecord.getRecordManager().record(this);
 	}
 	/**
 	 * Constructs a new MinecordEvent with default values: current time and not cancelled.
 	 */
 	public MinecordEvent() {
 		this.date = new Date();
-	}
-	/**
-	 * Gets the ServerManager in Minecord. It is no longer related to events, so it is deprecated.
-	 * @return The ServerManager in Minecord.
-	 */
-	@Deprecated
-	public ServerManager getServerManager() {
-		return Minecord.getServerManager();
 	}
 	/**
 	 * Gets the construction time.

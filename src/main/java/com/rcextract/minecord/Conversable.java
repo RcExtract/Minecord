@@ -30,7 +30,7 @@ public abstract class Conversable implements Sendable {
 		this.name = (String) map.valueList().get(2);
 		this.desc = (String) map.valueList().get(3);
 		this.options = new ComparativeSet<ChannelOptions>(options -> getChannelOptions(options.getChannel()) == null, (Collection<ChannelOptions>) map.valueList().get(4));
-		this.main = Minecord.getServerManager().getServer((int) map.valueList().get(5)).getChannel((int) map.valueList().get(6));
+		this.main = Minecord.getServer((int) map.valueList().get(5)).getChannel((int) map.valueList().get(6));
 	}
 	
 	@Override
@@ -74,7 +74,7 @@ public abstract class Conversable implements Sendable {
 	}
 	public Set<SendableOptions> getSendableOptions() {
 		Set<SendableOptions> options = new HashSet<SendableOptions>();
-		for (Server server : Minecord.getServerManager().getServers()) 
+		for (Server server : Minecord.getServers()) 
 			if (server.getSendableOption(this) != null) 
 				options.add(server.getSendableOption(this));
 		return options;

@@ -46,10 +46,10 @@ public class DataManipulator {
 		return "minecord";
 	}
 	public double getLatestVersion() {
-		return Double.parseDouble(Minecord.dbversion.replaceAll("dot", "."));
+		return Double.parseDouble(Minecord.databaseVersion().replaceAll("dot", "."));
 	}
 	public double getSupportingOldVersion() {
-		return Double.parseDouble(Minecord.olddbversion.replaceAll("dot", "."));
+		return Double.parseDouble(Minecord.oldDatabaseVersion().replaceAll("dot", "."));
 	}
 	public Double getVersion() throws SQLConnectException {
 		try (ResultSet databaseset = connection.getMetaData().getCatalogs()) {
@@ -80,13 +80,13 @@ public class DataManipulator {
 			boolean value = false;
 			String dbname = null;
 			if (!(exists())) {
-				statement.executeQuery("CREATE DATABASE minecord" + Minecord.dbversion);
-				dbname = "minecord" + Minecord.dbversion;
+				statement.executeQuery("CREATE DATABASE minecord" + Minecord.databaseVersion());
+				dbname = "minecord" + Minecord.databaseVersion();
 				return null;
 			} else if (isDataOld()) 
-				dbname = "minecord" + Minecord.olddbversion;
+				dbname = "minecord" + Minecord.oldDatabaseVersion();
 			else {
-				dbname = "minecord" + Minecord.dbversion;
+				dbname = "minecord" + Minecord.databaseVersion();
 				value = true;
 			}
 			connection.setCatalog(dbname);
@@ -100,8 +100,8 @@ public class DataManipulator {
 	}
 	public synchronized void load() {
 		try {
-			Minecord.getControlPanel().servers.addAll(converter.loadAll("server", Server.class));
-			Minecord.getControlPanel().sendables.addAll(converter.loadAll("user", Sendable.class));
+			Minecord.getServers().addAll(converter.loadAll("server", Server.class));
+			Minecord.getSendables().addAll(converter.loadAll("user", Sendable.class));
 		} catch (Throwable e) {
 			//These exceptions are never thrown.
 		}
@@ -109,8 +109,8 @@ public class DataManipulator {
 	
 	public synchronized void save() {
 		try {
-			converter.saveObjects(new ArrayList<Server>(Minecord.getControlPanel().servers));
-			converter.saveObjects(new ArrayList<Sendable>(Minecord.getControlPanel().sendables));
+			converter.saveObjects(new ArrayList<Server>(Minecord.getServers()));
+			converter.saveObjects(new ArrayList<Sendable>(Minecord.getSendables()));
 		} catch (Throwable e) {
 			//These exceptions are never thrown.
 		}
@@ -126,8 +126,8 @@ public class DataManipulator {
 			while (set.next()) {
 				String name = set.getString(1);
 				if (name.startsWith("minecord")) {
-					if (name.substring(8) == Minecord.dbversion) return true;
-					if (name.substring(8) == Minecord.olddbversion) return false;
+					if (name.substring(8) == Minecord.databaseVersion()) return true;
+					if (name.substring(8) == Minecord.oldDatabaseVersion()) return false;
 				}
 			}
 			return null;

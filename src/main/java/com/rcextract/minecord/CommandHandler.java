@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -27,8 +28,8 @@ import com.rcextract.minecord.event.server.ServerCreateEvent;
 public class CommandHandler implements CommandExecutor {
 
 	private Map<User, Object> editingTarget = new HashMap<User, Object>();
-	private Minecord minecord;
-	public CommandHandler(Minecord minecord) {
+	private MinecordPlugin minecord;
+	public CommandHandler(MinecordPlugin minecord) {
 		this.minecord = minecord;
 	}
 	public static final Map<Player, Boolean> gui = new HashMap<Player, Boolean>();
@@ -44,12 +45,12 @@ public class CommandHandler implements CommandExecutor {
 			}
 			if (args[0].equalsIgnoreCase("reload")) {
 				if (args.length == 1) {
-					Minecord.loadProperties();
+					Minecord.loadConfiguration();
 					Minecord.loadData();
 					return true;
 				}
 				if (args[1].equalsIgnoreCase("config")) {
-					Minecord.loadProperties();
+					Minecord.loadConfiguration();
 					return true;
 				}
 				if (args[1].equalsIgnoreCase("database") || args[1].equalsIgnoreCase("db")) {
@@ -64,7 +65,7 @@ public class CommandHandler implements CommandExecutor {
 					sender.sendMessage(ChatColor.RED + "Please specify a server name!");
 					return true;
 				}
-				Server server = Minecord.getServerManager().getServer(args[1]);
+				Server server = Minecord.getServer(args[1]);
 				if (server == null) {
 					sender.sendMessage(ChatColor.RED + "The server does not exist!");
 					return true;
@@ -100,7 +101,7 @@ public class CommandHandler implements CommandExecutor {
 				for (int i = 5; i < args.length; i++) {
 					//members.addAll(Minecord.getUserManager().getUsers(args[i]));
 				}
-				for (Server server : Minecord.getServerManager().getServers()) {
+				for (Server server : Minecord.getServers()) {
 					boolean yeah = desc == null ? true : server.getDescription().equals(desc);
 					//yeah = yeah && (approvement == null ? true : server.needApprovement() == approvement);
 					//yeah = yeah && (invitation == null ? true : server.needInvitation());
@@ -124,7 +125,7 @@ public class CommandHandler implements CommandExecutor {
 					sender.sendMessage(ChatColor.RED + "Please specify a server and channel name!");
 					return true;
 				}
-				Server server = Minecord.getServerManager().getServer(args[1]);
+				Server server = Minecord.getServer(args[1]);
 				if (server == null) {
 					sender.sendMessage(ChatColor.RED + "The server does not exist!");
 					sender.sendMessage(ChatColor.YELLOW + "Make sure the first argument is server name and second argument is channel name.");
@@ -153,7 +154,7 @@ public class CommandHandler implements CommandExecutor {
 					sender.sendMessage(ChatColor.RED + "Please specify a server!");
 					return true;
 				}
-				Server server = Minecord.getServerManager().getServer(args[1]);
+				Server server = Minecord.getServer(args[1]);
 				if (server == null) {
 					sender.sendMessage(ChatColor.RED + "The server does not exist!");
 					return true;
@@ -250,12 +251,13 @@ public class CommandHandler implements CommandExecutor {
 				Bukkit.getPluginManager().callEvent(event);
 				if (event.isCancelled()) return true;
 				Server server = null;
-				try {
-					server = Minecord.getServerManager().createServer(event.getName(), event.getDescription(), event.isApprovement(), event.isInvitation(), event.getRankManager(), event.getMain(), event.getChannels().toArray(new Channel[event.getChannels().size() - 1]));
-				} catch (DuplicatedException e) {
+				//try {
+					server = new Server(new Random().nextInt(), event.getName(), event.getDescription(), event.isApprovement(), event.isInvitation(), false, false, event.getRankManager(), event.getMain(), event.getChannels().toArray(new Channel[event.getChannels().size() - 1]));
+					minecord.getServers().add(server);
+				/*} catch (DuplicatedException e) {
 					sender.sendMessage(ChatColor.RED + "A server with that name already exists!");
 					return true;
-				}
+				}*/
 				sender.sendMessage(ChatColor.GREEN + "A server has been successfully created!");
 				Bukkit.dispatchCommand(sender, "minecord join " + server.getName());
 				return true;
@@ -265,7 +267,7 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.RED + "Please specify a server to join!");
 					return true;
 				}
-				Server server = Minecord.getServerManager().getServer(args[1]);
+				Server server = Minecord.getServer(args[1]);
 				if (server == null) {
 					player.sendMessage(ChatColor.RED + "Failed to find a server with that name!");
 					return true;
@@ -298,7 +300,7 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.RED + "Please specify a server!");
 					return true;
 				}
-				Server server = Minecord.getServerManager().getServer(args[1]);
+				Server server = Minecord.getServer(args[1]);
 				//ServerIdentity identity = user.getIdentity(server);
 				//if (server == null || identity == null || !(identity.isJoined())) {
 					player.sendMessage(ChatColor.RED + "Failed to find the server in your list of joined servers!");
@@ -328,7 +330,7 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.RED + "Please specify the server of the channel to leave!");
 					return true;
 				}
-				Server server = Minecord.getServerManager().getServer(args[1]);
+				Server server = Minecord.getServer(args[1]);
 				if (server == null) {
 					player.sendMessage(ChatColor.RED + "Failed to find a server with that name!");
 					return true;
@@ -365,7 +367,7 @@ public class CommandHandler implements CommandExecutor {
 					player.sendMessage(ChatColor.RED + "Please specify a server!");
 					return true;
 				}
-				Server server = Minecord.getServerManager().getServer(args[1]);
+				Server server = Minecord.getServer(args[1]);
 				if (server == null) {
 					player.sendMessage(ChatColor.RED + "The server does not exist!");
 					return true;
@@ -379,11 +381,11 @@ public class CommandHandler implements CommandExecutor {
 					Object obj = editingTarget.get(user);
 					Class<?> clazz = obj.getClass();
 					try {
-						player.sendMessage("Selected " + clazz.getSimpleName().toLowerCase() + " " + clazz.getMethod("getName").invoke(obj) + (clazz == Channel.class ? " in server " + Minecord.getServerManager().getServer((Channel) obj).getName() : "") + ".");
+						player.sendMessage("Selected " + clazz.getSimpleName().toLowerCase() + " " + clazz.getMethod("getName").invoke(obj) + (clazz == Channel.class ? " in server " + Minecord.getServer((Channel) obj).getName() : "") + ".");
 					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 							| NoSuchMethodException | SecurityException e) {
 						player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "An error occurred while attemping to do this. Please contact server administrator for further information.");
-						Minecord.minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
+						minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
 						e.printStackTrace();
 						return true;
 					} catch (NullPointerException e) {
@@ -391,7 +393,7 @@ public class CommandHandler implements CommandExecutor {
 					}
 					return true;
 				}
-				Server server = Minecord.getServerManager().getServer(args[1]);
+				Server server = Minecord.getServer(args[1]);
 				Channel channel = null;
 				if (server == null) {
 					player.sendMessage(ChatColor.RED + "The server does not exist!");
@@ -466,7 +468,7 @@ public class CommandHandler implements CommandExecutor {
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 						| NoSuchMethodException | SecurityException e) {
 					player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "An error occurred while attemping to do this. Please contact server administrator for further information.");
-					Minecord.minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
+					minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
 					e.printStackTrace();
 					return true;
 				}
@@ -505,7 +507,7 @@ public class CommandHandler implements CommandExecutor {
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | SecurityException | ClassNotFoundException e) {
 				player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "An error occurred while attemping to do this. Please contact server administrator for further information.");
-				Minecord.minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
+				minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
 				e.printStackTrace();
 				return true;
 			}
@@ -515,7 +517,7 @@ public class CommandHandler implements CommandExecutor {
 					method.invoke(obj, params);
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 					player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "An error occurred while attemping to do this. Please contact server administrator for further information.");
-					Minecord.minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
+					minecord.getLogger().log(Level.SEVERE, "Please open an issue with the following error code at https://github.com/RcExtract/Minecord/issues");
 					e.printStackTrace();
 					return true;
 				}

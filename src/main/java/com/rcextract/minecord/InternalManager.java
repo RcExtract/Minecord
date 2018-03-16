@@ -1,7 +1,7 @@
 //Not fully implemented!
 package com.rcextract.minecord;
 
-import java.util.ArrayList;
+/*import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -13,12 +13,13 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.OfflinePlayer;
 
 import com.rcextract.minecord.event.MinecordEvent;
-import com.rcextract.minecord.utils.ComparativeSet;
+import com.rcextract.minecord.utils.ComparativeSet;*/
 //import com.rcextract.minecord.utils.Pair;
 
 /**
  * The control panel of Minecord system.
- */
+*/
+/*
 public final class InternalManager implements ServerManager, UserManager, Recordable<MinecordEvent> {
 
 	protected final ComparativeSet<Server> servers;
@@ -75,9 +76,6 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	@Override
 	public Set<Server> getServers(User user) {
 		Set<Server> servers = new HashSet<Server>();
-		/*for (Server server : servers) 
-			if (server.getActiveMembers().contains(user)) 
-				servers.add(server);*/
 		return servers;
 	}
 	
@@ -135,7 +133,7 @@ public final class InternalManager implements ServerManager, UserManager, Record
 			if (user.getPlayer().getUniqueId().equals(player.getUniqueId())) 
 				return user;
 		return null;
-	}*/
+	}
 
 	@Override
 	public boolean isRegistered(OfflinePlayer player) {
@@ -153,13 +151,13 @@ public final class InternalManager implements ServerManager, UserManager, Record
 		if (channel == null) channel = getMain().getMain();
 		if (rank == null) rank = channel.getServer().getRankManager().getMain();
 		else if (rank.getRankManager().getServer() != channel.getServer()) throw new IllegalStateException("Both channel and rank must be in the same server!");
-		/*User user = new User(id, name, nickname, desc, player, rank, new Listener(channel, ListenerStatus.VIEW, 0));
+		User user = new User(id, name, nickname, desc, player, rank, new Listener(channel, ListenerStatus.VIEW, 0));
 		user.applyRank();
-		users.add(user);*/
-		return /*user*/null;
+		users.add(user);
+		return usernull;
 	}
 	@Deprecated
-	public User registerPlayer(String name, String nickname, String desc, final OfflinePlayer player/*, Listener main, ServerIdentity ... identities*/) {
+	public User registerPlayer(String name, String nickname, String desc, final OfflinePlayer player/*, Listener main, ServerIdentity ... identities) {
 		//User user = getUser(player);
 		//if (user != null) return user;
 		//int id = new Random().nextInt();
@@ -173,7 +171,7 @@ public final class InternalManager implements ServerManager, UserManager, Record
 				identityset.add(new ServerIdentity(this.getMain(), true, null));
 				main = new Listener(getMain().getMain(), true, 0);
 			} else 
-				identityset.add(new ServerIdentity(main.getChannel().getServer(), true, null, main));*/
+				identityset.add(new ServerIdentity(main.getChannel().getServer(), true, null, main));
 		boolean contains = false;
 		//for (ServerIdentity identity : identityset) 
 			//contains = contains || identity.getListeners().contains(main);
@@ -246,4 +244,4 @@ public final class InternalManager implements ServerManager, UserManager, Record
 	public void clear() {
 		records.clear();
 	}
-}
+}*/

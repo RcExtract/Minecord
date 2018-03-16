@@ -20,6 +20,7 @@ import com.rcextract.minecord.event.channel.ChannelEvent;
  * A {@link ChannelRecordManager} helps a server to manage records. It is separated into a class
  * for merging purposes which feature will be provided in the future.
  */
+@SuppressWarnings("deprecation")
 public class Channel implements RecordManager<ChannelEvent> {
 
 	private int id;
@@ -125,29 +126,41 @@ public class Channel implements RecordManager<ChannelEvent> {
 	public boolean isMain() {
 		return getServer().getMain() == this;
 	}
+	@Deprecated
 	@Override
 	public List<ChannelEvent> getRecords() {
-		return Minecord.getRecordManager().getRecords(ChannelEvent.class);
+		//return Minecord.getRecordManager().getRecords(ChannelEvent.class);
+		return null;
 	}
+	@Deprecated
 	@Override
 	public <E extends ChannelEvent> List<E> getRecords(Class<E> clazz) {
-		return Minecord.getRecordManager().getRecords(clazz);
+		//return Minecord.getRecordManager().getRecords(clazz);
+		return null;
 	}
+	@Deprecated
 	@Override
 	public ChannelEvent getLatestRecord() {
-		return Minecord.getRecordManager().getLatestRecord(ChannelEvent.class);
+		//return Minecord.getRecordManager().getLatestRecord(ChannelEvent.class);
+		return null;
 	}
+	@Deprecated
 	@Override
 	public <E extends ChannelEvent> E getLatestRecord(Class<E> clazz) {
-		return Minecord.getRecordManager().getLatestRecord(clazz);
+		//return Minecord.getRecordManager().getLatestRecord(clazz);
+		return null;
 	}
+	@Deprecated
 	@Override
 	public ChannelEvent getOldestRecord() {
-		return Minecord.getRecordManager().getOldestRecord(ChannelEvent.class);
+		//return Minecord.getRecordManager().getOldestRecord(ChannelEvent.class);
+		return null;
 	}
+	@Deprecated
 	@Override
 	public <E extends ChannelEvent> E getOldestRecord(Class<E> clazz) {
-		return Minecord.getRecordManager().getOldestRecord(clazz);
+		//return Minecord.getRecordManager().getOldestRecord(clazz);
+		return null;
 	}
 	public List<Message> getMessages() {
 		return messages;

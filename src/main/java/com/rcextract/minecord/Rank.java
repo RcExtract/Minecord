@@ -73,7 +73,7 @@ public class Rank {
 		return permissions;
 	}
 	public RankManager getRankManager() {
-		for (Server server : Minecord.getServerManager().getServers()) 
+		for (Server server : Minecord.getServers()) 
 			if (server.getRankManager().getRanks().contains(this)) 
 				return server.getRankManager();
 		return null;

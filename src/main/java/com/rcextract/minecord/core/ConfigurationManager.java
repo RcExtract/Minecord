@@ -1,4 +1,4 @@
-package com.rcextract.minecord;
+package com.rcextract.minecord.core;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,20 +9,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Properties;
 
-import org.bukkit.plugin.Plugin;
-
 import com.google.common.io.ByteStreams;
 
-public class ConfigManager {
+public class ConfigurationManager {
 
 	private File file;
-	private Plugin plugin;
+	private BukkitMinecord minecord;
 	/**
 	 * This constructor is reserved for initialization.
 	 */
-	protected ConfigManager(Plugin plugin) {
-		this.plugin = plugin;
-		File dir = plugin.getDataFolder();
+	protected ConfigurationManager(BukkitMinecord minecord) {
+		this.minecord = minecord;
+		File dir = minecord.getDataFolder();
 		if (!(dir.exists())) dir.mkdir();
 		file = new File(dir, "minecord.properties");
 	}
@@ -36,7 +34,7 @@ public class ConfigManager {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			InputStream i = plugin.getResource("minecord.properties");
+			InputStream i = minecord.getResource("minecord.properties");
 			OutputStream o = null;
 			try {
 				o = new FileOutputStream(file);

@@ -2,9 +2,9 @@ package com.rcextract.minecord;
 
 import org.bukkit.OfflinePlayer;
 
-import com.rcextract.minecord.getters.UserGetter;
-
-public interface UserManager extends UserGetter {
+@Deprecated
+public interface UserManager //extends UserGetter {
+{
 
 	public boolean isRegistered(OfflinePlayer player);
 	/**

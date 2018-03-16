@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import com.rcextract.minecord.event.user.UserEvent;
 import com.rcextract.minecord.utils.ArrayMap;
 
+@SuppressWarnings("deprecation")
 public class User extends Conversable implements RecordManager<UserEvent> {
 
 	private String nickname;
@@ -52,7 +53,7 @@ public class User extends Conversable implements RecordManager<UserEvent> {
 		ChannelOptions main = super.getChannelOptions(super.getMain());
 		player.sendMessage(super.getMain().getName() + ":");
 		for (Message message : main.getUnreadMessages()) 
-			player.sendMessage(Minecord.applyFormat(message.getSender().getName(), message.getSender().getNickName(), message.getSender().getPlayer().getUniqueId().toString(), message.getMessage(), message.getDate().toString()));
+			player.sendMessage(/*Minecord.getPlugin().applyFormat(message.getSender().getName(), message.getSender().getNickName(), message.getSender().getPlayer().getUniqueId().toString(), message.getMessage(), message.getDate().toString())*/ message.getMessage());
 		main.setIndex(main.getChannel().getMessages().size() - main.getUnreadMessages().size());
 	}
 
@@ -63,29 +64,41 @@ public class User extends Conversable implements RecordManager<UserEvent> {
 		map.put("player", player);
 		return map;
 	}
-	
+
+	@Deprecated
 	@Override
 	public List<UserEvent> getRecords() {
-		return Minecord.getRecordManager().getRecords(UserEvent.class);
+		//return Minecord.getRecordManager().getRecords(UserEvent.class);
+		return null;
 	}
+	@Deprecated
 	@Override
 	public <E extends UserEvent> List<E> getRecords(Class<E> clazz) {
-		return Minecord.getRecordManager().getRecords(clazz);
+		//return Minecord.getRecordManager().getRecords(clazz);
+		return null;
 	}
+	@Deprecated
 	@Override
 	public UserEvent getLatestRecord() {
-		return Minecord.getRecordManager().getLatestRecord(UserEvent.class);
+		//return Minecord.getRecordManager().getLatestRecord(UserEvent.class);
+		return null;
 	}
+	@Deprecated
 	@Override
 	public <E extends UserEvent> E getLatestRecord(Class<E> clazz) {
-		return Minecord.getRecordManager().getLatestRecord(clazz);
+		//return Minecord.getRecordManager().getLatestRecord(clazz);
+		return null;
 	}
+	@Deprecated
 	@Override
 	public UserEvent getOldestRecord() {
-		return Minecord.getRecordManager().getOldestRecord(UserEvent.class);
+		//return Minecord.getRecordManager().getOldestRecord(UserEvent.class);
+		return null;
 	}
+	@Deprecated
 	@Override
 	public <E extends UserEvent> E getOldestRecord(Class<E> clazz) {
-		return Minecord.getRecordManager().getOldestRecord(clazz);
+		//return Minecord.getRecordManager().getOldestRecord(clazz);
+		return null;
 	}
 }

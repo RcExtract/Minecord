@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import com.rcextract.minecord.core.BukkitMinecord;
+
 public class Updater {
 
 	private static final String API_KEY = "98BE0FE67F88AB82B4C197FAF1DC3B69206EFDCC4D3B80FC83A00037510B99B4";
@@ -16,8 +18,8 @@ public class Updater {
 		CONNECTION_FAILURE, DATA_ACCESSED, UP_TO_DATE, UPDATE_AVAILABLE;
 	}
 	
-	private Minecord minecord;
-	public Updater(Minecord minecord) {
+	private BukkitMinecord minecord;
+	public Updater(BukkitMinecord minecord) {
 		this.minecord = minecord;
 	}
 	public UpdaterResult check() {

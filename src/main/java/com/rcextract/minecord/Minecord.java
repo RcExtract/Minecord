@@ -1,254 +1,110 @@
-//Not implemented!
 package com.rcextract.minecord;
 
-import java.io.IOException;
-import java.sql.SQLTimeoutException;
-import java.util.Properties;
-import java.util.logging.Level;
+import java.util.Set;
 
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
-
-import com.rcextract.minecord.event.MinecordEvent;
-import com.rcextract.minecord.sql.DriverNotFoundException;
-import com.rcextract.minecord.sql.SQLConnectException;
+import com.rcextract.minecord.core.ConfigurationManager;
+import com.rcextract.minecord.utils.ComparativeSet;
 
 import net.milkbowl.vault.permission.Permission;
 
-/**
- * The core class of Minecord, also the core class of the plugin.
- * <p>
- * All Minecord system preferences are saved here.
- */
-public class Minecord extends JavaPlugin {
+public class Minecord {
 
-	private static InternalManager panel;
-	private static ConfigManager cm;
-	private static DataManipulator dm;
-	protected static Properties properties;
-	private static boolean errorDisable;
-	protected static Minecord minecord;
-	private static Permission permission;
-	protected static String dbversion;
-	protected static String olddbversion;
+	private static MinecordPlugin minecord;
 	
-	public static String captializeFirstLetter(String content) {
-		return content.substring(0, 1).toUpperCase() + content.substring(1);
+	public static MinecordPlugin getPlugin() {
+		return minecord;
 	}
-	@Override
-	public void onEnable() {
-		minecord = this;
-		dbversion = "7dot0";
-		olddbversion = "6dot0";
-		cm = new ConfigManager(this);
-		panel = new InternalManager();
-		permission = Bukkit.getServicesManager().getRegistration(Permission.class).getProvider();
-		loadProperties();
-		loadData();
-		checkUpdate();
-		new IncompatibleDetector(this).runTask(this);
-		
-	}
-	@Override
-	public void onDisable() {
-		if (errorDisable) {
-			getLogger().log(Level.WARNING, "Minecord is disabling due to an error occurred while initializing.");
-			getLogger().log(Level.WARNING, "This is purposed to keep your data protected from being overrided.");
-		} else {
-			try {
-				getLogger().log(Level.INFO, "Saving properties to minecord.properties...");
-				cm.save(properties);
-				getLogger().log(Level.INFO, "Properties are successfully saved.");
-			} catch (IOException e) {
-				getLogger().log(Level.SEVERE, "An error occurred while attempting to save the properties.", e);
-			}
-			saveDataInternal();
-		}
-	}
-	/**
-	 * Gets the record manager.
-	 * @return The record manager.
-	 */
-	public static Recordable<MinecordEvent> getRecordManager() {
-		return panel;
-	}
-	/**
-	 * Gets the control panel of Minecord system.
-	 * @return The control panel of Minecord system.
-	 */
-	protected static InternalManager getControlPanel() {
-		return panel;
-	}
-	/**
-	 * Gets the database manager.
-	 * @return The database manager.
-	 */
-	/*public static DataManipulator getDatabaseManager() {
-		return dm;
-	}*/
-	/**
-	 * Gets the server manager inside the control panel.
-	 * @return The server manager inside the control panel.
-	 */
-	public static ServerManager getServerManager() {
-		return panel;
-	}
-	/**
-	 * Gets the user manager inside the control panel.
-	 * @return The user manager inside the control panel.
-	 */
-	public static UserManager getUserManager() {
-		return panel;
-	}
-	/**
-	 * Gets the format of a message.
-	 * @return The format of a message.
-	 */
-	public static String getFormat() {
-		return properties.getProperty("format");
-	}
-	protected static String getHost() {
-		return properties.getProperty("host");
-	}
-	protected static String getUsername() {
-		return properties.getProperty("username");
-	}
-	protected static String getPassword() {
-		return properties.getProperty("password");
-	}
-	/**
-	 * Gets the amount of messages to be loaded for a user.
-	 * @return The amount of messages to be loaded for a user.
-	 */
-	public static int getMessageLoadCount() {
-		return Integer.parseInt(properties.getProperty("message-load-count"));
-	}
-	public static void reloadConfiguration() {
-		//String format = getFormat();
-		try {
-			cm.load(properties);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return;
-		}
-		//if (!(getFormat().equals(format))) 
-			//for (User user : Minecord.getUserManager().getUsers()) 
-				//updateMessage(user, true);
-	}
-	public static String applyFormat(String name, String nickname, String uuid, String message, String date) {
-		String format = new String(getFormat());
-		format = format.replaceAll("playername", name);
-		format = format.replaceAll("playernickname", nickname);
-		format = format.replaceAll("playeruuid", uuid);
-		format = format.replaceAll("message", message);
-		format = format.replaceAll("time", date);
-		format = format.replaceAll("&", "��");
-		return format;
-	}
-	public static void initialize() {
-		ready();
-		//if (dm == null) throw new IllegalStateException("Minecord is not ready.");
-		Bukkit.getPluginManager().registerEvents(new EventManager(), minecord);
-		minecord.getCommand("minecord").setExecutor(new CommandHandler(minecord));
-		if (panel.getServer("default") == null)
-			try {
-				panel.createServer("default", null, null, null, null, null);
-			} catch (DuplicatedException e) {
-				//This exception is never thrown.
-			}
-		//for (OfflinePlayer player : Bukkit.getOfflinePlayers()) 
-			//if (!(Minecord.getUserManager().isRegistered(player))) 
-				//Minecord.getUserManager().registerPlayer(null, null, null, player, new Listener(panel.getMain().getMain(), true, 0));
-		panel.initialize();
-	}
-	public static void loadProperties() {
-		if (minecord == null) throw new IllegalStateException("Minecord is not ready.");
-		properties = new Properties();
-		try {
-			minecord.getLogger().log(Level.INFO, "Loading properties from minecord.properties...");
-			cm.load(properties);
-			minecord.getLogger().log(Level.INFO, "Properties are successfully loaded.");
-		} catch (IOException e) {
-			minecord.getLogger().log(Level.SEVERE, "An error occurred while attempting to load the properties.", e);
-			errorDisable = true;
-			Bukkit.getPluginManager().disablePlugin(minecord);
-			return;
-		}
-	}
-	public static void loadData() {
-		ready();
-		Bukkit.getScheduler().runTaskAsynchronously(minecord, new Runnable() {
 
-			@Override
-			public void run() {
-				try {
-					minecord.getLogger().log(Level.INFO, "Loading data from database...");
-					dm = new DataManipulator(getHost(), getUsername(), getPassword());
-					dm.initialize();
-					dm.load();
-					minecord.getLogger().log(Level.INFO, "Data are successfully loaded.");
-				} catch (RuntimeException | SQLTimeoutException | SQLConnectException | DriverNotFoundException e) {
-					minecord.getLogger().log(Level.SEVERE, "An error occured while attempting to load the data.", e);
-					errorDisable = true;
-					Bukkit.getPluginManager().disablePlugin(minecord);
-					return;
-				} finally {
-					initialize();
-				}
-			}
-			
-		});
+	@Deprecated
+	public static MinecordPlugin getServerManager() {
+		return minecord;
 	}
-	public static void saveData() {
-		Bukkit.getScheduler().runTaskAsynchronously(minecord, new Runnable() {
 
-			@Override
-			public void run() {
-				saveDataInternal();
-			}
-			
-		});
+	@Deprecated
+	public static MinecordPlugin getUserManager() {
+		return minecord;
 	}
-	private static void saveDataInternal() {
-		try {
-			minecord.getLogger().log(Level.INFO, "Saving data to database...");
-			dm.save();
-			minecord.getLogger().log(Level.INFO, "Data are successfully saved.");
-		} catch (RuntimeException e) {
-			minecord.getLogger().log(Level.SEVERE, "An error occurred while attempting to save the data.", e);
-		}
+
+	@Deprecated
+	public static MinecordPlugin getRecordManager() {
+		return minecord;
 	}
-	public static void checkUpdate() {
-		Bukkit.getScheduler().runTaskAsynchronously(minecord, new Runnable() {
-
-			@Override
-			public void run() {
-				switch (new Updater(minecord).check()) {
-				case CONNECTION_FAILURE: {
-					minecord.getLogger().log(Level.SEVERE, "An error occured while attempting to check for an update.");
-					minecord.getLogger().log(Level.INFO, "Usually this error is caused by failure on connecting to spigot server.");
-				}
-					break;
-				case DATA_ACCESSED:
-					break;
-				case UPDATE_AVAILABLE: minecord.getLogger().log(Level.INFO, "An update is available at https://www.spigotmc.org/resources/minecord.44055");
-					break;
-				case UP_TO_DATE: minecord.getLogger().log(Level.INFO, "Your version is up to date.");
-					break;
-				default:
-					break;
-
-				}
-
-			}
-			
-		});
+	
+	protected static void setPlugin(MinecordPlugin minecord) {
+		Minecord.minecord = minecord;
 	}
+	
+	public static ComparativeSet<Server> getServers() {
+		return minecord.getServers();
+	}
+
+	public static Server getServer(int id) {
+		return minecord.getServer(id);
+	}
+
+	public static Server getServer(String name) {
+		return minecord.getServer(name);
+	}
+
+	public static Set<Server> getServers(Sendable sendable) {
+		return minecord.getServers(sendable);
+	}
+
+	public static Server getServer(Channel channel) {
+		return minecord.getServer(channel);
+	}
+
+	public static ComparativeSet<Sendable> getSendables() {
+		return minecord.getSendables();
+	}
+
+	public static Sendable getSendable(int id) {
+		return minecord.getSendable(id);
+	}
+
+	public static Set<Sendable> getSendables(String name) {
+		return minecord.getSendables(name);
+	}
+
+	public static Server getMain() {
+		return minecord.getMain();
+	}
+
+	public static ConfigurationManager getConfigurationManager() {
+		return minecord.getConfigurationManager();
+	}
+
+	public static DataManipulator getDataManipulator() {
+		return minecord.getDataManipulator();
+	}
+
 	public static Permission getPermissionManager() {
-		return permission;
+		return minecord.getPermissionManager();
 	}
-	public static void ready() {
-		if (minecord == null) throw new IllegalStateException("Minecord is not ready.");
-		if (properties == null) throw new IllegalStateException("Properties are not loaded.");
+
+	public static void loadConfiguration() {
+		minecord.loadConfiguration();
 	}
+
+	public static void saveConfiguration() {
+		minecord.saveConfiguration();
+	}
+
+	public static void loadData() {
+		minecord.loadData();
+	}
+
+	public static void saveData() {
+		minecord.saveData();
+	}
+
+	public static String databaseVersion() {
+		return minecord.databaseVersion();
+	}
+
+	public static String oldDatabaseVersion() {
+		return minecord.oldDatabaseVersion();
+	}
+	
+
 }

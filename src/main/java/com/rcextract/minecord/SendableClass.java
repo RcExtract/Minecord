@@ -2,6 +2,7 @@ package com.rcextract.minecord;
 
 import java.lang.reflect.Method;
 
+@Deprecated
 public class SendableClass<T extends Sendable> {
 
 	private final Class<T> clazz;
