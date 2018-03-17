@@ -8,6 +8,8 @@ import org.bukkit.entity.Player;
 import com.rcextract.minecord.event.user.UserEvent;
 import com.rcextract.minecord.utils.ArrayMap;
 
+import me.clip.placeholderapi.PlaceholderAPI;
+
 @SuppressWarnings("deprecation")
 public class User extends Conversable implements RecordManager<UserEvent> {
 
@@ -53,7 +55,8 @@ public class User extends Conversable implements RecordManager<UserEvent> {
 		ChannelOptions main = super.getChannelOptions(super.getMain());
 		player.sendMessage(super.getMain().getName() + ":");
 		for (Message message : main.getUnreadMessages()) 
-			player.sendMessage(/*Minecord.getPlugin().applyFormat(message.getSender().getName(), message.getSender().getNickName(), message.getSender().getPlayer().getUniqueId().toString(), message.getMessage(), message.getDate().toString())*/ message.getMessage());
+			player.sendMessage(/*Minecord.getPlugin().applyFormat(message.getSender().getName(), message.getSender().getNickName(), message.getSender().getPlayer().getUniqueId().toString(), message.getMessage(), message.getDate().toString())*/
+					PlaceholderAPI.setPlaceholders(player, Minecord.getFormat().replaceAll("%minecord_message%", message.getMessage())));
 		main.setIndex(main.getChannel().getMessages().size() - main.getUnreadMessages().size());
 	}
 

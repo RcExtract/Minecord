@@ -4,6 +4,9 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## 1.1.2 (New API not fully implemented, about 88%, 10% will be done before 1.2.0 Release)
+- Added support for PlaceholderAPI
+
 ## 1.1.1 (New API not fully implemented, about 88%, 10% will be done before 1.2.0 Release)
 - Rearranged classes
 - Redesigned the static Minecord methods access method

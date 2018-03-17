@@ -113,7 +113,7 @@ public class Channel implements RecordManager<ChannelEvent> {
 		return null;
 	}*/
 	public Server getServer() {
-		for (Server server : Minecord.getServerManager().getServers()) 
+		for (Server server : Minecord.getServers()) 
 			if (server.getChannels().contains(this)) 
 				return server;
 		return null;

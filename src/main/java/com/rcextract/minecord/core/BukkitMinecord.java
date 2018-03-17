@@ -40,10 +40,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 	private ComparativeSet<Server> servers;
 	private Server main;
 	private ComparativeSet<Sendable> sendables;
-	
-	public static String captializeFirstLetter(String content) {
-		return content.substring(0, 1).toUpperCase() + content.substring(1);
-	}
+
 	@Override
 	public void onEnable() {
 		minecord = this;
@@ -57,6 +54,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 		loadData();
 		checkUpdate();
 		new IncompatibleDetector(this).runTask(this);
+		new MinecordPlaceholders().register();
 		
 	}
 	@Override

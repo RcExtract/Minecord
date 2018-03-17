@@ -20,4 +20,5 @@ public interface MinecordPlugin extends Plugin, ServerGetter, SendableGetter {
 	public void saveData();
 	public String databaseVersion();
 	public String oldDatabaseVersion();
+	public String getFormat();
 }

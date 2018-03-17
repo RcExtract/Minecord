@@ -21,7 +21,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
-import com.rcextract.minecord.core.BukkitMinecord;
+import com.rcextract.minecord.Minecord;
 import com.rcextract.minecord.utils.ArrayMap;
 import com.rcextract.minecord.utils.ComparativeSet;
 import com.rcextract.minecord.utils.Pair;
@@ -372,7 +372,7 @@ public class SQLObjectConverter {
 						typename = "short";
 					if (typename.equalsIgnoreCase("bigint")) 
 						typename = "long";
-					typename = BukkitMinecord.captializeFirstLetter(typename);
+					typename = Minecord.capitalizeFirstLetter(typename);
 					Class<?> type = Class.forName(md.getColumnClassName(i));
 					if (type.isAssignableFrom(Number.class)) {
 						Class<?> realtype = Class.forName("java.lang." + typename);

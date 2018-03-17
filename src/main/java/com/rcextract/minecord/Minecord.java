@@ -14,21 +14,6 @@ public class Minecord {
 	public static MinecordPlugin getPlugin() {
 		return minecord;
 	}
-
-	@Deprecated
-	public static MinecordPlugin getServerManager() {
-		return minecord;
-	}
-
-	@Deprecated
-	public static MinecordPlugin getUserManager() {
-		return minecord;
-	}
-
-	@Deprecated
-	public static MinecordPlugin getRecordManager() {
-		return minecord;
-	}
 	
 	protected static void setPlugin(MinecordPlugin minecord) {
 		Minecord.minecord = minecord;
@@ -106,5 +91,12 @@ public class Minecord {
 		return minecord.oldDatabaseVersion();
 	}
 	
+	public static String getFormat() {
+		return minecord.getFormat();
+	}
+	
+	public static String capitalizeFirstLetter(String string) {
+		return string.substring(0, 1).toUpperCase() + string.substring(1);
+	}
 
 }
