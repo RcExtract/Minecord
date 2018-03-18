@@ -1,4 +1,4 @@
-package com.rcextract.minecord.core;
+package com.rcextract.minecord.bukkitminecord;
 
 import java.util.logging.Level;
 

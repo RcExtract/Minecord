@@ -3,28 +3,27 @@ package com.rcextract.minecord.sql;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.apache.commons.lang.Validate;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 
 import com.rcextract.minecord.Minecord;
 import com.rcextract.minecord.utils.ArrayMap;
 import com.rcextract.minecord.utils.ComparativeSet;
 import com.rcextract.minecord.utils.Pair;
+import com.rcextract.minecord.utils.Table;
 
 /*
  * +-----------------+----------------------------------+-------------+
@@ -86,69 +85,36 @@ import com.rcextract.minecord.utils.Pair;
  * It is strongly recommended to put an {@link SQLList} into the map returning from the 
  * {@link DatabaseSerializable#serialize()} than {@link ArrayList}, so the converter 
  * can get the element type most safely.
+ * <p>
+ * Besides, this class also supports serializing and deserializing objects which type 
+ * is not implementing the interface, by adding converters to this converter.
  */
 public class SQLObjectConverter {
-
-	private static final Set<Class<?>> primitives;
-	private static final Set<TypeConverter<?, ?>> DEFAULT_CONVERTERS;
-	static {
-		primitives = new HashSet<Class<?>>();
-		primitives.add(Boolean.class);
-		primitives.add(Character.class);
-		primitives.add(Number.class);
-		primitives.add(String.class);
-		DEFAULT_CONVERTERS = new HashSet<TypeConverter<?, ?>>();
-		DEFAULT_CONVERTERS.add(new TypeConverter<UUID, String>(UUID.class, String.class) {
-
-			@Override
-			public String serialize(UUID input) {
-				return input.toString();
-			}
-
-			@Override
-			public UUID deserialize(String output) {
-				return UUID.fromString(output);
-			}
-			
-		});
-		DEFAULT_CONVERTERS.add(new TypeConverter<OfflinePlayer, UUID>(OfflinePlayer.class, UUID.class) {
-
-			@Override
-			public UUID serialize(OfflinePlayer input) {
-				return input.getUniqueId();
-			}
-
-			@Override
-			public OfflinePlayer deserialize(UUID output) {
-				return Bukkit.getOfflinePlayer(output);
-			}
-			
-		});
-	}
-	public static Set<TypeConverter<?, ?>> getDefaultConverters() {
-		return DEFAULT_CONVERTERS;
-	}
 	
 	private ComparativeSet<TypeConverter<?, ?>> converters;
 	private final Connection connection;
 	private Map<String, Class<?>> tables = new HashMap<String, Class<?>>();
 	private Map<Object, Pair<String, Integer>> savedObjects = new HashMap<Object, Pair<String, Integer>>();
 	private Map<Object, Pair<String, Integer>> loadedObjects = new HashMap<Object, Pair<String, Integer>>();
-
-	public SQLObjectConverter(String url, String user, String password) throws SQLException {
-		this(DriverManager.getConnection(url, user, password));
-	}
+	//The third column is dummy
+	private Table<Object, TypeConverter<?, ?>, Object> needToSaveConverters = new Table<Object, TypeConverter<?, ?>, Object>();
+	/*
+	 * This is a field to determine the last method type called, whether it is saving 
+	 * or loading method. If the method type does not matches the state, initialization 
+	 * for the field will be done.
+	 */
+	private boolean load;
 	
-	public SQLObjectConverter(Connection connection) {
+	public SQLObjectConverter(Connection connection, TypeConverter<?, ?> ... converters) {
 		Validate.notNull(connection);
 		this.connection = connection;
 		this.converters = new ComparativeSet<TypeConverter<?, ?>>(converter -> {
-			for (TypeConverter<?, ?> c : converters) 
-				if (converter.getInputClass() == c.getInputClass() || converter.getOutputClass() == c.getOutputClass()) 
-					return false;
-			return true;
-		});
-		this.converters.addAll(DEFAULT_CONVERTERS);
+			return this.converters.getIf(c -> c.getInputClass() == converter.getInputClass() && c.getOutputClass() == converter.getOutputClass()).isEmpty();
+		}, Arrays.asList(converters));
+	}
+	
+	public SQLObjectConverter(Connection connection) {
+		this(connection, new TypeConverter[0]);
 	}
 
 	private String getTable(Class<?> implementer) {
@@ -171,6 +137,36 @@ public class SQLObjectConverter {
 		return (List<? extends T>) loadAll(table);
 	}
 	
+	public void initializeFieldsForLoading() throws SQLTimeoutException, DatabaseAccessException, DataLoadException {
+		initializeFields();
+		loadedObjects.clear();
+	}
+	public void initializeFieldsForSaving() throws SQLTimeoutException, DatabaseAccessException, DataLoadException {
+		initializeFields();
+		savedObjects.clear();
+	}
+	public void initializeFields() throws SQLTimeoutException, DatabaseAccessException, DataLoadException {
+		try (Statement statement = connection.createStatement()) {
+			ResultSet set = statement.executeQuery("SELECT * FROM tables_info");
+			while (set.next()) 
+				tables.put(set.getString("table_name"), Class.forName(set.getString("implementing_class")));
+			load = false;
+		} catch (SQLTimeoutException e) {
+			throw e;
+		} catch (SQLException e) {
+			throw new DatabaseAccessException();
+		} catch (ClassNotFoundException e) {
+			throw new DataLoadException(e);
+		}
+	}
+	@SuppressWarnings("unchecked")
+	public <T> List<T> loadAll(Class<T> clazz) throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
+		List<T> list = new ArrayList<T>();
+		for (Map.Entry<String, Class<?>> entry : tables.entrySet()) 
+			if (entry.getValue().isAssignableFrom(clazz)) 
+				list.addAll((Collection<? extends T>) loadAll(entry.getKey()));
+		return list;
+	}
 	/**
 	 * Loads all objects from a single table.
 	 * @param table The desired table name.
@@ -181,12 +177,14 @@ public class SQLObjectConverter {
 	 * @throws Throwable when an exception is thrown while constructing an object from itself.
 	 */
 	public List<Object> loadAll(String table) throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
+		if (!(load)) 
+			initializeFieldsForLoading();
 		List<Object> list = new ArrayList<Object>();
 		try (Statement statement = connection.createStatement()) {
 			ResultSet set = statement.executeQuery("SELECT * FROM" + table);
 			for (int i = 1; i <= set.getFetchSize(); i++) 
-				list.add(loadObject(table, i));
-		}
+				list.add(loadObject(table, i, true));
+		} 
 		return list;
 	}
 
@@ -200,7 +198,9 @@ public class SQLObjectConverter {
 	 * @throws DataLoadException when an error occurred while deserializing a row, which other exceptions cannot represent.
 	 * @throws Throwable when an exception is thrown while constructing an object from itself.
 	 */
-	public Object loadObject(String table, int row) throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
+	public Object loadObject(String table, int row, boolean remove) throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
+		if (!(load)) 
+			initializeFieldsForLoading();
 		for (Map.Entry<Object, Pair<String, Integer>> entry : loadedObjects.entrySet()) 
 			if (entry.getValue().getKey() == table && entry.getValue().getValue() == row) 
 				return entry.getKey();
@@ -211,15 +211,7 @@ public class SQLObjectConverter {
 			ResultSetMetaData md = set.getMetaData();
 			for (int i = 0; i <= md.getColumnCount(); i++) {
 				Class<?> type = Class.forName(md.getColumnClassName(i));
-				Object object = set.getObject(i, type);
-				if (object instanceof String) {
-					String string = (String) object;
-					if ((string + ", ").matches("list from table .+ (range [0-9]+ to [0-9]+, )+")) 
-						object = loadList(string);
-					if ((string.split("; ")[0] + ", ").matches("map keys from table .+ (range [0-9]+ to [0-9]+, )+") &&
-							(string.split("; ") + ", ").matches("values from table .+ (range [0-9]+ to [0-9]+, )+")) 
-						object = loadArrayMap(string);
-				}
+				Object object = deserialize(set.getObject(i, type));
 				map.put(md.getColumnName(i), object);
 			}
 			ResultSet meta = statement.executeQuery("SELECT * FROM tables_info WHERE table_name = " + table);
@@ -234,6 +226,7 @@ public class SQLObjectConverter {
 				}
 			}
 			loadedObjects.put(map.get(1).getValue(), new Pair<String, Integer>(table, row));
+			if (remove) set.deleteRow();
 			return map.get(1).getValue();
 		} catch (SQLTimeoutException e) {
 			throw e;
@@ -250,7 +243,38 @@ public class SQLObjectConverter {
 			throw new InvalidTypeException(e);
 		}
 	}
-	
+
+	public Object deserialize(Object object) throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
+		if (object instanceof String) {
+			String string = (String) object;
+			if ((string + ", ").matches("list from table .+ (range [0-9]+ to [0-9]+, )+")) 
+				return loadList(string);
+			if ((string.split("; ")[0] + ", ").matches("map keys from table .+ (range [0-9]+ to [0-9]+, )+") &&
+					(string.split("; ") + ", ").matches("values from table .+ (range [0-9]+ to [0-9]+, )+")) 
+				return loadArrayMap(string);
+			if (string.matches("object from table .+ at [0-9]+")) 
+				return loadObjectReference(string);
+		}
+		try (Statement statement = connection.createStatement(); PreparedStatement stmt = connection.prepareStatement("SELECT ? from tables_info")) {
+			ResultSet set = statement.executeQuery("SELECT * FROM converters_cache WHERE target_table = " + getTable(object.getClass()));
+			set.absolute(1);
+			List<Class<?>> types = new ArrayList<Class<?>>();
+			String fullconvertersindex = set.getString("target_converter_input_types");
+			for (String i : fullconvertersindex.split(", ")) {
+				stmt.setInt(1, Integer.parseInt(i));
+				ResultSet info = stmt.executeQuery();
+				info.absolute(1);
+				types.add(Class.forName(info.getString("implementing_class")));
+			}
+			Object o = object;
+			for (Class<?> type : types) {
+				Set<TypeConverter<?, ?>> converters = this.converters.getIf(converter -> converter.getOutputClass() == object.getClass() && converter.getInputClass() == type);
+				TypeConverter<?, ?> converter = converters.toArray(new TypeConverter[converters.size()])[0];
+				o = converter.getClass().getMethod("deserialize", object.getClass()).invoke(converter, object);
+			}
+			return o;
+		}
+	}
 	public List<?> loadList(String statement) throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
 		return loadList(statement, tables.get(statement.split("(list from table | range | to |, )")[0]));
 	}
@@ -260,13 +284,13 @@ public class SQLObjectConverter {
 		SQLList<E> list = SQLList.create(type);
 		for (int i = 1; i < args.length; i += 2) 
 			for (int ui = Integer.parseInt(args[i]); i <= Integer.parseInt(args[i + 1]); i++) 
-				list.add(list.getDeclaringClass().cast(loadObject(args[0], ui)));
+				list.add(list.getDeclaringClass().cast(loadObject(args[0], ui, true)));
 		return list;
 	}
 	
 	public Object loadObjectReference(String statement) throws SQLTimeoutException, DatabaseAccessException, NumberFormatException, DataLoadException, Throwable {
 		String[] args = statement.split("(object from table | at ");
-		return loadObject(args[0], Integer.parseInt(args[1]));
+		return loadObject(args[0], Integer.parseInt(args[1]), true);
 	}
 	
 	public ArrayMap<?, ?> loadArrayMap(String statement) throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
@@ -276,10 +300,10 @@ public class SQLObjectConverter {
 		for (int i = 1; i <= keyargs.length; i += 2) {
 			List<Object> keys = new ArrayList<Object>();
 			for (int ui = Integer.parseInt(keyargs[i]); i <= Integer.parseInt(keyargs[i + 1]); i++) 
-				keys.add(loadObject(keyargs[0], ui));
+				keys.add(loadObject(keyargs[0], ui, true));
 			List<Object> values = new ArrayList<Object>();
 			for (int ui = Integer.parseInt(valueargs[i]); i <= Integer.parseInt(valueargs[i + 1]); i++) 
-				keys.add(loadObject(valueargs[0], ui));
+				keys.add(loadObject(valueargs[0], ui, true));
 			for (int io = 0; i < keys.size(); i++) 
 				map.put(keys.get(io), values.get(io));
 		}
@@ -314,6 +338,7 @@ public class SQLObjectConverter {
 	 * @throws Throwable when an exception is thrown while calling necessary methods for serialization.
 	 */
 	public Pair<String, Integer> saveObject(Object object) throws Throwable, SQLTimeoutException, DatabaseAccessException, DataLoadException {
+		if (load) initializeFieldsForSaving();
 		if (savedObjects.containsKey(object)) return savedObjects.get(object);
 		int rowcount = 0;
 		ArrayMap<String, Object> map = serialize(object);
@@ -328,7 +353,6 @@ public class SQLObjectConverter {
 			ArrayMap<String, Class<?>> sqlcolumns = new ArrayMap<String, Class<?>>();
 			for (int i = 1; i <= set.getMetaData().getColumnCount(); i++) 
 				sqlcolumns.put(set.getMetaData().getColumnName(i), Class.forName(set.getMetaData().getColumnClassName(i)));
-			set.close();
 			if (!(columns.equals(sqlcolumns) && name.equals(sqlname))) {
 				//Create table
 				statement.executeUpdate("DROP TABLE " + sqlname);
@@ -414,8 +438,10 @@ public class SQLObjectConverter {
 			for (Object o : map.valueList()) 
 				savesql += o.toString() + ", ";
 			statement.executeUpdate(savesql.substring(0, savesql.length() - 3) + ")");
-			Pair<String, Integer> pair = new Pair<String, Integer>(name, rowcount + 1);
+			Pair<String, Integer> pair = new Pair<String, Integer>(name, set.getMetaData().getColumnCount());
 			savedObjects.put(object, pair);
+			if (needToSaveConverters.aSet().keySet().contains(object)) 
+				saveConverters(object);
 			return pair;
 		} catch (SQLTimeoutException e) {
 			throw e;
@@ -431,6 +457,27 @@ public class SQLObjectConverter {
 		}
 	}
 
+	public void saveConverters(Object object) throws SQLTimeoutException, DatabaseAccessException, DataLoadException {
+		try (Statement statement = connection.createStatement()) {
+			statement.executeUpdate("CREATE TABLE IF NOT EXISTS converters_cache (target_table INT UNSIGNED NOT NULL, target_converter_input_types TEXT(65535) NOT NULL)");
+			String sql = "INSERT INTO converters_cache VALUES (" + getTable(object.getClass()) + ", ";
+			ResultSet set = statement.executeQuery("SELECT * FROM tables_info");
+			for (TypeConverter<?, ?> converter : needToSaveConverters.a(object).keySet()) {
+				while (set.next()) 
+					if (Class.forName(set.getString("implementing_class")) == converter.getInputClass()) 
+						sql += Integer.toString(set.getRow()) + ", ";
+				set.absolute(0);
+			}
+			statement.executeUpdate(sql.substring(0, sql.length() - 3) + ")");
+		} catch (SQLTimeoutException e) {
+			throw e;
+		} catch (SQLException e) {
+			throw new DatabaseAccessException();
+		} catch (ClassNotFoundException e) {
+			throw new DataLoadException(e);
+		}
+	}
+	
 	public ArrayMap<String, Object> serialize(Object object) throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
 		if (object instanceof DatabaseSerializable) 
 			return serializeAsDatabaseSerializable((DatabaseSerializable) object);
@@ -444,9 +491,22 @@ public class SQLObjectConverter {
 			return serializeAsArrayMap((ArrayMap<?, ?>) object);
 		if (object instanceof String) 
 			return serializeAsString((String) object);
-		return serializeUltimately(object);
+		return serializeWithExternalConverter(object);
 	}
-	
+
+	public ArrayMap<String, Object> serializeWithExternalConverter(Object object) {
+		ArrayMap<String, Object> map = new ArrayMap<String, Object>();
+		Set<TypeConverter<?, ?>> converters = this.converters.getIf(converter -> object.getClass() == converter.getInputClass());
+		TypeConverter<?, ?> converter = converters.toArray(new TypeConverter[converters.size()])[0];
+		try {
+			map.put(object.getClass().getSimpleName(), converter.getClass().getMethod("serialize", object.getClass()).invoke(converter, object));
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+				| SecurityException e) {
+			//These exceptions are not thrown.
+		}
+		needToSaveConverters.put(object, converter, null);
+		return map;
+	}
 	public ArrayMap<String, Object> serializeAsString(String string) {
 		ArrayMap<String, Object> map = new ArrayMap<String, Object>();
 		map.put("value", string);

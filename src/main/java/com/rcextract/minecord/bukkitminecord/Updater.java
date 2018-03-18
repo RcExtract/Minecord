@@ -1,4 +1,4 @@
-package com.rcextract.minecord;
+package com.rcextract.minecord.bukkitminecord;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,7 +6,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import com.rcextract.minecord.core.BukkitMinecord;
+import com.rcextract.minecord.MinecordPlugin;
 
 public class Updater {
 
@@ -18,8 +18,8 @@ public class Updater {
 		CONNECTION_FAILURE, DATA_ACCESSED, UP_TO_DATE, UPDATE_AVAILABLE;
 	}
 	
-	private BukkitMinecord minecord;
-	public Updater(BukkitMinecord minecord) {
+	private MinecordPlugin minecord;
+	public Updater(MinecordPlugin minecord) {
 		this.minecord = minecord;
 	}
 	public UpdaterResult check() {
@@ -43,14 +43,17 @@ public class Updater {
 			//This exception is never thrown.
 			return UpdaterResult.DATA_ACCESSED;
 		}
-		String[] current = minecord.getDescription().getVersion().split("\\.");
-		String[] online = label.split("\\.");
-		if (Integer.parseInt(current[0]) < Integer.parseInt(online[0])) 
-			return UpdaterResult.UPDATE_AVAILABLE;
-		if (Integer.parseInt(current[1]) < Integer.parseInt(online[1])) 
-			return UpdaterResult.UPDATE_AVAILABLE;
-		if (Integer.parseInt(current[2]) < Integer.parseInt(online[2])) 
+		String current = minecord.getDescription().getVersion();
+		if (buildNumber(current.split("( |SNAPSHOT)")) < buildNumber(label.split("( |SNAPSHOT)"))) 
 			return UpdaterResult.UPDATE_AVAILABLE;
 		return UpdaterResult.UP_TO_DATE;
+	}
+	
+	public int buildNumber(String[] versions) {
+		int build = 0;
+		String s = String.join(".", versions);
+		for (int i = s.split(".").length - 1; i >= 0; i--) 
+			build += Integer.parseInt(s.split(".")[i]) * (10 ^ s.split(".").length - 1 - i);
+		return build;
 	}
 }

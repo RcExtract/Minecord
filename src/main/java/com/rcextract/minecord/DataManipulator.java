@@ -7,12 +7,18 @@ import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 
+import com.rcextract.minecord.sql.DataLoadException;
+import com.rcextract.minecord.sql.DatabaseAccessException;
 import com.rcextract.minecord.sql.DriverNotFoundException;
 import com.rcextract.minecord.sql.SQLConnectException;
 import com.rcextract.minecord.sql.SQLObjectConverter;
+import com.rcextract.minecord.sql.TypeConverter;
 
 public class DataManipulator {
 
@@ -39,7 +45,31 @@ public class DataManipulator {
 		} catch (SQLException e) {
 			throw new SQLConnectException();
 		}
-		this.converter = new SQLObjectConverter(connection);
+		this.converter = new SQLObjectConverter(connection, new TypeConverter<UUID, String>(UUID.class, String.class) {
+
+			@Override
+			public String serialize(UUID input) {
+				return input.toString();
+			}
+
+			@Override
+			public UUID deserialize(String output) {
+				return UUID.fromString(output);
+			}
+			
+		}, new TypeConverter<OfflinePlayer, UUID>(OfflinePlayer.class, UUID.class) {
+
+			@Override
+			public UUID serialize(OfflinePlayer input) {
+				return input.getUniqueId();
+			}
+
+			@Override
+			public OfflinePlayer deserialize(UUID output) {
+				return Bukkit.getOfflinePlayer(output);
+			}
+			
+		});
 	}
 
 	public String getName() {
@@ -98,22 +128,14 @@ public class DataManipulator {
 			throw new SQLConnectException();
 		}
 	}
-	public synchronized void load() {
-		try {
-			Minecord.getServers().addAll(converter.loadAll("server", Server.class));
-			Minecord.getSendables().addAll(converter.loadAll("user", Sendable.class));
-		} catch (Throwable e) {
-			//These exceptions are never thrown.
-		}
+	public synchronized void load() throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
+		Minecord.getServers().addAll(converter.loadAll(Server.class));
+		Minecord.getSendables().addAll(converter.loadAll(Sendable.class));
 	}
 	
-	public synchronized void save() {
-		try {
-			converter.saveObjects(new ArrayList<Server>(Minecord.getServers()));
-			converter.saveObjects(new ArrayList<Sendable>(Minecord.getSendables()));
-		} catch (Throwable e) {
-			//These exceptions are never thrown.
-		}
+	public synchronized void save() throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
+		converter.saveObjects(new ArrayList<Server>(Minecord.getServers()));
+		converter.saveObjects(new ArrayList<Sendable>(Minecord.getSendables()));
 	}
 	
 	public boolean exists() throws SQLTimeoutException, SQLConnectException {

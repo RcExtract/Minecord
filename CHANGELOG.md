@@ -4,6 +4,17 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## 1.1.3 (New API not fully implemented, about 90%, 10% will be done before 1.2.0 Release)
+- Recoded Core class
+- New enhanced data and configuration safety system
+- Host, user and password are no longer saved in configuration files due to security reasons.
+- Enhanced the Command Expansion API
+- You can now set host, user and password through console
+- Rearranged classes
+- Enhanced SQLObjectConverter and fixed some bugs
+- Enhanced update available detection system
+- SQLObjectConverter now supports external serializers and deserializers
+
 ## 1.1.2 (New API not fully implemented, about 88%, 10% will be done before 1.2.0 Release)
 - Added support for PlaceholderAPI
 

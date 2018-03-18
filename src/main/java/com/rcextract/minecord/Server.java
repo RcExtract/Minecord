@@ -1,11 +1,9 @@
 package com.rcextract.minecord;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import com.rcextract.minecord.event.server.ServerEvent;
 import com.rcextract.minecord.getters.ChannelGetter;
 import com.rcextract.minecord.getters.SendableOptionsGetter;
 import com.rcextract.minecord.utils.ComparativeSet;
@@ -32,8 +30,7 @@ import com.rcextract.minecord.utils.ComparativeSet;
  * A {@link ServerRecordManager} helps a server to manage records. It is separated into a class
  * for merging purposes which feature will be provided in the future.
  */
-@SuppressWarnings("deprecation")
-public class Server implements RecordManager<ServerEvent>, ChannelGetter, SendableOptionsGetter {
+public class Server implements ChannelGetter, SendableOptionsGetter {
 
 	private final int id;
 	private String name;
@@ -224,42 +221,6 @@ public class Server implements RecordManager<ServerEvent>, ChannelGetter, Sendab
 			if (option.getRank() == rank) 
 				options.add(option);
 		return options;
-	}
-	@Deprecated
-	@Override
-	public List<ServerEvent> getRecords() {
-		//return Minecord.getRecordManager().getRecords(ServerEvent.class);
-		return null;
-	}
-	@Deprecated
-	@Override
-	public <E extends ServerEvent> List<E> getRecords(Class<E> clazz) {
-		//return Minecord.getRecordManager().getRecords(clazz);
-		return null;
-	}
-	@Deprecated
-	@Override
-	public ServerEvent getLatestRecord() {
-		//return Minecord.getRecordManager().getLatestRecord(ServerEvent.class);
-		return null;
-	}
-	@Deprecated
-	@Override
-	public <E extends ServerEvent> E getLatestRecord(Class<E> clazz) {
-		//return Minecord.getRecordManager().getLatestRecord(clazz);
-		return null;
-	}
-	@Deprecated
-	@Override
-	public ServerEvent getOldestRecord() {
-		//return Minecord.getRecordManager().getOldestRecord(ServerEvent.class);
-		return null;
-	}
-	@Deprecated
-	@Override
-	public <E extends ServerEvent> E getOldestRecord(Class<E> clazz) {
-		//return Minecord.getRecordManager().getOldestRecord(clazz);
-		return null;
 	}
 	@Override
 	public Channel getChannel(int id) {

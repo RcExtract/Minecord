@@ -1,8 +1,8 @@
 package com.rcextract.minecord;
 
+import java.io.IOException;
 import java.util.Set;
 
-import com.rcextract.minecord.core.ConfigurationManager;
 import com.rcextract.minecord.utils.ComparativeSet;
 
 import net.milkbowl.vault.permission.Permission;
@@ -67,20 +67,16 @@ public class Minecord {
 		return minecord.getPermissionManager();
 	}
 
+	public boolean initializeConfigurationManager() throws IOException {
+		return minecord.generateDataFolder() && minecord.generateConfigurationFile();
+	}
+	
 	public static void loadConfiguration() {
 		minecord.loadConfiguration();
 	}
 
-	public static void saveConfiguration() {
+	public static void saveConfiguration() throws IOException {
 		minecord.saveConfiguration();
-	}
-
-	public static void loadData() {
-		minecord.loadData();
-	}
-
-	public static void saveData() {
-		minecord.saveData();
 	}
 
 	public static String databaseVersion() {
@@ -97,6 +93,15 @@ public class Minecord {
 	
 	public static String capitalizeFirstLetter(String string) {
 		return string.substring(0, 1).toUpperCase() + string.substring(1);
+	}
+	
+	public static <T> T[] reverse(T[] array) {
+		for (int i = 0; i < array.length; i++) {
+			T t = array[0];
+			array[0] = array[array.length - 1 - i];
+			array[array.length - 1 - i] = t;
+		}
+		return array;
 	}
 
 }

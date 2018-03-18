@@ -1,4 +1,4 @@
-package com.rcextract.minecord.core;
+package com.rcextract.minecord.bukkitminecord;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,14 +11,15 @@ import java.util.Properties;
 
 import com.google.common.io.ByteStreams;
 
-public class ConfigurationManager {
+@Deprecated
+public class ConfigManager {
 
 	private File file;
 	private BukkitMinecord minecord;
 	/**
 	 * This constructor is reserved for initialization.
 	 */
-	protected ConfigurationManager(BukkitMinecord minecord) {
+	protected ConfigManager(BukkitMinecord minecord) {
 		this.minecord = minecord;
 		File dir = minecord.getDataFolder();
 		if (!(dir.exists())) dir.mkdir();
