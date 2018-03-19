@@ -59,4 +59,8 @@ public class SimpleConfigurationManager implements ConfigurationManager {
 	public String getFormat() {
 		return configuration.getString("format");
 	}
+	
+	public long getDuration() {
+		return configuration.getLong("auto-save");
+	}
 }

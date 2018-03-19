@@ -4,7 +4,12 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
-## 1.1.3 (New API not fully implemented, about 90%, 10% will be done before 1.2.0 Release)
+## 1.1.4 (New API now suppresses the fact of incomplete implementation)
+- Added auto saving scheduler
+- Removed deprecated elements
+- Enhanced the SQLObjectConverter
+
+## 1.1.3 (New API not fully implemented, about 90%)
 - Recoded Core class
 - New enhanced data and configuration safety system
 - Host, user and password are no longer saved in configuration files due to security reasons.
@@ -15,15 +20,15 @@ the runtime of Minecord.
 - Enhanced update available detection system
 - SQLObjectConverter now supports external serializers and deserializers
 
-## 1.1.2 (New API not fully implemented, about 88%, 10% will be done before 1.2.0 Release)
+## 1.1.2 (New API not fully implemented, about 88%)
 - Added support for PlaceholderAPI
 
-## 1.1.1 (New API not fully implemented, about 88%, 10% will be done before 1.2.0 Release)
+## 1.1.1 (New API not fully implemented, about 88%)
 - Rearranged classes
 - Redesigned the static Minecord methods access method
 - Improved the implementation towards the new API
 
-## 1.1.0 (New API not fully implemented, about 85%, 10% will be done before 1.2.0 Release)
+## 1.1.0 (New API not fully implemented, about 85%)
 - SQLObjectConverter now supports Java object referencing
 - Minecord can now load and save data after reimplementation
 - Added FinalTypeConverter for final external serialization and deserialization

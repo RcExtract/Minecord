@@ -1,2 +1,3 @@
 # A simple configuration file for storing what format should chat messages be sent in.
 format: %minecord_nickname% > %minecord_message%
+auto-save: 300

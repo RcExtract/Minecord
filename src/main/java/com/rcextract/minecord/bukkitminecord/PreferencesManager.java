@@ -47,4 +47,12 @@ public class PreferencesManager {
 		preferences.put("format", format);
 	}
 	
+	protected long getBackupDuration() {
+		return preferences.getLong("duration", Long.MIN_VALUE);
+	}
+	
+	protected void setBackupDuration(long duration) {
+		preferences.putLong("duration", duration);
+	}
+	
 }

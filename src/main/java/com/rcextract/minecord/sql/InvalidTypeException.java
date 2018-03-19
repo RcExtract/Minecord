@@ -9,7 +9,7 @@ package com.rcextract.minecord.sql;
  * exception is always thrown for invalid types, which is related to runtime, and not 
  * causes outside the Java Runtime Environment.
  */
-public class InvalidTypeException extends RuntimeException {
+public class InvalidTypeException extends IllegalArgumentException {
 
 	private static final long serialVersionUID = 1887604144699967565L;
 

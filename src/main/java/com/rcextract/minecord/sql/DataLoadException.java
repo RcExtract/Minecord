@@ -1,6 +1,6 @@
 package com.rcextract.minecord.sql;
 
-public class DataLoadException extends SQLObjectConnectorException {
+public class DataLoadException extends Exception {
 
 	private static final long serialVersionUID = 1315522023117907164L;
 

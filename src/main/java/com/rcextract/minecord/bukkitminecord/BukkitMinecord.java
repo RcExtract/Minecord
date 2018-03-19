@@ -48,6 +48,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 	private CommandExpansion ce;
 	private Updater updater;
 	private String format;
+	private long duration;
 	private Runnable dataLoad;
 	private Runnable configurationLoad;
 	private Runnable dataSave;
@@ -62,7 +63,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 	private Server main;
 	private ComparativeSet<Sendable> sendables;
 	
-	public static enum ConfigurationSaveOptions {
+	private static enum ConfigurationSaveOptions {
 		SAVE_ALL, FILE_ONLY, PREFERENCE_ONLY, DISABLED
 	}
 
@@ -94,7 +95,8 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 				}
 				cm.loadConfiguration();
 				format = ((SimpleConfigurationManager) cm).getFormat();
-				if (format != null) {
+				duration = ((SimpleConfigurationManager) cm).getDuration();
+				if (format != null && cm.getConfiguration().contains("duration")) {
 					logger.log(Level.INFO, "Configuration is successfully loaded.");
 					saveConfiguration = ConfigurationSaveOptions.FILE_ONLY;
 					return;
@@ -106,7 +108,8 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 			public void loadBackupConfiguration(boolean fileExists) {
 				logger.log(Level.SEVERE, "Attempting to load backup configuration...");
 				format = pm.getBackupFormat();
-				if (format != null) {
+				duration = pm.getBackupDuration();
+				if (format != null && duration != Long.MIN_VALUE) {
 					logger.log(Level.INFO, "Backup configuration is successfully loaded.");
 					saveConfiguration = ConfigurationSaveOptions.PREFERENCE_ONLY;
 					return;
@@ -114,6 +117,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 				if (!(fileExists)) return;
 				logger.log(Level.SEVERE, "An error occurred while attempting to load the backup configuration.");
 				format = "%minecord_nickname% > %minecord_message%";
+				duration = 300;
 				logger.log(Level.WARNING, "Default format will be used temporaily. It will not replace the value in configuration file or backup configuration, if exists.");
 				saveConfiguration = ConfigurationSaveOptions.DISABLED;
 			}
@@ -250,9 +254,8 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 					}
 					
 				});
-			} else {
-				Bukkit.getScheduler().runTaskAsynchronously(this, dataLoad);
-			}				
+			} else 
+				Bukkit.getScheduler().runTaskAsynchronously(this, dataLoad);		
 		} catch (BackingStoreException e) {
 			getLogger().log(Level.SEVERE, "An error occurred while attempting to read the secured configurations.", e);
 			getLogger().log(Level.WARNING, "For safety reasons, Minecord will be disabled without other executions.");
@@ -261,7 +264,22 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 		}
 		new IncompatibleDetector(this).runTask(this);
 		if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) 
-			new MinecordPlaceholders().register();
+			if (new MinecordPlaceholders().register())
+				logger.log(Level.INFO, "Placeholders are successfully registered.");
+			else 
+				logger.log(Level.INFO, "An unexpected error occurred while attempting to register the placeholders.");
+		else 
+			logger.log(Level.INFO, "Could not find plugin PlaceHolderAPI. Placeholders\' registration cancelled.");
+		if (duration > 0L) 
+			Bukkit.getScheduler().runTaskTimerAsynchronously(this, new Runnable() {
+	
+				@Override
+				public void run() {
+					configurationSave.run();
+					dataSave.run();
+				}
+				
+			}, duration * 20L, duration * 20L);		
 	}
 	@Override
 	public void onDisable() {
