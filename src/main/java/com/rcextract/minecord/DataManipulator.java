@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.permissions.Permission;
 
 import com.rcextract.minecord.sql.DataLoadException;
 import com.rcextract.minecord.sql.DatabaseAccessException;
@@ -67,6 +68,18 @@ public class DataManipulator {
 			@Override
 			public OfflinePlayer deserialize(UUID output) {
 				return Bukkit.getOfflinePlayer(output);
+			}
+			
+		}, new TypeConverter<Permission, String>(Permission.class, String.class) {
+
+			@Override
+			public String serialize(Permission input) {
+				return input.getName();
+			}
+
+			@Override
+			public Permission deserialize(String output) {
+				return new Permission(output);
 			}
 			
 		});

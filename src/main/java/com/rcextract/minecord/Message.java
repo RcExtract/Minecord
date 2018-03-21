@@ -14,6 +14,7 @@ public class Message {
 		this.message = message;
 		this.date = date;
 	}
+
 	public int getIdentifier() {
 		return id;
 	}

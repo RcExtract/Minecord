@@ -2,13 +2,15 @@ package com.rcextract.minecord;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
+import com.rcextract.minecord.getters.ChannelOptionsGetter;
 import com.rcextract.minecord.sql.SQLList;
 import com.rcextract.minecord.utils.ArrayMap;
 import com.rcextract.minecord.utils.ComparativeSet;
 
-public abstract class Conversable implements Sendable {
+public abstract class Conversable implements Sendable, ChannelOptionsGetter {
 
 	private final int id;
 	private String name;
@@ -26,11 +28,12 @@ public abstract class Conversable implements Sendable {
 	
 	@SuppressWarnings("unchecked")
 	public Conversable(ArrayMap<String, Object> map) {
-		this.id = (int) map.valueList().get(1);
-		this.name = (String) map.valueList().get(2);
-		this.desc = (String) map.valueList().get(3);
-		this.options = new ComparativeSet<ChannelOptions>(options -> getChannelOptions(options.getChannel()) == null, (Collection<ChannelOptions>) map.valueList().get(4));
-		this.main = Minecord.getServer((int) map.valueList().get(5)).getChannel((int) map.valueList().get(6));
+		Map<String, Object> internal = map.toMap();
+		this.id = Minecord.generateSendableIdentifier();
+		this.name = (String) internal.get("name");
+		this.desc = (String) internal.get("desc");
+		this.options = new ComparativeSet<ChannelOptions>((ChannelOptions element) -> getChannelOptions(element.getChannel()) == null, (Collection<ChannelOptions>) internal.get("coptions"));
+		this.main = (Channel) internal.get("main");
 	}
 	
 	@Override
@@ -100,12 +103,10 @@ public abstract class Conversable implements Sendable {
 	@Override
 	public ArrayMap<String, Object> serialize() {
 		ArrayMap<String, Object> map = new ArrayMap<String, Object>();
-		map.put("id", id);
 		map.put("name", name);
 		map.put("desc", desc);
 		map.put("options", new SQLList<ChannelOptions>(ChannelOptions.class, options));
-		map.put("server", main.getServer().getIdentifier());
-		map.put("main", main.getIdentifier());
+		map.put("main", main);
 		return map;
 	}
 	

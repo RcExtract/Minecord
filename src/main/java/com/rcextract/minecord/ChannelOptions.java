@@ -1,16 +1,30 @@
 package com.rcextract.minecord;
 
 import java.util.List;
+import java.util.Map;
 
-public class ChannelOptions implements Cloneable {
+import com.rcextract.minecord.sql.DatabaseSerializable;
+import com.rcextract.minecord.sql.SerializableAs;
+import com.rcextract.minecord.utils.ArrayMap;
+
+@SerializableAs("coptions")
+public class ChannelOptions implements Cloneable, DatabaseSerializable {
 
 	private final Channel channel;
 	private boolean notify;
 	private int index;
+	
 	public ChannelOptions(Channel channel, boolean notify, int index) {
 		this.channel = channel;
 		this.notify = notify;
 		this.index = index;
+	}
+	
+	public ChannelOptions(ArrayMap<String, Object> map) {
+		Map<String, Object> internal = map.toMap();
+		this.channel = (Channel) internal.get("channel");
+		this.notify = (boolean) internal.get("notify");
+		this.index = (int) internal.get("index");
 	}
 	public Channel getChannel() {
 		return channel;
@@ -49,12 +63,13 @@ public class ChannelOptions implements Cloneable {
 	public int unreadMessagesCount() {
 		return channel.getMessages().size() - 1 - index;
 	}
-	/*public User getUser() {
-		for (User user : Minecord.getUserManager().getUsers()) 
-			if (user.getChannelOptions().contains(this)) 
-				return user;
+
+	public Conversable getConversable() {
+		for (Sendable sendable : Minecord.getSendables()) 
+			if (sendable instanceof Conversable && ((Conversable) sendable).getChannelOptions().contains(this)) 
+				return (Conversable) sendable;
 		return null;
-	}*/
+	}
 	public ChannelOptions clone() {
 		try {
 			return (ChannelOptions) super.clone();
@@ -62,5 +77,13 @@ public class ChannelOptions implements Cloneable {
 			//This exception is never thrown.
 			return null;
 		}
+	}
+	@Override
+	public ArrayMap<String, Object> serialize() {
+		ArrayMap<String, Object> map = new ArrayMap<String, Object>();
+		map.put("channel", channel);
+		map.put("notify", notify);
+		map.put("index", index);
+		return map;
 	}
 }

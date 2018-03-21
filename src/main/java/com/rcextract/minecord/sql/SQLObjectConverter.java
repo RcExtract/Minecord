@@ -110,6 +110,16 @@ import com.rcextract.minecord.utils.Table;
  *  	}
  *  }
  *  Visit {@link TypeConverter} for more information.
+ *  <p>
+ *  Make sure you don't save cycling references. For example, having object A and 
+ *  object B referring each other will cause a {@link StackOverflowError}. If you 
+ *  analyse carefully at the source code of this class, it will actually save all 
+ *  objects involved in the properties of an object before serialization. The reverse 
+ *  is for deserialization. When object A is serializing, object B will be saved first. 
+ *  But when serializing object B, object A should be saved first. This will create an 
+ *  unstoppable cycle. Try to see if changing reference to any object B in object A 
+ *  requires reference to any object A in object B. If true, usually the error will 
+ *  occur.
  */
 public class SQLObjectConverter {
 	
@@ -307,7 +317,7 @@ public class SQLObjectConverter {
 	}
 	
 	private Object loadObjectReference(String statement) throws SQLTimeoutException, DatabaseAccessException, NumberFormatException, DataLoadException, Throwable {
-		String[] args = statement.split("(object from table | at ");
+		String[] args = statement.split("(object from table | at )");
 		return loadObject(args[0], Integer.parseInt(args[1]), true);
 	}
 	
@@ -363,7 +373,7 @@ public class SQLObjectConverter {
 		processSerializedArrayMap(map);
 		ArrayMap<String, Class<?>> columns = map.apply(null, o -> { return object.getClass(); });
 		SerializableAs a = object.getClass().getDeclaredAnnotation(SerializableAs.class);
-		String name = (a == null) ? object.getClass().getSimpleName().toLowerCase() : a.name();
+		String name = (a == null) ? object.getClass().getSimpleName().toLowerCase() : a.value();
 		try (Statement statement = connection.createStatement()) {
 			ResultSet set = statement.executeQuery("SELECT * FROM tables_info WHERE implementing_class = " + object.getClass().getName());
 			set.absolute(1);

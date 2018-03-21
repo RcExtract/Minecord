@@ -14,6 +14,7 @@ import com.rcextract.minecord.event.MinecordEvent;
 /**
  * Represents the creation of a {@link Server}.
  */
+@SuppressWarnings("deprecation")
 public class ServerCreateEvent extends MinecordEvent {
 
 	private static final HandlerList handlers = new HandlerList();

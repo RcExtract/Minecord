@@ -12,5 +12,5 @@ import java.lang.annotation.Target;
 @Target(TYPE)
 public @interface SerializableAs {
 
-	String name();
+	String value();
 }

@@ -2,11 +2,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.rcextract</groupId>
   <artifactId>minecord</artifactId>
-  <version>1.1.4</version>
+  <version>1.1.5</version>
   <name>Minecord</name>
-  <description>An advanced chat channel management plugin.</description>
+  <description>The ultimate multichat solution for Minecraft servers.</description>
   <build>
-    <finalName>Minecord-1.1.4</finalName>
+    <finalName>Minecord-1.1.5</finalName>
     <sourceDirectory>src/main/java</sourceDirectory>
     <resources>
       <resource>

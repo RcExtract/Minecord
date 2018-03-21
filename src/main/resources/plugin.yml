@@ -1,5 +1,5 @@
 name: Minecord
-version: 1.1.4
+version: 1.1.5
 author: RcExtract
 main: com.rcextract.minecord.bukkitminecord.BukkitMinecord
 database: true
@@ -12,6 +12,3 @@ permissions:
     minecord.create-server:
         default: true
         description: Permits a player to create a server.
-    minecord.connect:
-        default: false
-        description: Permits a command sender to set preferences for connecting to database.

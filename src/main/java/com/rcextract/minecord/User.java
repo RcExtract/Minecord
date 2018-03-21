@@ -55,6 +55,11 @@ public class User extends Conversable {
 					PlaceholderAPI.setPlaceholders(player, Minecord.getFormat().replaceAll("%minecord_message%", message.getMessage())));
 		main.setIndex(main.getChannel().getMessages().size() - main.getUnreadMessages().size());
 	}
+	@Override
+	public void chat(String message) throws IllegalStateException {
+		if (!(player.isOnline())) throw new IllegalStateException();
+		player.getPlayer().chat(message);
+	}
 
 	@Override
 	public ArrayMap<String, Object> serialize() {

@@ -1,6 +1,7 @@
 package com.rcextract.minecord;
 
 import java.io.IOException;
+import java.util.Random;
 import java.util.Set;
 
 import com.rcextract.minecord.utils.ComparativeSet;
@@ -102,6 +103,18 @@ public class Minecord {
 			array[array.length - 1 - i] = t;
 		}
 		return array;
+	}
+	
+	public static int generateServerIdentifier() {
+		int id = new Random().nextInt();
+		while (getServer(id) != null) id = new Random().nextInt();
+		return id;
+	}
+	
+	public static int generateSendableIdentifier() {
+		int id = new Random().nextInt();
+		while (getSendable(id) != null) id = new Random().nextInt();
+		return id;
 	}
 
 }

@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLTimeoutException;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,17 +18,29 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.rcextract.minecord.Channel;
+import com.rcextract.minecord.ChannelOptions;
 import com.rcextract.minecord.CommandExpansion;
 import com.rcextract.minecord.CommandHandler;
 import com.rcextract.minecord.ConfigurationManager;
+import com.rcextract.minecord.Conversable;
 import com.rcextract.minecord.DataManipulator;
+import com.rcextract.minecord.Message;
+import com.rcextract.minecord.Minecord;
 import com.rcextract.minecord.MinecordPlugin;
 import com.rcextract.minecord.RankManager;
 import com.rcextract.minecord.Sendable;
 import com.rcextract.minecord.Server;
+import com.rcextract.minecord.User;
+import com.rcextract.minecord.event.user.UserMessageEvent;
 import com.rcextract.minecord.sql.DataLoadException;
 import com.rcextract.minecord.sql.DatabaseAccessException;
 import com.rcextract.minecord.sql.DriverNotFoundException;
@@ -40,12 +54,13 @@ import net.milkbowl.vault.permission.Permission;
  * <p>
  * All Minecord system preferences are saved here.
  */
+@SuppressWarnings("deprecation")
 public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 
 	private ConfigurationManager cm;
 	private DataManipulator dm;
 	private PreferencesManager pm;
-	private CommandExpansion ce;
+	private Set<CommandExpansion> ce;
 	private Updater updater;
 	private String format;
 	private long duration;
@@ -57,6 +72,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 	private ConfigurationSaveOptions saveConfiguration;
 	//True means save, false means don't save.
 	private boolean saveData;
+	private Scanner scanner;
 	protected String dbversion;
 	protected String olddbversion;
 	private ComparativeSet<Server> servers;
@@ -237,6 +253,32 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 			
 		};
 		Bukkit.getScheduler().runTaskAsynchronously(this, configurationLoad);
+		scanner = new Scanner(System.in);
+		BukkitMinecord minecord = this;
+		Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
+
+			@Override
+			public void run() {
+				ConsoleCommandSender sender = Bukkit.getConsoleSender();
+				String command = scanner.nextLine();
+				if (command.startsWith("minecord connect")) {
+					String[] args = command.split("(minecord connect | )");
+					if (args.length < 3) {
+						sender.sendMessage(ChatColor.RED + "Please specify host, user and password!");
+						run();
+						return;
+					}
+					pm.setHost(args[0]);
+					pm.setUser(args[1]);
+					pm.setPassword(args[2]);
+					sender.sendMessage(ChatColor.GREEN + "Host, user and password are successfully saved.");
+					if (dm == null) 
+						Bukkit.getScheduler().runTaskAsynchronously(minecord, dataLoad);
+					run();
+				}
+			}
+			
+		});
 		try {
 			if (!(pm.isConfigured())) {
 				Bukkit.getScheduler().runTask(this, new Runnable() {
@@ -279,12 +321,14 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 					dataSave.run();
 				}
 				
-			}, duration * 20L, duration * 20L);		
+			}, duration * 20L, duration * 20L);
+		Bukkit.getPluginManager().registerEvents(this, this);
 	}
 	@Override
 	public void onDisable() {
 		dataSave.run();
 		configurationSave.run();
+		scanner.close();
 	}
 	public ConfigurationManager getConfigurationManager() {
 		return cm;
@@ -303,11 +347,8 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 	public PreferencesManager getPreferencesManager() {
 		return pm;
 	}
-	public CommandExpansion getCommandExpansion() {
+	public Set<CommandExpansion> getCommandExpansions() {
 		return ce;
-	}
-	public void setCommandExpansion(CommandExpansion commandExpansion) {
-		this.ce = commandExpansion;
 	}
 	public Permission getPermissionManager() {
 		if (Bukkit.getServicesManager().isProvidedFor(Permission.class)) 
@@ -442,23 +483,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("connect")) {
-				if (!(sender.hasPermission("minecord.connect"))) {
-					sender.sendMessage(ChatColor.RED + "You are not permitted to modify preferences for connecting to database!");
-					return true;
-				}
-				if (args.length < 4) {
-					sender.sendMessage(ChatColor.RED + "Please provide a host, user and password!");
-					return true;
-				}
-				pm.setHost(args[0]);
-				pm.setUser(args[1]);
-				pm.setPassword(args[2]);
-				sender.sendMessage(ChatColor.GREEN + "Preferences for connecting to database has been successfully changed.");
-				if (dm == null) {
-					Bukkit.getScheduler().runTaskAsynchronously(this, dataLoad);
-					if (!(sender instanceof ConsoleCommandSender)) 
-						sender.sendMessage(ChatColor.AQUA + "Please view the console for more information about loading data.");
-				}
+				//Handled externally by a Scanner.
 				return true;
 			}
 			String command = args[0];
@@ -476,5 +501,33 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 			return true;
 		}
 		return false;
+	}
+	
+	@EventHandler
+	public void onPlayerLogin(PlayerLoginEvent event) {
+		Player player = event.getPlayer();
+		Minecord.getSendables().add(new User(Minecord.generateSendableIdentifier(), player.getName(), "A default user description", player.getCustomName(), player, getMain().getMain(), new ChannelOptions(getMain().getMain(), true, 0)));
+	}
+	
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onPlayerChat(AsyncPlayerChatEvent event) {
+		User sender = getSendables().getIf(sendable -> sendable instanceof User && ((User) sendable).getPlayer() == event.getPlayer()).toArray(new User[1])[0];
+		Channel main = sender.getMain();
+		//This set stores conversables which applyMessage should be executed instantly
+		Set<Conversable> conversables = new HashSet<Conversable>();
+		sender.getMain().getServer().getSendables().forEach(sendable -> {
+			if (sendable instanceof Conversable && sendable.getMain() == main) 
+				conversables.add((Conversable) sendable);
+		});
+		UserMessageEvent e = new UserMessageEvent(event.getMessage(), main, sender, conversables);
+		Bukkit.getPluginManager().callEvent(e);
+		if (e.isCancelled()) return;
+		main.getMessages().add(new Message(main.generateMessageIdentifier(), sender, e.getMessage(), e.getDate()));
+		conversables.forEach(conversable -> conversable.applyMessage());
+	}
+	
+	@EventHandler
+	public void onPlayerJoin(PlayerJoinEvent event) {
+		getSendables().getIf(sendable -> sendable instanceof User && ((User) sendable).getPlayer() == event.getPlayer()).toArray(new User[1])[0].applyMessage();
 	}
 }

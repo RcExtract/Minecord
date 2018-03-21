@@ -1,11 +1,15 @@
 package com.rcextract.minecord;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
 import com.rcextract.minecord.getters.ChannelGetter;
 import com.rcextract.minecord.getters.SendableOptionsGetter;
+import com.rcextract.minecord.sql.DatabaseSerializable;
+import com.rcextract.minecord.sql.SerializableAs;
+import com.rcextract.minecord.utils.ArrayMap;
 import com.rcextract.minecord.utils.ComparativeSet;
 
 /**
@@ -29,8 +33,14 @@ import com.rcextract.minecord.utils.ComparativeSet;
  * <p>
  * A {@link ServerRecordManager} helps a server to manage records. It is separated into a class
  * for merging purposes which feature will be provided in the future.
+ * <p>
+ * This class uses a very tricky method to prevent {@link StackOverflowError} when 
+ * serializing and deserializing, is to deal with channels first, so the cycle loop 
+ * from server to sendable options to sendable to channel options to channel to server 
+ * will be broken.
  */
-public class Server implements ChannelGetter, SendableOptionsGetter {
+@SerializableAs("server")
+public class Server implements ChannelGetter, SendableOptionsGetter, DatabaseSerializable {
 
 	private final int id;
 	private String name;
@@ -41,9 +51,11 @@ public class Server implements ChannelGetter, SendableOptionsGetter {
 	private boolean locked;
 	private final ComparativeSet<Channel> channels;
 	private Channel main;
+	@Deprecated
 	private RankManager rankManager;
 	private final ComparativeSet<SendableOptions> options;
 
+	@Deprecated
 	public Server(int id, String name, String desc, boolean approvement, boolean invitation, boolean permanent, boolean locked, /*ChannelManager channelManager, */RankManager rankManager, Channel main, Channel ... channels) {
 		this.id = id;
 		this.name = name;
@@ -56,6 +68,23 @@ public class Server implements ChannelGetter, SendableOptionsGetter {
 		this.main = main;
 		this.rankManager = rankManager;
 		this.options = new ComparativeSet<SendableOptions>((SendableOptions element) -> getSendableOption(element.getSendable()) == null);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Deprecated
+	public Server(ArrayMap<String, Object> map) {
+		Map<String, Object> internal = map.toMap();
+		this.id = Minecord.generateServerIdentifier();
+		this.name = (String) internal.get("name");
+		this.desc = (String) internal.get("desc");
+		this.approvement = (boolean) internal.get("approvement");
+		this.invitation = (boolean) internal.get("invitation");
+		this.permanent = (boolean) internal.get("permanent");
+		this.locked = (boolean) internal.get("locked");
+		this.channels = (ComparativeSet<Channel>) internal.get("channels");
+		this.main = (Channel) internal.get("main");
+		this.rankManager = (RankManager) internal.get("rank_manager");
+		this.options = (ComparativeSet<SendableOptions>) internal.get("options");
 	}
 	/**
 	 * Gets the identifier of the server.
@@ -175,6 +204,7 @@ public class Server implements ChannelGetter, SendableOptionsGetter {
 	 * Gets the rank manager. It currently does nothing and always return null.
 	 * @return The rank manager.
 	 */
+	@Deprecated
 	public RankManager getRankManager() {
 		return rankManager;
 	}
@@ -239,10 +269,31 @@ public class Server implements ChannelGetter, SendableOptionsGetter {
 	
 	public Channel initialize() {
 		if (channels.isEmpty()) {
-			Channel channel = new Channel(new Random().nextInt(), "general", "A default channel description.");
+			Channel channel = new Channel(new Random().nextInt(), "general", "A default channel description.", false);
 			channels.add(channel);
 			return channel;
 		}
 		return null;
+	}
+	
+	public int generateChannelIdentifier() {
+		int id = new Random().nextInt();
+		while (getChannel(id) != null) id = new Random().nextInt();
+		return id;
+	}
+	@Override
+	public ArrayMap<String, Object> serialize() {
+		ArrayMap<String, Object> map = new ArrayMap<String, Object>();
+		map.put("name", name);
+		map.put("desc", desc);
+		map.put("approvement", approvement);
+		map.put("invitation", invitation);
+		map.put("permanent", permanent);
+		map.put("locked", locked);
+		map.put("channels", channels);
+		map.put("main", main);
+		map.put("rank_manager", rankManager);
+		map.put("options", options);
+		return map;
 	}
 }

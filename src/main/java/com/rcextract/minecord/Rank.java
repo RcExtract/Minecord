@@ -1,10 +1,16 @@
 package com.rcextract.minecord;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.permissions.Permission;
 
-public class Rank {
+import com.rcextract.minecord.sql.DatabaseSerializable;
+import com.rcextract.minecord.sql.SerializableAs;
+import com.rcextract.minecord.utils.ArrayMap;
+
+@SerializableAs("rank")
+public class Rank implements DatabaseSerializable {
 
 	private String name;
 	private String desc;
@@ -12,13 +18,23 @@ public class Rank {
 	private boolean admin;
 	private boolean override;
 	private Set<Permission> permissions;
-	protected Rank(String name, String desc, String tag, boolean admin, boolean override, Set<Permission> permissions) {
+	public Rank(String name, String desc, String tag, boolean admin, boolean override, Set<Permission> permissions) {
 		this.name = name;
 		this.desc = desc;
 		this.tag = tag;
 		this.admin = admin;
 		this.override = override;
 		this.permissions = permissions;
+	}
+	@SuppressWarnings("unchecked")
+	public Rank(ArrayMap<String, Object> map) {
+		Map<String, Object> internal = map.toMap();
+		this.name = (String) internal.get("name");
+		this.desc = (String) internal.get("desc");
+		this.tag = (String) internal.get("tag");
+		this.admin = (boolean) internal.get("admin");
+		this.override = (boolean) internal.get("override");
+		this.permissions = (Set<Permission>) internal.get("permissions");
 	}
 	public String getName() {
 		return name;
@@ -72,13 +88,26 @@ public class Rank {
 		 */
 		return permissions;
 	}
+	@Deprecated
 	public RankManager getRankManager() {
 		for (Server server : Minecord.getServers()) 
 			if (server.getRankManager().getRanks().contains(this)) 
 				return server.getRankManager();
 		return null;
 	}
+	@Deprecated
 	public boolean isMain() {
 		return getRankManager().getMain() == this;
+	}
+	@Override
+	public ArrayMap<String, Object> serialize() {
+		ArrayMap<String, Object> map = new ArrayMap<String, Object>();
+		map.put("name", name);
+		map.put("desc", desc);
+		map.put("tag", tag);
+		map.put("admin", admin);
+		map.put("override", override);
+		map.put("permissions", permissions);
+		return map;
 	}
 }

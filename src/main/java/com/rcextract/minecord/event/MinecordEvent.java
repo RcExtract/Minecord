@@ -5,8 +5,6 @@ import java.util.Date;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 
-import com.rcextract.minecord.ServerManager;
-
 /**
  * Represents an event of a {@link ServerManager}, also a super type of all Minecord events.
  * <p>

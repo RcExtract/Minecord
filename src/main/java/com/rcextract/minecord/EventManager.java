@@ -27,6 +27,7 @@ import org.bukkit.event.player.PlayerLoginEvent;
 /*import com.rcextract.minecord.event.UserMessageEvent;
 import com.rcextract.minecord.event.UserTagEvent;*/
 
+@Deprecated
 public class EventManager implements Listener {
 
 	/**

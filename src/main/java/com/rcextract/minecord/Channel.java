@@ -1,7 +1,13 @@
 package com.rcextract.minecord;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import com.rcextract.minecord.sql.DatabaseSerializable;
+import com.rcextract.minecord.sql.SerializableAs;
+import com.rcextract.minecord.utils.ArrayMap;
+import com.rcextract.minecord.utils.ComparativeList;
 
 /**
  * In Minecord, a Channel groups up a set of users, usually by small topic of a big topic. Main 
@@ -18,28 +24,30 @@ import java.util.List;
  * A {@link ChannelRecordManager} helps a server to manage records. It is separated into a class
  * for merging purposes which feature will be provided in the future.
  */
-public class Channel {
+@SerializableAs("channel")
+public class Channel implements DatabaseSerializable {
 
 	private int id;
 	private String name;
 	private String desc;
 	private boolean locked;
-	protected List<Message> messages;
-	public Channel(int id, String name, String desc) {
-		this.id = id;
-		this.name = name;
-		this.desc = desc;
-		this.messages = new ArrayList<Message>();
-	}
-	/**
-	 * This constructor is reserved for initialization.
-	 */
-	protected Channel(int id, String name, String desc, boolean locked) {
+	private ComparativeList<Message> messages;
+	
+	public Channel(int id, String name, String desc, boolean locked) {
 		this.id = id;
 		this.name = name;
 		this.desc = desc;
 		this.locked = locked;
-		this.messages = new ArrayList<Message>();
+		this.messages = new ComparativeList<Message>(message -> getMessage(message.getIdentifier()) == null);
+	}
+	
+	public Channel(ArrayMap<String, Object> map) {
+		Map<String, Object> internal = map.toMap();
+		this.id = getServer().generateChannelIdentifier();
+		this.name = (String) internal.get("name");
+		this.desc = (String) internal.get("desc");
+		this.locked = (boolean) internal.get("locked");
+		this.messages = new ComparativeList<Message>(message -> getMessage(message.getIdentifier()) == null);
 	}
 	/**
 	 * Gets the identifier of the channel.
@@ -145,5 +153,18 @@ public class Channel {
 			if (messageobj.getMessage().equals(message)) 
 				return messageobj;
 		return null;
+	}
+	@Override
+	public ArrayMap<String, Object> serialize() {
+		ArrayMap<String, Object> map = new ArrayMap<String, Object>();
+		map.put("name", name);
+		map.put("desc", desc);
+		map.put("locked", locked);
+		return map;
+	}
+	public int generateMessageIdentifier() {
+		int id = new Random().nextInt();
+		while (getMessage(id) != null) id = new Random().nextInt();
+		return id;
 	}
 }

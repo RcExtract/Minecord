@@ -4,6 +4,16 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## 1.1.5
+- Now supports multiple command expansions
+- Increased security to command /minecord connect
+- Chat filter now works correctly
+- Implemented the new SQL saving API completely
+- Planning to remove rank manager like channel manager
+- Added utility methods to Sendable and Conversable
+- Fixed a bug in SQLObjectConverter
+- Added utility class ComparativeList
+
 ## 1.1.4 (New API now suppresses the fact of incomplete implementation)
 - Added auto saving scheduler
 - Removed deprecated elements
