@@ -1,10 +1,12 @@
 package com.rcextract.minecord;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Random;
-import java.util.Set;
+import java.util.UUID;
 
-import com.rcextract.minecord.utils.ComparativeSet;
+import org.bukkit.configuration.InvalidConfigurationException;
+
+import com.rcextract.minecord.utils.EnhancedSet;
 
 import net.milkbowl.vault.permission.Permission;
 
@@ -20,36 +22,16 @@ public class Minecord {
 		Minecord.minecord = minecord;
 	}
 	
-	public static ComparativeSet<Server> getServers() {
+	public static EnhancedSet<Server> getServers() {
 		return minecord.getServers();
 	}
-
-	public static Server getServer(int id) {
-		return minecord.getServer(id);
+	
+	public static Channel getChannel(UUID id) {
+		return minecord.getChannel(id);
 	}
 
-	public static Server getServer(String name) {
-		return minecord.getServer(name);
-	}
-
-	public static Set<Server> getServers(Sendable sendable) {
-		return minecord.getServers(sendable);
-	}
-
-	public static Server getServer(Channel channel) {
-		return minecord.getServer(channel);
-	}
-
-	public static ComparativeSet<Sendable> getSendables() {
+	public static EnhancedSet<Sendable> getSendables() {
 		return minecord.getSendables();
-	}
-
-	public static Sendable getSendable(int id) {
-		return minecord.getSendable(id);
-	}
-
-	public static Set<Sendable> getSendables(String name) {
-		return minecord.getSendables(name);
 	}
 
 	public static Server getMain() {
@@ -72,7 +54,7 @@ public class Minecord {
 		return minecord.generateDataFolder() && minecord.generateConfigurationFile();
 	}
 	
-	public static void loadConfiguration() {
+	public static void loadConfiguration() throws FileNotFoundException, IOException, InvalidConfigurationException {
 		minecord.loadConfiguration();
 	}
 
@@ -103,18 +85,6 @@ public class Minecord {
 			array[array.length - 1 - i] = t;
 		}
 		return array;
-	}
-	
-	public static int generateServerIdentifier() {
-		int id = new Random().nextInt();
-		while (getServer(id) != null) id = new Random().nextInt();
-		return id;
-	}
-	
-	public static int generateSendableIdentifier() {
-		int id = new Random().nextInt();
-		while (getSendable(id) != null) id = new Random().nextInt();
-		return id;
 	}
 
 }

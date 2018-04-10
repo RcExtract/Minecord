@@ -5,6 +5,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlIDREF;
+
 import org.apache.commons.lang.Validate;
 import org.bukkit.permissions.Permission;
 
@@ -12,11 +16,14 @@ import com.rcextract.minecord.sql.DatabaseSerializable;
 import com.rcextract.minecord.sql.SerializableAs;
 import com.rcextract.minecord.utils.ArrayMap;
 
+@XmlAccessorType(XmlAccessType.FIELD)
 @SerializableAs("soptions")
 public class SendableOptions implements DatabaseSerializable {
 
+	@XmlIDREF
 	private final Sendable sendable;
 	private JoinState state;
+	@XmlIDREF
 	private Rank rank;
 	private final Set<Permission> permissions;
 	

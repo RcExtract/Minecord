@@ -1,9 +1,9 @@
 package com.rcextract.minecord.utils;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Predicate;
+
+import org.apache.commons.lang.Validate;
 
 /**
  * This is a subclass of HashSet<T> which allows implementation to add filter and 
@@ -16,28 +16,23 @@ import java.util.function.Predicate;
  * 
  * @since 1.1.0 SNAPSHOT 1.0
  */
-public class ComparativeSet<T> extends HashSet<T> {
+public class ComparativeSet<T> extends EnhancedSet<T> implements Predicate<T>, AutoCloseable {
 	
 	private static final long serialVersionUID = -2222981329974385110L;
 
-	private T last;
-	private final Predicate<? super T> filter;
+	private Predicate<? super T> filter;
+	private boolean closed;
 	
 	/**
 	 * Constructs a ComparativeSet with a filter.
-	 * @param filter The filter.
 	 */
-	public ComparativeSet(Predicate<? super T> filter) {
-		this.filter = filter;
-	}
+	public ComparativeSet() {}
 
 	/**
 	 * Constructs a ComparativeSet with a collection of elements after filtering.
-	 * @param filter The filter.
 	 * @param collection The collection of elements.
 	 */
-	public ComparativeSet(Predicate<? super T> filter, Collection<T> collection) {
-		this.filter = filter;
+	public ComparativeSet(Collection<T> collection) {
 		collection.forEach(element -> {
 			if (!(filter.test(element))) super.add(element);
 		});
@@ -50,6 +45,17 @@ public class ComparativeSet<T> extends HashSet<T> {
 	public Predicate<? super T> getFilter() {
 		return filter;
 	}
+	
+	/**
+	 * Sets the filter.
+	 * @param filter The filter.
+	 * @throws IllegalStateException Thrown when this set is closed.
+	 */
+	public void setFilter(Predicate<? super T> filter) {
+		if (closed) throw new IllegalStateException();
+		Validate.notNull(filter);
+		this.filter = filter;
+	}
 
 	/**
 	 * Adds a new element after filtering. If the element matches the requirements of 
@@ -58,40 +64,24 @@ public class ComparativeSet<T> extends HashSet<T> {
 	 */
 	@Override
 	public boolean add(T t) {
-		if (filter.test(t)) {
-			last = t;
+		if (filter.test(t)) 
 			return super.add(t);
-		}
 		return false;
 	}
 
-	/**
-	 * Returns all the elements which match the requirements of the filter.
-	 * @param filter The filter.
-	 * @return All the elements which match the requirements of the filter.
-	 */
-	public Set<T> getIf(Predicate<? super T> filter) {
-		Set<T> set = new HashSet<T>();
-		forEach((T t) -> { if (filter.test(t)) set.add(t); });
-		return set;
-	}
-
-	/**
-	 * Returns the unique value when the size of this set is 1, otherwise null.
-	 * @return The unique value when the size of this set is 1, otherwise null.
-	 */
-	public T get() {
-		if (super.size() == 1) return super.iterator().next();
-		return null;
-	}
-	
-	public T getLast() {
-		return last;
-	}
-
-	@SuppressWarnings("unchecked")
 	@Override
 	public ComparativeSet<T> clone() {
 		return (ComparativeSet<T>) super.clone();
 	}
+
+	@Override
+	public boolean test(T t) {
+		return filter.test(t);
+	}
+
+	@Override
+	public void close() {
+		closed = true;
+	}
+	
 }

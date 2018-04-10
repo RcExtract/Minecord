@@ -140,9 +140,10 @@ public class SQLObjectConverter {
 	public SQLObjectConverter(Connection connection, TypeConverter<?, ?> ... converters) {
 		Validate.notNull(connection);
 		this.connection = connection;
-		this.converters = new ComparativeSet<TypeConverter<?, ?>>(converter -> {
+		this.converters = new ComparativeSet<TypeConverter<?, ?>>(Arrays.asList(converters));
+		this.converters.setFilter(converter -> {
 			return this.converters.getIf(c -> c.getInputClass() == converter.getInputClass() && c.getOutputClass() == converter.getOutputClass()).isEmpty();
-		}, Arrays.asList(converters));
+		});
 	}
 
 	private String getTable(Class<?> implementer) {
@@ -187,13 +188,15 @@ public class SQLObjectConverter {
 			throw new DataLoadException(e);
 		}
 	}
+
 	@SuppressWarnings("unchecked")
-	public <T> List<T> loadAll(Class<T> clazz) throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
-		List<T> list = new ArrayList<T>();
+	public <T> ArrayMap<String, T> loadAll(Class<T> clazz) throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
+		ArrayMap<String, T> map = new ArrayMap<String, T>();
 		for (Map.Entry<String, Class<?>> entry : tables.entrySet()) 
 			if (entry.getValue().isAssignableFrom(clazz)) 
-				list.addAll((Collection<? extends T>) loadAll(entry.getKey()));
-		return list;
+				for (Object object : loadAll(entry.getKey())) 
+					map.put(entry.getKey(), (T) object);
+		return map;
 	}
 	/**
 	 * Loads all objects from a single table.
@@ -347,7 +350,7 @@ public class SQLObjectConverter {
 	 * @throws DataLoadException when an error occurred while serializing rows, which other exceptions cannot represent.
 	 * @throws Throwable when an exception is thrown while calling necessary methods for serialization.
 	 */
-	public ArrayMap<String, Integer> saveObjects(List<? extends Object> list) throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
+	public ArrayMap<String, Integer> saveObjects(List<?> list) throws SQLTimeoutException, DatabaseAccessException, DataLoadException, Throwable {
 		ArrayMap<String, Integer> map = new ArrayMap<String, Integer>();
 		for (Object object : list) {
 			Pair<String, Integer> pair = saveObject(object);
@@ -373,7 +376,7 @@ public class SQLObjectConverter {
 		processSerializedArrayMap(map);
 		ArrayMap<String, Class<?>> columns = map.apply(null, o -> { return object.getClass(); });
 		SerializableAs a = object.getClass().getDeclaredAnnotation(SerializableAs.class);
-		String name = (a == null) ? object.getClass().getSimpleName().toLowerCase() : a.value();
+		String name = (a == null) ? object.getClass().getSimpleName().toLowerCase() : a.value().toLowerCase();
 		try (Statement statement = connection.createStatement()) {
 			ResultSet set = statement.executeQuery("SELECT * FROM tables_info WHERE implementing_class = " + object.getClass().getName());
 			set.absolute(1);
@@ -537,7 +540,7 @@ public class SQLObjectConverter {
 	}
 	private ArrayMap<String, Object> serializeAsString(String string) {
 		ArrayMap<String, Object> map = new ArrayMap<String, Object>();
-		map.put("value", string);
+		map.put("string", string);
 		return map;
 	}
 	

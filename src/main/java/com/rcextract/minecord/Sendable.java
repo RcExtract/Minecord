@@ -1,12 +1,13 @@
 package com.rcextract.minecord;
 
 import java.util.Set;
+import java.util.UUID;
 
 import com.rcextract.minecord.sql.DatabaseSerializable;
 
 public interface Sendable extends DatabaseSerializable {
 	
-	public int getIdentifier();
+	public UUID getIdentifier();
 	public String getName();
 	public void setName(String name);
 	public String getDescription();

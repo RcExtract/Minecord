@@ -2,26 +2,35 @@ package com.rcextract.minecord;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlID;
+
+import org.bukkit.ChatColor;
 import org.bukkit.permissions.Permission;
 
 import com.rcextract.minecord.sql.DatabaseSerializable;
 import com.rcextract.minecord.sql.SerializableAs;
 import com.rcextract.minecord.utils.ArrayMap;
 
+@XmlAccessorType(XmlAccessType.FIELD)
 @SerializableAs("rank")
 public class Rank implements DatabaseSerializable {
 
+	@XmlID
+	private final UUID id = UUID.randomUUID();
 	private String name;
 	private String desc;
-	private String tag;
+	private ChatColor color;
 	private boolean admin;
 	private boolean override;
-	private Set<Permission> permissions;
-	public Rank(String name, String desc, String tag, boolean admin, boolean override, Set<Permission> permissions) {
+	private final Set<Permission> permissions;
+	public Rank(String name, String desc, ChatColor color, boolean admin, boolean override, Set<Permission> permissions) {
 		this.name = name;
 		this.desc = desc;
-		this.tag = tag;
+		this.color = color;
 		this.admin = admin;
 		this.override = override;
 		this.permissions = permissions;
@@ -31,10 +40,13 @@ public class Rank implements DatabaseSerializable {
 		Map<String, Object> internal = map.toMap();
 		this.name = (String) internal.get("name");
 		this.desc = (String) internal.get("desc");
-		this.tag = (String) internal.get("tag");
+		this.color = (ChatColor) internal.get("color");
 		this.admin = (boolean) internal.get("admin");
 		this.override = (boolean) internal.get("override");
 		this.permissions = (Set<Permission>) internal.get("permissions");
+	}
+	public UUID getIdentifier() {
+		return id;
 	}
 	public String getName() {
 		return name;
@@ -48,11 +60,11 @@ public class Rank implements DatabaseSerializable {
 	public void setDescription(String desc) {
 		this.desc = desc;
 	}
-	public String getTag() {
-		return tag;
+	public ChatColor getColor() {
+		return color;
 	}
-	public void setTag(String tag) {
-		this.tag = tag;
+	public void setColor(ChatColor color) {
+		this.color = color;
 	}
 	public boolean isAdministrative() {
 		return admin;
@@ -88,23 +100,22 @@ public class Rank implements DatabaseSerializable {
 		 */
 		return permissions;
 	}
-	@Deprecated
-	public RankManager getRankManager() {
+	public Server getServer() {
 		for (Server server : Minecord.getServers()) 
-			if (server.getRankManager().getRanks().contains(this)) 
-				return server.getRankManager();
+			if (server.getRanks().contains(this)) 
+				return server;
 		return null;
 	}
 	@Deprecated
 	public boolean isMain() {
-		return getRankManager().getMain() == this;
+		return getServer().getMainRank() == this;
 	}
 	@Override
 	public ArrayMap<String, Object> serialize() {
 		ArrayMap<String, Object> map = new ArrayMap<String, Object>();
 		map.put("name", name);
 		map.put("desc", desc);
-		map.put("tag", tag);
+		map.put("color", color);
 		map.put("admin", admin);
 		map.put("override", override);
 		map.put("permissions", permissions);

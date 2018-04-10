@@ -7,12 +7,12 @@ public class PreferencesManager {
 	
 	private Preferences preferences;
 	
-	protected PreferencesManager() {
-		this.preferences = Preferences.userRoot().node("com.rcextract.minecord.core");
+	public PreferencesManager() {
+		this.preferences = Preferences.systemRoot().node("com.rcextract.minecord.bukkitminecord");
 	}
 
 	public boolean isConfigured() throws BackingStoreException {
-		return preferences.keys().length == 0;
+		return preferences.keys().length == 6;
 	}
 	
 	protected String getHost() {
@@ -47,12 +47,20 @@ public class PreferencesManager {
 		preferences.put("format", format);
 	}
 	
-	protected long getBackupDuration() {
-		return preferences.getLong("duration", Long.MIN_VALUE);
+	protected long getBackupConfigurationDuration() {
+		return preferences.getLong("configurationDuration", Long.MIN_VALUE);
 	}
 	
-	protected void setBackupDuration(long duration) {
-		preferences.putLong("duration", duration);
+	protected void setBackupConfigurationDuration(long duration) {
+		preferences.putLong("configurationDuration", duration);
+	}
+	
+	protected long getBackupDataDuration() {
+		return preferences.getLong("configurationDuration", Long.MIN_VALUE);
+	}
+	
+	protected void setBackupDataDuration(long duration) {
+		preferences.putLong("configurationDuration", duration);
 	}
 	
 }

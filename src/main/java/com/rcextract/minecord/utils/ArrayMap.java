@@ -20,6 +20,15 @@ public class ArrayMap<K, V> implements Serializable {
 		return new ArrayMap<A, B>(map);
 	}
 	
+	public static <F, S> ArrayMap<F, S> combine(List<F> f, List<S> s) {
+		ArrayMap<F, S> map = new ArrayMap<F, S>();
+		if (f.size() > s.size()) 
+			f.forEach(fo -> map.put(fo, f.indexOf(fo) >= s.size() ? null : s.get(f.indexOf(fo))));
+		else 
+			s.forEach(so -> map.put(s.indexOf(so) >= f.size() ? null : f.get(s.indexOf(so)), so));
+		return map;
+	}
+	
 	private List<Pair<K, V>> list;
 	
 	public ArrayMap() {

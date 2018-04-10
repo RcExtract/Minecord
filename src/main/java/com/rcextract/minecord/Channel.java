@@ -2,7 +2,13 @@ package com.rcextract.minecord;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlIDREF;
 
 import com.rcextract.minecord.sql.DatabaseSerializable;
 import com.rcextract.minecord.sql.SerializableAs;
@@ -24,38 +30,39 @@ import com.rcextract.minecord.utils.ComparativeList;
  * A {@link ChannelRecordManager} helps a server to manage records. It is separated into a class
  * for merging purposes which feature will be provided in the future.
  */
+@XmlAccessorType(XmlAccessType.FIELD)
 @SerializableAs("channel")
 public class Channel implements DatabaseSerializable {
 
-	private int id;
+	@XmlID
+	private final UUID id = UUID.randomUUID();
 	private String name;
 	private String desc;
 	private boolean locked;
-	private ComparativeList<Message> messages;
+	@XmlIDREF
+	private final ComparativeList<Message> messages = new ComparativeList<Message>(message -> getMessage(message.getIdentifier()) == null);
 	
-	public Channel(int id, String name, String desc, boolean locked) {
-		this.id = id;
+	public Channel(String name, String desc, boolean locked) {
 		this.name = name;
 		this.desc = desc;
 		this.locked = locked;
-		this.messages = new ComparativeList<Message>(message -> getMessage(message.getIdentifier()) == null);
 	}
 	
 	public Channel(ArrayMap<String, Object> map) {
 		Map<String, Object> internal = map.toMap();
-		this.id = getServer().generateChannelIdentifier();
 		this.name = (String) internal.get("name");
 		this.desc = (String) internal.get("desc");
 		this.locked = (boolean) internal.get("locked");
-		this.messages = new ComparativeList<Message>(message -> getMessage(message.getIdentifier()) == null);
 	}
+	
 	/**
 	 * Gets the identifier of the channel.
 	 * @return The identifier of the channel.
 	 */
-	public int getIdentifier() {
+	public UUID getIdentifier() {
 		return id;
 	}
+	
 	/**
 	 * Gets the name of the channel.
 	 * @return The name of the channel.
@@ -63,16 +70,16 @@ public class Channel implements DatabaseSerializable {
 	public String getName() {
 		return name;
 	}
+	
 	/**
 	 * Renames the channel.
 	 * @param name The new name of the channel.
 	 * @throws DuplicatedException If the name is used by another channel.
 	 */
 	public void setName(String name) throws DuplicatedException {
-		Server server = getServer();
-		if (server != null && server.getChannel(name) != null) throw new DuplicatedException();
 		this.name = name;
 	}
+	
 	/**
 	 * Gets the description of the channel.
 	 * @return The description of the channel.
@@ -80,6 +87,7 @@ public class Channel implements DatabaseSerializable {
 	public String getDescription() {
 		return desc;
 	}
+	
 	/**
 	 * Sets the description of the channel.
 	 * @param desc The new description of the channel.
@@ -87,36 +95,19 @@ public class Channel implements DatabaseSerializable {
 	public void setDescription(String desc) {
 		this.desc = desc;
 	}
+	
 	/**
-	 * Determines if the channel is ready to join.
-	 * @return The reversed boolean of locked.
+	 * Determines if the channel is locked
+	 * @return Whether if the channel is locked.
 	 */
-	public boolean ready() {
-		return !locked;
+	public boolean isLocked() {
+		return locked;
 	}
-	/**
-	 * Locks the channel. All functions should be disabled for normal users and they all should 
-	 * be kicked.
-	 */
-	public void lock() {
-		this.locked = true;
+	
+	public void setLocked(boolean locked) {
+		this.locked = locked;
 	}
-	/**
-	 * Unlocks the channel. All functions should be enabled for normal users according to the 
-	 * rank manager. Only users with custom permission {@code MANAGE_CHANNELS} should have
-	 * access to unlocking.
-	 */
-	public void unlock() {
-		this.locked = false;
-	}
-	/**
-	 * Gets the channel manager managing this channel.
-	 * @return The channel manager managing this channel.
-	 */
-	/*public ChannelManager getChannelManager() {
-		for (Server server : Minecord.getServerManager().getServers()) if (server.getChannelManager().getChannels().contains(this)) return server.getChannelManager();
-		return null;
-	}*/
+
 	public Server getServer() {
 		for (Server server : Minecord.getServers()) 
 			if (server.getChannels().contains(this)) 
@@ -129,31 +120,41 @@ public class Channel implements DatabaseSerializable {
 	 * @return If this channel is main in the channel manager defined.
 	 */
 	public boolean isMain() {
-		return getServer().getMain() == this;
+		return getServer().getMainChannel() == this;
 	}
+	
 	public List<Message> getMessages() {
 		return messages;
 	}
+	
 	public Message getLatestMessage() {
 		if (messages.isEmpty()) return null;
 		return messages.get(messages.size() - 1);
 	}
+	
 	public Message getOldestMessage() {
 		if (messages.isEmpty()) return null;
 		return messages.get(0);
 	}
-	public Message getMessage(int id) {
+	
+	public Message getMessage(UUID id) {
 		for (Message message : messages) 
-			if (message.getIdentifier() == id) 
+			if (message.getIdentifier().equals(id)) 
 				return message;
 		return null;
 	}
+	
 	public Message getMessage(String message) {
 		for (Message messageobj : messages) 
 			if (messageobj.getMessage().equals(message)) 
 				return messageobj;
 		return null;
 	}
+	
+	public Set<Sendable> getViewers() {
+		return Minecord.getSendables().getIf(sendable -> sendable.getMain() == this);
+	}
+	
 	@Override
 	public ArrayMap<String, Object> serialize() {
 		ArrayMap<String, Object> map = new ArrayMap<String, Object>();
@@ -162,9 +163,5 @@ public class Channel implements DatabaseSerializable {
 		map.put("locked", locked);
 		return map;
 	}
-	public int generateMessageIdentifier() {
-		int id = new Random().nextInt();
-		while (getMessage(id) != null) id = new Random().nextInt();
-		return id;
-	}
+
 }

@@ -1,12 +1,17 @@
 package com.rcextract.minecord;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
-import com.rcextract.minecord.getters.ChannelGetter;
-import com.rcextract.minecord.getters.SendableOptionsGetter;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlIDREF;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import com.rcextract.minecord.sql.DatabaseSerializable;
 import com.rcextract.minecord.sql.SerializableAs;
 import com.rcextract.minecord.utils.ArrayMap;
@@ -39,58 +44,67 @@ import com.rcextract.minecord.utils.ComparativeSet;
  * from server to sendable options to sendable to channel options to channel to server 
  * will be broken.
  */
-@SerializableAs("server")
-public class Server implements ChannelGetter, SendableOptionsGetter, DatabaseSerializable {
 
-	private final int id;
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
+@SerializableAs("server")
+public class Server implements DatabaseSerializable {
+
+	@XmlID
+	private final UUID id = UUID.randomUUID();
 	private String name;
 	private String desc;
 	private boolean approvement;
 	private boolean invitation;
 	private boolean permanent;
 	private boolean locked;
-	private final ComparativeSet<Channel> channels;
-	private Channel main;
-	@Deprecated
-	private RankManager rankManager;
+	@XmlIDREF
+	private final Set<Channel> channels;
+	@XmlIDREF
+	private Channel channel;
+	@XmlIDREF
+	private final Set<Rank> ranks;
+	@XmlIDREF
+	private Rank rank;
+	@XmlIDREF
 	private final ComparativeSet<SendableOptions> options;
 
-	@Deprecated
-	public Server(int id, String name, String desc, boolean approvement, boolean invitation, boolean permanent, boolean locked, /*ChannelManager channelManager, */RankManager rankManager, Channel main, Channel ... channels) {
-		this.id = id;
+	public Server(String name, String desc, boolean approvement, boolean invitation, boolean permanent, boolean locked, Channel channel, Collection<Channel> channels, Rank rank, Collection<Rank> ranks, Collection<SendableOptions> options) {
 		this.name = name;
 		this.desc = desc;
 		this.approvement = approvement;
 		this.invitation = invitation;
 		this.permanent = permanent;
 		this.locked = locked;
-		this.channels = new ComparativeSet<Channel>((Channel element) -> getChannel(element.getIdentifier()) == null);
-		this.main = main;
-		this.rankManager = rankManager;
-		this.options = new ComparativeSet<SendableOptions>((SendableOptions element) -> getSendableOption(element.getSendable()) == null);
+		this.channels = new HashSet<Channel>(channels);
+		this.channel = channel;
+		this.ranks = new HashSet<Rank>(ranks);
+		this.rank = rank;
+		this.options = new ComparativeSet<SendableOptions>(options);
+		this.options.setFilter(option -> this.options.getIf(o -> o.getSendable() == option.getSendable()).isEmpty());
 	}
 	
 	@SuppressWarnings("unchecked")
-	@Deprecated
 	public Server(ArrayMap<String, Object> map) {
 		Map<String, Object> internal = map.toMap();
-		this.id = Minecord.generateServerIdentifier();
 		this.name = (String) internal.get("name");
 		this.desc = (String) internal.get("desc");
 		this.approvement = (boolean) internal.get("approvement");
 		this.invitation = (boolean) internal.get("invitation");
 		this.permanent = (boolean) internal.get("permanent");
 		this.locked = (boolean) internal.get("locked");
-		this.channels = (ComparativeSet<Channel>) internal.get("channels");
-		this.main = (Channel) internal.get("main");
-		this.rankManager = (RankManager) internal.get("rank_manager");
-		this.options = (ComparativeSet<SendableOptions>) internal.get("options");
+		this.channels = new HashSet<Channel>((Collection<Channel>) internal.get("channels"));
+		this.channel = (Channel) internal.get("channel");
+		this.ranks = new HashSet<Rank>((Collection<Rank>) internal.get("ranks"));
+		this.rank = (Rank) internal.get("rank");
+		this.options = new ComparativeSet<SendableOptions>((Collection<SendableOptions>) internal.get("options"));
+		options.setFilter(option -> options.getIf(o -> o.getSendable() == option.getSendable()).isEmpty());
 	}
 	/**
 	 * Gets the identifier of the server.
 	 * @return The identifier of the server.
 	 */
-	public int getIdentifier() {
+	public UUID getIdentifier() {
 		return id;
 	}
 	/**
@@ -104,6 +118,7 @@ public class Server implements ChannelGetter, SendableOptionsGetter, DatabaseSer
 	 * Renames the server.
 	 * @param name The new name of the server.
 	 */
+	
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -118,6 +133,7 @@ public class Server implements ChannelGetter, SendableOptionsGetter, DatabaseSer
 	 * Sets the description of the server.
 	 * @param desc The new description of the server.
 	 */
+	
 	public void setDescription(String desc) {
 		this.desc = desc;
 	}
@@ -132,6 +148,7 @@ public class Server implements ChannelGetter, SendableOptionsGetter, DatabaseSer
 	 * Changes the state of approvement requirement.
 	 * @param approvement The new state of approvement requirement.
 	 */
+	
 	public void setApprovement(boolean approvement) {
 		this.approvement = approvement;
 	}
@@ -147,6 +164,7 @@ public class Server implements ChannelGetter, SendableOptionsGetter, DatabaseSer
 	 * @param approvement The new state of invitation requirement.
 	 * @return 
 	 */
+	
 	public void setInvitation(boolean invitation) {
 		this.invitation = invitation;
 	}
@@ -162,6 +180,7 @@ public class Server implements ChannelGetter, SendableOptionsGetter, DatabaseSer
 	 * @param approvement The new state of if the users can delete the server.
 	 * @return 
 	 */
+	
 	public void setPermanent(boolean permanent) {
 		this.permanent = permanent;
 	}
@@ -176,111 +195,46 @@ public class Server implements ChannelGetter, SendableOptionsGetter, DatabaseSer
 	 * Sets the locked state of the server.
 	 * @param locked The locked state of the server.
 	 */
+	
 	public void setLocked(boolean locked) {
 		this.locked = locked;
 	}
-	/**
-	 * Unlocks the server. All functions should be enabled for normal users according to the 
-	 * rank manager. Only users with permission {@code minecord.managelock.server} should have
-	 * access to unlocking.
-	 */
-	public void unlock() throws IllegalStateException {
-		if (!(locked)) throw new IllegalStateException();
-		this.locked = false;
-	}
-	public ComparativeSet<Channel> getChannels() {
+
+	public Set<Channel> getChannels() {
 		return channels;
 	}
 	
-	public Channel getMain() {
-		return main;
+	public Channel getMainChannel() {
+		return channel;
 	}
 	
-	public void setMain(Channel main) {
+	public void setMainChannel(Channel main) {
 		if (!(channels.contains(main))) throw new IllegalArgumentException();
-		this.main = main;
+		this.channel = main;
 	}
-	/**
-	 * Gets the rank manager. It currently does nothing and always return null.
-	 * @return The rank manager.
-	 */
-	@Deprecated
-	public RankManager getRankManager() {
-		return rankManager;
+	
+	public Set<Rank> getRanks() {
+		return ranks;
 	}
-	/**
-	 * Sets the rank manager.
-	 * <p>
-	 * This method is reserved for initialization.
-	 * @param rankManager The rank manager.
-	 */
-	@Deprecated
-	protected void setRankManager(RankManager rankManager) {
-		this.rankManager = rankManager;
+	public Rank getMainRank() {
+		return rank;
 	}
-	@Override
-	public Set<Sendable> getSendables() {
-		Set<Sendable> sendables = new HashSet<Sendable>();
-		for (SendableOptions option : options) 
-			sendables.add(option.getSendable());
-		return sendables;
+	public void setMainRank(Rank main) {
+		if (!(ranks.contains(main))) throw new IllegalArgumentException();
+		this.rank = main;
 	}
-	@Override
 	public ComparativeSet<SendableOptions> getSendableOptions() {
 		return options;
 	}
-	@Override
-	public SendableOptions getSendableOption(Sendable sendable) {
-		for (SendableOptions option : options) 
-			if (option.getSendable() == sendable) 
-				return option;
-		return null;
-	}
-	@Override
-	public Set<SendableOptions> getSendableOptions(JoinState state) {
-		Set<SendableOptions> options = new HashSet<SendableOptions>();
-		for (SendableOptions option : options) 
-			if (option.getState() == state) 
-				options.add(option);
-		return options;
-	}
-	@Override
-	public Set<SendableOptions> getSendableOptions(Rank rank) {
-		Set<SendableOptions> options = new HashSet<SendableOptions>();
-		for (SendableOptions option : options) 
-			if (option.getRank() == rank) 
-				options.add(option);
-		return options;
-	}
-	@Override
-	public Channel getChannel(int id) {
-		for (Channel channel : channels) 
-			if (channel.getIdentifier() == id) 
-				return channel;
-		return null;
-	}
-	@Override
-	public Channel getChannel(String name) {
-		for (Channel channel : channels) 
-			if (channel.getName().equals(name)) 
-				return channel;
-		return null;
-	}
-	
 	public Channel initialize() {
 		if (channels.isEmpty()) {
-			Channel channel = new Channel(new Random().nextInt(), "general", "A default channel description.", false);
+			Channel channel = new Channel("general", "A default channel description.", false);
 			channels.add(channel);
 			return channel;
 		}
 		return null;
 	}
 	
-	public int generateChannelIdentifier() {
-		int id = new Random().nextInt();
-		while (getChannel(id) != null) id = new Random().nextInt();
-		return id;
-	}
 	@Override
 	public ArrayMap<String, Object> serialize() {
 		ArrayMap<String, Object> map = new ArrayMap<String, Object>();
@@ -291,8 +245,9 @@ public class Server implements ChannelGetter, SendableOptionsGetter, DatabaseSer
 		map.put("permanent", permanent);
 		map.put("locked", locked);
 		map.put("channels", channels);
-		map.put("main", main);
-		map.put("rank_manager", rankManager);
+		map.put("channel", channel);
+		map.put("ranks", ranks);
+		map.put("rank", rank);
 		map.put("options", options);
 		return map;
 	}

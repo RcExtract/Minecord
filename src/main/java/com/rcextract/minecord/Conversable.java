@@ -1,43 +1,55 @@
 package com.rcextract.minecord;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
-import com.rcextract.minecord.getters.ChannelOptionsGetter;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlIDREF;
+
 import com.rcextract.minecord.sql.SQLList;
+import com.rcextract.minecord.sql.SerializableAs;
 import com.rcextract.minecord.utils.ArrayMap;
 import com.rcextract.minecord.utils.ComparativeSet;
 
-public abstract class Conversable implements Sendable, ChannelOptionsGetter {
+@XmlAccessorType(XmlAccessType.FIELD)
+@SerializableAs("conversable")
+public abstract class Conversable implements Sendable {
 
-	private final int id;
+	@XmlID
+	private final UUID id = UUID.randomUUID();
 	private String name;
 	private String desc;
+	@XmlIDREF
 	private final ComparativeSet<ChannelOptions> options;
+	@XmlIDREF
 	private Channel main;
 	
-	public Conversable(int id, String name, String desc, Channel main, ChannelOptions ... options) {
-		this.id = id;
+	public Conversable(String name, String desc, Channel main, ChannelOptions ... options) {
 		this.name = name;
 		this.desc = desc;
-		this.options = new ComparativeSet<ChannelOptions>((ChannelOptions element) -> getChannelOptions(element.getChannel()) == null);
+		this.options = new ComparativeSet<ChannelOptions>(Arrays.asList(options));
+		this.options.setFilter(option -> this.options.getIf(o -> o.getChannel() == option.getChannel()).isEmpty());
 		this.main = main;
 	}
 	
 	@SuppressWarnings("unchecked")
 	public Conversable(ArrayMap<String, Object> map) {
 		Map<String, Object> internal = map.toMap();
-		this.id = Minecord.generateSendableIdentifier();
 		this.name = (String) internal.get("name");
 		this.desc = (String) internal.get("desc");
-		this.options = new ComparativeSet<ChannelOptions>((ChannelOptions element) -> getChannelOptions(element.getChannel()) == null, (Collection<ChannelOptions>) internal.get("coptions"));
+		options = new ComparativeSet<ChannelOptions>((Collection<ChannelOptions>) internal.get("coptions"));
+		options.setFilter(option -> this.options.getIf(o -> o.getChannel() == option.getChannel()).isEmpty());
 		this.main = (Channel) internal.get("main");
 	}
 	
 	@Override
-	public int getIdentifier() {
+	public UUID getIdentifier() {
 		return id;
 	}
 	@Override
@@ -56,30 +68,14 @@ public abstract class Conversable implements Sendable, ChannelOptionsGetter {
 	public void setDescription(String desc) {
 		this.desc = desc;
 	}
-	@Override
-	public Set<ChannelOptions> getChannelOptions() {
+	public ComparativeSet<ChannelOptions> getChannelOptions() {
 		return options;
-	}
-	@Override
-	public ChannelOptions getChannelOptions(Channel channel) {
-		for (ChannelOptions preference : options) 
-			if (preference.getChannel() == channel) 
-				return preference;
-		return null;
-	}
-	@Override
-	public Set<ChannelOptions> getChannelOptions(boolean notify) {
-		Set<ChannelOptions> channeloptions = new HashSet<ChannelOptions>();
-		for (ChannelOptions preference : options) 
-			if (preference.isNotify() == notify) 
-				channeloptions.add(preference);
-		return channeloptions;
 	}
 	public Set<SendableOptions> getSendableOptions() {
 		Set<SendableOptions> options = new HashSet<SendableOptions>();
 		for (Server server : Minecord.getServers()) 
-			if (server.getSendableOption(this) != null) 
-				options.add(server.getSendableOption(this));
+			options.add(server.getSendableOptions().getIf(option -> option.getSendable() == this).get());
+		options.removeIf(option -> option == null);
 		return options;
 	}
 	@Override
@@ -105,7 +101,7 @@ public abstract class Conversable implements Sendable, ChannelOptionsGetter {
 		ArrayMap<String, Object> map = new ArrayMap<String, Object>();
 		map.put("name", name);
 		map.put("desc", desc);
-		map.put("options", new SQLList<ChannelOptions>(ChannelOptions.class, options));
+		map.put("coptions", new SQLList<ChannelOptions>(ChannelOptions.class, options));
 		map.put("main", main);
 		return map;
 	}

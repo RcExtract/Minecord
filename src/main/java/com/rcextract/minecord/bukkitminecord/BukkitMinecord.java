@@ -1,29 +1,36 @@
 package com.rcextract.minecord.bukkitminecord;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLTimeoutException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.configuration.Configuration;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.rcextract.minecord.Channel;
@@ -36,8 +43,9 @@ import com.rcextract.minecord.DataManipulator;
 import com.rcextract.minecord.Message;
 import com.rcextract.minecord.Minecord;
 import com.rcextract.minecord.MinecordPlugin;
-import com.rcextract.minecord.RankManager;
+import com.rcextract.minecord.Rank;
 import com.rcextract.minecord.Sendable;
+import com.rcextract.minecord.SendableOptions;
 import com.rcextract.minecord.Server;
 import com.rcextract.minecord.User;
 import com.rcextract.minecord.event.user.UserMessageEvent;
@@ -46,6 +54,7 @@ import com.rcextract.minecord.sql.DatabaseAccessException;
 import com.rcextract.minecord.sql.DriverNotFoundException;
 import com.rcextract.minecord.sql.SQLConnectException;
 import com.rcextract.minecord.utils.ComparativeSet;
+import com.rcextract.minecord.utils.EnhancedSet;
 
 import net.milkbowl.vault.permission.Permission;
 
@@ -54,91 +63,56 @@ import net.milkbowl.vault.permission.Permission;
  * <p>
  * All Minecord system preferences are saved here.
  */
-@SuppressWarnings("deprecation")
 public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 
 	private ConfigurationManager cm;
 	private DataManipulator dm;
 	private PreferencesManager pm;
-	private Set<CommandExpansion> ce;
+	private ComparativeSet<RegisteredCommandHandler> ce;
 	private Updater updater;
 	private String format;
-	private long duration;
+	private long configurationDuration;
+	private long dataDuration;
 	private Runnable dataLoad;
-	private Runnable configurationLoad;
+	private ConfigurationLoader cloader;
 	private Runnable dataSave;
 	private Runnable configurationSave;
-	//True means save to minecord.yml, false means save to preferences, null means don't save.
-	private ConfigurationSaveOptions saveConfiguration;
-	//True means save, false means don't save.
+	private SaveOptions saveConfiguration;
 	private boolean saveData;
 	private Scanner scanner;
 	protected String dbversion;
 	protected String olddbversion;
-	private ComparativeSet<Server> servers;
+	private EnhancedSet<Server> servers;
 	private Server main;
-	private ComparativeSet<Sendable> sendables;
-	
-	private static enum ConfigurationSaveOptions {
-		SAVE_ALL, FILE_ONLY, PREFERENCE_ONLY, DISABLED
-	}
+	private EnhancedSet<Sendable> sendables;
 
 	@Override
 	public void onEnable() {
+		/*
+		 * if !generate source 1
+		 *     goto load source 2
+		 * if load source 1
+		 *     set save to source 1
+		 * else
+		 *     set save to source 2
+		 *     if load source 2
+		 *         set save to both sources
+		 *     else
+		 *         set do not save
+		 *         use default data
+		 */
 		dbversion = "7dot0";
 		olddbversion = "6dot0";
-		servers = new ComparativeSet<Server>(server -> getServer(server.getIdentifier()) == null && getServer(server.getName()) == null);
-		sendables = new ComparativeSet<Sendable>(sendable -> getSendable(sendable.getIdentifier()) == null);
+		ce = new ComparativeSet<RegisteredCommandHandler>();
+		ce.setFilter(rch -> ce.getIf(o -> o.getExecutor() == rch.getExecutor()).isEmpty());
+		ce.close();
+		servers = new EnhancedSet<Server>();
+		sendables = new EnhancedSet<Sendable>();
 		cm = new SimpleConfigurationManager(this);
 		pm = new PreferencesManager();
 		updater = new Updater(this);
+		cloader = new ConfigurationLoader(this);
 		Logger logger = getLogger();
-		configurationLoad = new Runnable() {
-
-			@Override
-			public void run() {
-				logger.log(Level.INFO, "Loading configuration file...");
-				cm.generateDataFolder();
-				try {
-					cm.generateConfigurationFile();
-				} catch (IOException e) {
-					logger.log(Level.WARNING, "An unexpected error occurred while attempting to generate the configuration file.");
-					logger.log(Level.WARNING, "This is usually caused by the relationship between JRE and System.");
-					logger.log(Level.WARNING, "For example, JRE does not have permission to create file on the disk.");
-					loadBackupConfiguration(false);
-					saveConfiguration = ConfigurationSaveOptions.SAVE_ALL;
-					return;
-				}
-				cm.loadConfiguration();
-				format = ((SimpleConfigurationManager) cm).getFormat();
-				duration = ((SimpleConfigurationManager) cm).getDuration();
-				if (format != null && cm.getConfiguration().contains("duration")) {
-					logger.log(Level.INFO, "Configuration is successfully loaded.");
-					saveConfiguration = ConfigurationSaveOptions.FILE_ONLY;
-					return;
-				}
-				logger.log(Level.SEVERE, "An error occurred while attempting to load the configuration.");
-				loadBackupConfiguration(true);
-			}
-			
-			public void loadBackupConfiguration(boolean fileExists) {
-				logger.log(Level.SEVERE, "Attempting to load backup configuration...");
-				format = pm.getBackupFormat();
-				duration = pm.getBackupDuration();
-				if (format != null && duration != Long.MIN_VALUE) {
-					logger.log(Level.INFO, "Backup configuration is successfully loaded.");
-					saveConfiguration = ConfigurationSaveOptions.PREFERENCE_ONLY;
-					return;
-				}
-				if (!(fileExists)) return;
-				logger.log(Level.SEVERE, "An error occurred while attempting to load the backup configuration.");
-				format = "%minecord_nickname% > %minecord_message%";
-				duration = 300;
-				logger.log(Level.WARNING, "Default format will be used temporaily. It will not replace the value in configuration file or backup configuration, if exists.");
-				saveConfiguration = ConfigurationSaveOptions.DISABLED;
-			}
-			
-		};
 		
 		dataLoad = new Runnable() {
 
@@ -146,7 +120,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 			public void run() {
 				try {
 					logger.log(Level.INFO, "Attempting to connect to database...");
-					dm = new DataManipulator(pm.getHost(), pm.getUser(), pm.getPassword());
+					dm = new DatabaseDataManipulator(pm.getHost(), pm.getUser(), pm.getPassword());
 					logger.log(Level.INFO, "Loading data from database...");
 					dm.load();
 					logger.log(Level.INFO, "Data is successfully loaded.");
@@ -154,7 +128,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 					if (servers.isEmpty()) {
 						logger.log(Level.WARNING, "Data is empty. Ignore this warning if you are using Minecord for the first time.");
 						logger.log(Level.INFO, "Generating default data.");
-						Server server = new Server(new Random().nextInt(), "default", "This is the main server.", false, false, false, false, new RankManager(), null);
+						Server server = new Server("default", "This is the main server.", false, false, false, false, null, new HashSet<Channel>(), null, new HashSet<Rank>(), new ComparativeSet<SendableOptions>());
 						servers.add(server);
 						main = server;
 					}
@@ -174,7 +148,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 					logger.log(Level.SEVERE, "You will be referred to the developer of the deserializer if possible.");
 				}
 				logger.log(Level.WARNING, "Default data will be used temporaily. It will not replace the data in the database, if exists.");
-				Server server = new Server(new Random().nextInt(), "default", "This is the main server.", false, false, false, false, new RankManager(), null);
+				Server server = new Server("default", "This is the main server.", false, false, false, false, null, new HashSet<Channel>(), null, new HashSet<Rank>(), new ComparativeSet<SendableOptions>());
 				servers.add(server);
 				main = server;
 			}
@@ -210,9 +184,9 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 			@Override
 			public void run() {
 				switch (saveConfiguration) {
-				case DISABLED:
+				case DO_NOT_SAVE:
 					return;
-				case FILE_ONLY: 
+				case SAVE_SOURCE_ONE: 
 					try {
 						saveToFile();
 					} catch (IOException e) {
@@ -221,7 +195,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 						logger.log(Level.SEVERE, "For example, JRE does not have permission to write to file on the disk.");
 						saveToPreference();
 					}
-				case PREFERENCE_ONLY:
+				case SAVE_SOURCE_TWO:
 					saveToPreference();
 				case SAVE_ALL: {
 					try {
@@ -240,7 +214,10 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 			
 			public void saveToFile() throws IOException {
 				logger.log(Level.INFO, "Saving configuration...");
-				cm.getConfiguration().set("format", format);
+				Configuration config = cm.getConfiguration();
+				config.set("format", format);
+				config.set("auto-save-configuration", configurationDuration);
+				config.set("auto-save-data", dataDuration);
 				cm.saveConfiguration();
 				logger.log(Level.INFO, "Configuration is successfully saved.");
 			}
@@ -248,11 +225,20 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 			public void saveToPreference() {
 				logger.log(Level.INFO, "Saving configuration as backup...");
 				pm.setBackupFormat(format);
+				pm.setBackupConfigurationDuration(configurationDuration);
+				pm.setBackupDataDuration(dataDuration);
 				logger.log(Level.INFO, "Configuration is successfully saved as backup.");
 			}
 			
 		};
-		Bukkit.getScheduler().runTaskAsynchronously(this, configurationLoad);
+		Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
+
+			@Override
+			public void run() {
+				cloader.load();
+			}
+			
+		});
 		scanner = new Scanner(System.in);
 		BukkitMinecord minecord = this;
 		Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
@@ -300,8 +286,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 				Bukkit.getScheduler().runTaskAsynchronously(this, dataLoad);		
 		} catch (BackingStoreException e) {
 			getLogger().log(Level.SEVERE, "An error occurred while attempting to read the secured configurations.", e);
-			getLogger().log(Level.WARNING, "For safety reasons, Minecord will be disabled without other executions.");
-			saveConfiguration = ConfigurationSaveOptions.DISABLED;
+			saveConfiguration = SaveOptions.DO_NOT_SAVE;
 			saveData = false;
 		}
 		new IncompatibleDetector(this).runTask(this);
@@ -312,7 +297,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 				logger.log(Level.INFO, "An unexpected error occurred while attempting to register the placeholders.");
 		else 
 			logger.log(Level.INFO, "Could not find plugin PlaceHolderAPI. Placeholders\' registration cancelled.");
-		if (duration > 0L) 
+		if (dataDuration > 0L) 
 			Bukkit.getScheduler().runTaskTimerAsynchronously(this, new Runnable() {
 	
 				@Override
@@ -321,7 +306,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 					dataSave.run();
 				}
 				
-			}, duration * 20L, duration * 20L);
+			}, dataDuration * 20L, dataDuration * 20L);
 		Bukkit.getPluginManager().registerEvents(this, this);
 	}
 	@Override
@@ -337,6 +322,15 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 		Validate.notNull(configurationManager);
 		this.cm = configurationManager;
 	}
+	public void setFormat(String format) {
+		this.format = format;
+	}
+	public void setConfigurationAutoSaveInterval(long length) {
+		this.configurationDuration = length;
+	}
+	public void setDataAutoSaveInterval(long length) {
+		this.dataDuration = length;
+	}
 	public DataManipulator getDataManipulator() {
 		return dm;
 	}
@@ -347,9 +341,34 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 	public PreferencesManager getPreferencesManager() {
 		return pm;
 	}
-	public Set<CommandExpansion> getCommandExpansions() {
-		return ce;
+	public Set<RegisteredCommandHandler> getRegisteredCommandHandlers() {
+		return Collections.unmodifiableSet(ce);
 	}
+	public boolean registerCommandExpansion(CommandExpansion expansion, Plugin plugin) {
+		Class<? extends CommandExpansion> clazz = expansion.getClass();
+		for (Method method : clazz.getMethods()) {
+			if (method.getReturnType() == boolean.class && method.isAccessible() && method.getExceptionTypes().length == 0) {
+				CommandHandler handler = method.getAnnotation(CommandHandler.class);
+				Class<?>[] parametertypes = method.getParameterTypes();
+				if (handler != null && parametertypes[0] == CommandSender.class && parametertypes[1] == String[].class) {
+					ce.add(new RegisteredCommandHandler(handler.value(), handler.priority(), plugin, expansion, (CommandSender sender, String[] args) -> { try {
+						return (boolean) method.invoke(expansion, sender, args);
+					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+						return false;
+					} }));
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public void unregisterCommandExpansion(CommandExpansion expansion) {
+		ce.forEach(rch -> {
+			if (rch.getExpansion() == expansion) ce.remove(rch);
+		});
+	}
+	
 	public Permission getPermissionManager() {
 		if (Bukkit.getServicesManager().isProvidedFor(Permission.class)) 
 			return Bukkit.getServicesManager().getRegistration(Permission.class).getProvider();
@@ -378,7 +397,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 		return cm.generateConfigurationFile();
 	}
 	@Override
-	public void loadConfiguration() {
+	public void loadConfiguration() throws FileNotFoundException, IOException, InvalidConfigurationException {
 		cm.loadConfiguration();
 	}
 	@Override
@@ -394,7 +413,7 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 		return olddbversion;
 	}
 	public String getFormat() {
-		return ((SimpleConfigurationManager) cm).getFormat();
+		return format;
 	}
 	
 	@Deprecated
@@ -426,37 +445,21 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 		panel.initialize();
 	}*/
 
-	@Override
-	public ComparativeSet<Server> getServers() {
+	public EnhancedSet<Server> getServers() {
 		return servers;
 	}
-	@Override
-	public Server getServer(int id) {
-		return servers.getIf(server -> server.getIdentifier() == id).toArray(new Server[servers.size()])[0];
-	}
-	@Override
-	public Server getServer(String name) {
-		return servers.getIf(server -> server.getName().equals(name)).toArray(new Server[servers.size()])[0];
-	}
-	@Override
-	public Set<Server> getServers(Sendable sendable) {
-		return servers.getIf(server -> server.getSendables().contains(sendable));
-	}
-	@Override
-	public Server getServer(Channel channel) {
-		return servers.getIf(server -> server.getChannels().contains(channel)).toArray(new Server[servers.size()])[0];
-	}
-	@Override
-	public ComparativeSet<Sendable> getSendables() {
+
+	public EnhancedSet<Sendable> getSendables() {
 		return sendables;
 	}
+
 	@Override
-	public Sendable getSendable(int id) {
-		return sendables.getIf(sendable -> sendable.getIdentifier() == id).toArray(new Sendable[sendables.size()])[0];
-	}
-	@Override
-	public Set<Sendable> getSendables(String name) {
-		return sendables.getIf(sendable -> sendable.getName().equals(name));
+	public Channel getChannel(UUID id) {
+		for (Server server : servers) 
+			for (Channel channel : server.getChannels()) 
+				if (channel.getIdentifier().equals(id)) 
+					return channel;
+		return null;
 	}
 	@Override
 	public Server getMain() {
@@ -486,18 +489,14 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 				//Handled externally by a Scanner.
 				return true;
 			}
-			String command = args[0];
-			for (Method method : ce.getClass().getMethods()) {
-				CommandHandler ch = method.getAnnotation(CommandHandler.class);
-				if (ch != null && ch.command().equalsIgnoreCase(command) && method.getReturnType() == boolean.class && method.getParameterCount() == 1 && method.getParameterTypes()[0].isAssignableFrom(CommandSender.class)) 
-					try {
-						return (boolean) method.invoke(ce, sender);
-					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-						getLogger().log(Level.SEVERE, "An error occurred while attempting to execute command " + command, e instanceof InvocationTargetException ? e.getCause() : e);
-						return true;
-					}
-			}
-			sender.sendMessage("Command " + command + " does not exist!");
+			EventPriority[] priorities = EventPriority.values();
+			ArrayUtils.reverse(priorities);
+			EnhancedSet<RegisteredCommandHandler> rchs = ce.getIf(rch -> rch.getName().equalsIgnoreCase(args[0]));
+			for (EventPriority priority : priorities) 
+				for (RegisteredCommandHandler rch : rchs.getIf(rch -> rch.getPriority() == priority)) 
+					if (rch.getExecutor().apply(sender, Arrays.copyOfRange(args, 2, args.length))) return true;
+					else continue;
+			sender.sendMessage("Command " + args[0] + " does not exist!");
 			return true;
 		}
 		return false;
@@ -506,23 +505,24 @@ public class BukkitMinecord extends JavaPlugin implements MinecordPlugin {
 	@EventHandler
 	public void onPlayerLogin(PlayerLoginEvent event) {
 		Player player = event.getPlayer();
-		Minecord.getSendables().add(new User(Minecord.generateSendableIdentifier(), player.getName(), "A default user description", player.getCustomName(), player, getMain().getMain(), new ChannelOptions(getMain().getMain(), true, 0)));
+		Minecord.getSendables().add(new User(player.getName(), "A default user description", player.getCustomName(), player, getMain().getMainChannel(), new ChannelOptions(getMain().getMainChannel(), true, 0)));
 	}
 	
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onPlayerChat(AsyncPlayerChatEvent event) {
 		User sender = getSendables().getIf(sendable -> sendable instanceof User && ((User) sendable).getPlayer() == event.getPlayer()).toArray(new User[1])[0];
 		Channel main = sender.getMain();
 		//This set stores conversables which applyMessage should be executed instantly
 		Set<Conversable> conversables = new HashSet<Conversable>();
-		sender.getMain().getServer().getSendables().forEach(sendable -> {
+		sender.getMain().getServer().getSendableOptions().forEach(soptions -> {
+			Sendable sendable = soptions.getSendable();
 			if (sendable instanceof Conversable && sendable.getMain() == main) 
 				conversables.add((Conversable) sendable);
 		});
 		UserMessageEvent e = new UserMessageEvent(event.getMessage(), main, sender, conversables);
 		Bukkit.getPluginManager().callEvent(e);
 		if (e.isCancelled()) return;
-		main.getMessages().add(new Message(main.generateMessageIdentifier(), sender, e.getMessage(), e.getDate()));
+		main.getMessages().add(new Message(sender, e.getMessage(), e.getDate()));
 		conversables.forEach(conversable -> conversable.applyMessage());
 	}
 	

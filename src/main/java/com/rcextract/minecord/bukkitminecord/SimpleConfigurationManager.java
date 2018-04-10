@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -23,14 +24,17 @@ public class SimpleConfigurationManager implements ConfigurationManager {
 	public SimpleConfigurationManager(MinecordPlugin minecord) {
 		this.minecord = minecord;
 		this.file = new File(minecord.getDataFolder(), "minecord.yml");
+		this.configuration = new YamlConfiguration();
 	}
-	
+
+	@Override
 	public boolean generateDataFolder() {
 		File dataFolder = minecord.getDataFolder();
 		if (!(dataFolder.exists())) return dataFolder.mkdir();
 		return false;
 	}
-	
+
+	@Override
 	public boolean generateConfigurationFile() throws IOException {
 		if (file.createNewFile()) 
 			try (InputStream i = minecord.getResource("minecord.yml"); OutputStream o = new FileOutputStream(file)) {
@@ -42,11 +46,13 @@ public class SimpleConfigurationManager implements ConfigurationManager {
 			}
 		return false;
 	}
-	
-	public void loadConfiguration() {
-		configuration = YamlConfiguration.loadConfiguration(file);
+
+	@Override
+	public void loadConfiguration() throws FileNotFoundException, IOException, InvalidConfigurationException {
+		configuration.load(file);
 	}
-	
+
+	@Override
 	public void saveConfiguration() throws IOException {
 		configuration.save(file);
 	}
@@ -55,12 +61,5 @@ public class SimpleConfigurationManager implements ConfigurationManager {
 	public FileConfiguration getConfiguration() {
 		return configuration;
 	}
-	
-	public String getFormat() {
-		return configuration.getString("format");
-	}
-	
-	public long getDuration() {
-		return configuration.getLong("auto-save");
-	}
+
 }

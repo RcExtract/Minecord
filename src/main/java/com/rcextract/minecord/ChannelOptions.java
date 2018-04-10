@@ -3,13 +3,21 @@ package com.rcextract.minecord;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlIDREF;
+
 import com.rcextract.minecord.sql.DatabaseSerializable;
 import com.rcextract.minecord.sql.SerializableAs;
 import com.rcextract.minecord.utils.ArrayMap;
 
+@XmlAccessorType(XmlAccessType.FIELD)
 @SerializableAs("coptions")
 public class ChannelOptions implements Cloneable, DatabaseSerializable {
 
+	@XmlID
+	@XmlIDREF
 	private final Channel channel;
 	private boolean notify;
 	private int index;
@@ -26,6 +34,7 @@ public class ChannelOptions implements Cloneable, DatabaseSerializable {
 		this.notify = (boolean) internal.get("notify");
 		this.index = (int) internal.get("index");
 	}
+	
 	public Channel getChannel() {
 		return channel;
 	}
@@ -86,4 +95,5 @@ public class ChannelOptions implements Cloneable, DatabaseSerializable {
 		map.put("index", index);
 		return map;
 	}
+	
 }

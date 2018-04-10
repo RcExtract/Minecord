@@ -4,6 +4,19 @@
 the runtime of Minecord.
 - On Alpha Update 2.0 and 3.0, the plugin is recoded.
 
+## 1.2.0 SNAPSHOT 1.0 (New API not fully implemented, about 70%) (Unstable)
+- Added support for saving data in XML format
+- Enhanced support for multiple command expansions
+- Now configuration and data can auto save with different intervals
+- Improved configuration backup system
+- Added utility class EnhancedSet
+- Added partial support for multiple DataManipulators
+- Added some utility methods
+- Removed rank manager
+- Improved server, channel, and sendable identifier system
+- Fixed some minor bugs
+- Removed all getters due to EnhancedSet starts existing
+
 ## 1.1.5
 - Now supports multiple command expansions
 - Increased security to command /minecord connect
